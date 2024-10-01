@@ -1,0 +1,606 @@
+{% load static %}{% load socialaccount %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta content="width=device-width, initial-scale=1.0" name="viewport">
+
+  <title>Dashboard - CIMPS</title>
+  <meta content="" name="description">
+  <meta content="" name="keywords">
+
+  <!-- Favicons -->
+  <link href="{% static 'images/favicon.ico'%}" rel="icon">
+  <link href="{% static 'assets/img/apple-touch-icon.png'%}" rel="apple-touch-icon">
+
+  <!-- Google Fonts -->
+  <link href="https://fonts.gstatic.com" rel="preconnect">
+  <link href="https://fonts.googleapis.com/css?family=Open+Sans:300,300i,400,400i,600,600i,700,700i|Nunito:300,300i,400,400i,600,600i,700,700i|Poppins:300,300i,400,400i,500,500i,600,600i,700,700i" rel="stylesheet">
+
+  <!-- Vendor CSS Files -->
+  <link href="{% static 'assets/vendor/bootstrap/css/bootstrap.min.css'%}" rel="stylesheet">
+  <link href="{% static 'assets/vendor/bootstrap-icons/bootstrap-icons.css'%}" rel="stylesheet">
+  <link href="{% static 'assets/vendor/boxicons/css/boxicons.min.css'%}" rel="stylesheet">
+  <link href="{% static 'assets/vendor/quill/quill.snow.css'%}" rel="stylesheet">
+  <link href="{% static 'assets/vendor/quill/quill.bubble.css'%}" rel="stylesheet">
+  <link href="{% static 'assets/vendor/remixicon/remixicon.css'%}" rel="stylesheet">
+  <link href="{% static 'assets/vendor/simple-datatables/style.css'%}" rel="stylesheet">
+  
+
+  <link href="{% static 'assets/css/style.css'%}" rel="stylesheet">
+<!-- Bootstrap CSS -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+
+</head>
+
+<body>
+
+  <!-- ======= Header ======= -->
+  <header id="header" class="header fixed-top d-flex align-items-center">
+
+    <div class="d-flex align-items-center justify-content-between">
+      <a href="index.html" class="logo d-flex align-items-center">
+        <img src="{% static 'images/black_logo.png' %}" alt="">
+        <span class="d-none d-lg-block">CIMPS {% now 'Y' %}</span>
+      </a>
+      <i class="bi bi-list toggle-sidebar-btn"></i>
+    </div><!-- End Logo -->
+
+    
+
+    <nav class="header-nav ms-auto">
+      <ul class="d-flex align-items-center">
+
+        
+
+          <ul class="dropdown-menu dropdown-menu-end dropdown-menu-arrow notifications">
+            <li class="dropdown-header">
+              You have 4 new notifications
+              <a href="#"><span class="badge rounded-pill bg-primary p-2 ms-2">View all</span></a>
+            </li>
+            <li>
+              <hr class="dropdown-divider">
+            </li>
+
+            <li class="notification-item">
+              <i class="bi bi-exclamation-circle text-warning"></i>
+              <div>
+                <h4>Lorem Ipsum</h4>
+                <p>Quae dolorem earum veritatis oditseno</p>
+                <p>30 min. ago</p>
+              </div>
+            </li>
+
+            <li>
+              <hr class="dropdown-divider">
+            </li>
+
+            <li class="notification-item">
+              <i class="bi bi-x-circle text-danger"></i>
+              <div>
+                <h4>Atque rerum nesciunt</h4>
+                <p>Quae dolorem earum veritatis oditseno</p>
+                <p>1 hr. ago</p>
+              </div>
+            </li>
+
+            <li>
+              <hr class="dropdown-divider">
+            </li>
+
+            <li class="notification-item">
+              <i class="bi bi-check-circle text-success"></i>
+              <div>
+                <h4>Sit rerum fuga</h4>
+                <p>Quae dolorem earum veritatis oditseno</p>
+                <p>2 hrs. ago</p>
+              </div>
+            </li>
+
+            <li>
+              <hr class="dropdown-divider">
+            </li>
+
+            <li class="notification-item">
+              <i class="bi bi-info-circle text-primary"></i>
+              <div>
+                <h4>Dicta reprehenderit</h4>
+                <p>Quae dolorem earum veritatis oditseno</p>
+                <p>4 hrs. ago</p>
+              </div>
+            </li>
+
+            <li>
+              <hr class="dropdown-divider">
+            </li>
+            <li class="dropdown-footer">
+              <a href="#">Show all notifications</a>
+            </li>
+
+          </ul><!-- End Notification Dropdown Items -->
+
+        </li><!-- End Notification Nav -->
+
+        <li class="nav-item dropdown">
+
+          
+        </li><!-- End Messages Nav -->
+
+        <li class="nav-item dropdown pe-3">
+
+          <a class="nav-link nav-profile d-flex align-items-center pe-0" href="#" data-bs-toggle="dropdown">
+            <img src="{{ user.socialaccount_set.all.0.get_avatar_url }}" alt="Profile" class="rounded-circle">
+            <span class="d-none d-md-block dropdown-toggle ps-2">Hi, {{ user.socialaccount_set.all.0.extra_data.name }}</span>
+          </a><!-- End Profile Iamge Icon -->
+
+          <ul class="dropdown-menu dropdown-menu-end dropdown-menu-arrow profile">
+            <li class="dropdown-header">
+              <h6>Kevin Anderson</h6>
+              <span>Web Designer</span>
+            </li>
+            <li>
+              <hr class="dropdown-divider">
+            </li>
+
+            <li>
+              <a class="dropdown-item d-flex align-items-center" href="users-profile.html">
+                <i class="bi bi-person"></i>
+                <span>My Profile</span>
+              </a>
+            </li>
+            <li>
+              <hr class="dropdown-divider">
+            </li>
+
+            <li>
+              <a class="dropdown-item d-flex align-items-center" href="users-profile.html">
+                <i class="bi bi-gear"></i>
+                <span>Account Settings</span>
+              </a>
+            </li>
+            <li>
+              <hr class="dropdown-divider">
+            </li>
+
+            <li>
+              <a class="dropdown-item d-flex align-items-center" href="pages-faq.html">
+                <i class="bi bi-question-circle"></i>
+                <span>Need Help?</span>
+              </a>
+            </li>
+            <li>
+              <hr class="dropdown-divider">
+            </li>
+
+            <li>
+              <a class="dropdown-item d-flex align-items-center" href="#">
+                <i class="bi bi-box-arrow-right"></i>
+                <span>Sign Out</span>
+              </a>
+            </li>
+
+          </ul><!-- End Profile Dropdown Items -->
+        </li><!-- End Profile Nav -->
+
+      </ul>
+    </nav><!-- End Icons Navigation -->
+
+  </header><!-- End Header -->
+
+    <!-- ======= Sidebar ======= -->
+    <aside id="sidebar" class="sidebar">
+
+        <ul class="sidebar-nav" id="sidebar-nav">
+    
+          <li class="nav-item">
+            <a class="nav-link collapsed" href="{% url 'complete_profile'%}">
+              <i class="bi bi-person"></i>
+              <span>Profile Information</span>
+            </a>
+          </li>
+          <li class="nav-item"></li>
+            <a class="nav-link " href="{% url 'dashboard' %}">
+              <i class="bi bi-grid"></i>
+              <span>Dashboard</span>
+            </a>
+          </li>
+          <li class="nav-item"></li>
+          <a class="nav-link collapsed" href="{% url 'payment' %}">
+              <i class="bi bi-cash-coin"></i>
+              <span>Payment</span>
+            </a>
+          </li>
+          <li class="nav-item"></li>
+        <a class="nav-link collapsed" href="{% url 'schedule' %}">
+          <i class="bi bi-calendar"></i>
+          <span>Schedule (Program)</span>
+        </a>
+        <li class="nav-item"></li>
+        <a class="nav-link collapsed" href="{% url 'seeMySchedule' %}">
+          <i class="bi bi-file-earmark-break"></i>
+          <span>See my schedule</span>
+        </a>
+      </li>
+          <li class="nav-item"></li>
+            <a class="nav-link collapsed" href="{% url 'account_logout' %}">
+              <i class="bi bi-door-closed-fill"></i>
+              <span>Log Out</span>
+            </a>
+          </li>
+          {% if is_staff_user %}
+          <li class="nav-item">Staff options</li>
+            <a class="nav-link collapsed" href="{% url 'assistanceList' %}">
+              <i class="bi bi-check2-square"></i>
+              <span>Assistance List</span>
+            </a>
+          </li>
+          <li class="nav-item"></li>
+            <a class="nav-link collapsed" href="{% url 'validatePaymentAdmin' %}">
+              <i class="bi bi-wallet2"></i>
+              <span>Validate Payments</span>
+            </a>
+          </li>
+          
+          {% endif %}
+          {% if is_staff_superuser %}
+          <li class="nav-item">Super Admin options</li>
+            <a class="nav-link collapsed" href="{{request.scheme}}://{{ request.get_host }}/admin">
+              <i class="bi bi-terminal"></i>
+              <span>Super Admin Console</span>
+            </a>
+          </li>
+          <li class="nav-item"></li>
+            <a class="nav-link collapsed" href="{% url 'registerPlace' %}">
+              <i class="bi bi-building"></i>
+              <span>Register Places</span>
+            </a>
+          </li>
+          <li class="nav-item"></li>
+            <a class="nav-link collapsed" href="{% url 'registerEvent' %}">
+              <i class="bi bi-briefcase"></i>
+              <span>Register Events</span>
+            </a>
+          </li>
+          <li class="nav-item"></li>
+            <a class="nav-link collapsed" href="{% url 'listEvents' %}">
+              <i class="bi bi-card-list"></i>
+              <span>List Events</span>
+            </a>
+          </li>
+          <li class="nav-item"></li>
+            <a class="nav-link collapsed" href="{% url 'manageCongressDates' %}">
+              <i class="bi bi-calendar-check"></i>
+              <span>Manage Congress Dates</span>
+            </a>
+          </li>
+          {% endif %}
+        </ul>
+    
+      </aside><!-- End Sidebar-->
+
+  <main id="main" class="main">
+
+    <div class="pagetitle">
+      <h1>Dashboard</h1>
+      <nav>
+        <ol class="breadcrumb">
+          <li class="breadcrumb-item"><a href="index.html">Home</a></li>
+          <li class="breadcrumb-item active">Dashboard</li>
+        </ol>
+      </nav>
+    </div><!-- End Page Title -->
+
+    <section class="section dashboard">
+      <div class="row">
+
+        <!-- Left side columns -->
+        <div class="col-lg-8">
+          <div class="row">
+            <div class="card">
+              <div class="card-body">
+                <h5 class="card-title">Our gallery</h5>
+                <div id="carouselExampleIndicators" class="carousel slide carousel-container" data-bs-ride="carousel">
+                  <!-- Indicadores del carrusel -->
+                  <div class="carousel-indicators">
+                    <button type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide-to="0" class="active" aria-current="true" aria-label="Slide 1"></button>
+                    <button type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide-to="1" aria-label="Slide 2"></button>
+                    <button type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide-to="2" aria-label="Slide 3"></button>
+                    <button type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide-to="3" aria-label="Slide 4"></button>
+                    <button type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide-to="4" aria-label="Slide 5"></button>
+                  </div>
+                
+                  <!-- Elementos del carrusel -->
+                  <div class="carousel-inner">
+                    <div class="carousel-item active">
+                      <img src="{% static 'images/ban1.jpeg' %}" class="d-block w-100" alt="Banner 1">
+                      <div class="carousel-caption d-none d-md-block">
+                        <h5>...</h5>
+                        <p>...</p>
+                      </div>
+                    </div>
+                    <div class="carousel-item">
+                      <img src="{% static 'images/banGrisel.jpeg' %}" class="d-block w-100" alt="Banner Grisel">
+                      <div class="carousel-caption d-none d-md-block">
+                        <h5>...</h5>
+                        <p>...</p>
+                      </div>
+                    </div>
+                    <div class="carousel-item">
+                      <img src="{% static 'images/ban2.png' %}" class="d-block w-100" alt="Banner 2">
+                      <div class="carousel-caption d-none d-md-block">
+                        <h5>...</h5>
+                        <p>...</p>
+                      </div>
+                    </div>
+                    <div class="carousel-item">
+                      <img src="{% static 'images/ban3.png' %}" class="d-block w-100" alt="Banner 3">
+                      <div class="carousel-caption d-none d-md-block">
+                        <h5>...</h5>
+                        <p>...</p>
+                      </div>
+                    </div>
+                    <div class="carousel-item">
+                      <img src="{% static 'images/ban4.png' %}" class="d-block w-100" alt="Banner 4">
+                      <div class="carousel-caption d-none d-md-block">
+                        <h5>...</h5>
+                        <p>...</p>
+                      </div>
+                    </div>
+                  </div>
+                
+                  <!-- Controles prev y next -->
+                  <button class="carousel-control-prev" type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide="prev">
+                    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                    <span class="visually-hidden">Previous</span>
+                  </button>
+                  <button class="carousel-control-next" type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide="next">
+                    <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                    <span class="visually-hidden">Next</span>
+                  </button>
+                </div>
+            </div>
+            </div>
+            
+          </div>
+          <div class="row">
+
+            
+
+            <!-- Revenue Card -->
+            <!-- <div class="col-xxl-4 col-md-6">
+              <div class="card info-card revenue-card">
+
+                <div class="filter">
+                  <a class="icon" href="#" data-bs-toggle="dropdown"><i class="bi bi-three-dots"></i></a>
+                  <ul class="dropdown-menu dropdown-menu-end dropdown-menu-arrow">
+                    <li class="dropdown-header text-start">
+                      <h6>Filter</h6>
+                    </li>
+
+                    <li><a class="dropdown-item" href="#">Today</a></li>
+                    <li><a class="dropdown-item" href="#">This Month</a></li>
+                    <li><a class="dropdown-item" href="#">This Year</a></li>
+                  </ul>
+                </div>
+
+                <div class="card-body">
+                  <h5 class="card-title">Revenue <span>| This Month</span></h5>
+
+                  <div class="d-flex align-items-center">
+                    <div class="card-icon rounded-circle d-flex align-items-center justify-content-center">
+                      <i class="bi bi-currency-dollar"></i>
+                    </div>
+                    <div class="ps-3">
+                      <h6>$3,264</h6>
+                      <span class="text-success small pt-1 fw-bold">8%</span> <span class="text-muted small pt-2 ps-1">increase</span>
+
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+            </div> -->
+            <!-- End Revenue Card -->
+
+            
+
+            <!-- Reports -->
+            
+
+
+          </div>
+        </div><!-- End Left side columns -->
+
+        <!-- Right side columns -->
+        <div class="col-lg-4">
+
+          <!-- Recent Activity -->
+          <div class="card">
+            <div class="filter">
+              <a class="icon" href="#" data-bs-toggle="dropdown"><i class="bi bi-three-dots"></i></a>
+              <ul class="dropdown-menu dropdown-menu-end dropdown-menu-arrow">
+                <li class="dropdown-header text-start">
+                  <h6>Filter</h6>
+                </li>
+
+                <li><a class="dropdown-item" href="#">Today</a></li>
+                <li><a class="dropdown-item" href="#">This Month</a></li>
+                <li><a class="dropdown-item" href="#">This Year</a></li>
+              </ul>
+            </div>
+
+            <div class="card-body">
+              <h5 class="card-title">News <span></span></h5>
+
+              <div class="activity">
+
+                <div class="activity-item d-flex">
+                  <div class="activite-label">September 06, 2024</div>
+                  <i class='bi bi-circle-fill activity-badge text-success align-self-start'></i>
+                  <div class="activity-content">
+                    Camera<a href="#" class="fw-bold text-dark"> ready</a>.
+                  </div>
+                </div><!-- End activity item-->
+
+                <div class="activity-item d-flex">
+                  <div class="activite-label">September 13, 2024</div>
+                  <i class='bi bi-circle-fill activity-badge text-danger align-self-start'></i>
+                  <div class="activity-content">
+                    Payment registration.
+                  </div>
+                </div>
+
+
+              </div>
+
+            </div>
+            
+          </div><!-- End Recent Activity -->
+          <!-- Sales Card -->
+          <div class="col-xxl-12 col-md-6">
+            <div class="card info-card sales-card">
+
+              
+
+              <div class="card-body">
+                <h5 class="card-title">Payment Status <span></span></h5>
+
+                <div class="d-flex align-items-center">
+                  <div class="card-icon rounded-circle d-flex align-items-center justify-content-center">
+                    <i class="bi bi bi-currency-dollar"></i>
+                  </div>
+                  <div class="ps-3">
+                    {% if not paymentCompleted %}
+                    <h6>Pending</h6>
+                    <span class="text-danger small pt-1 fw-bold">You cannot register into any event.</span> <span class="text-muted small pt-2 ps-1"></span>
+                    {% endif %}
+                    {% if paymentCompleted %}
+                    <h6>Completed</h6>
+                    <span class="text-success small pt-1 fw-bold">Thank you for your payment!</span> <span class="text-muted small pt-2 ps-1"></span>
+                    {% endif %}
+
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div><!-- End Sales Card -->
+          <!-- Customers Card -->
+          <div class="col-xxl-12 col-xl-12">
+
+            <div class="card info-card customers-card">
+
+              <div class="filter">
+                <a class="icon" href="#" data-bs-toggle="dropdown"><i class="bi bi-three-dots"></i></a>
+                <ul class="dropdown-menu dropdown-menu-end dropdown-menu-arrow">
+                  <li class="dropdown-header text-start">
+                    <h6>Filter</h6>
+                  </li>
+
+                  <li><a class="dropdown-item" href="#">Today</a></li>
+                  <li><a class="dropdown-item" href="#">This Month</a></li>
+                  <li><a class="dropdown-item" href="#">This Year</a></li>
+                </ul>
+              </div>
+
+              <div class="card-body">
+                <h5 class="card-title">User Type <span></span></h5>
+
+                <div class="d-flex align-items-center">
+                  <div class="card-icon rounded-circle d-flex align-items-center justify-content-center">
+                    <i class="bi bi-people"></i>
+                  </div>
+                  <div class="ps-3">
+                    <h6>{{ userType.get_user_type_display }}</h6>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+
+          </div><!-- End Customers Card -->
+
+          
+
+          
+       
+        </div><!-- End Right side columns -->
+        <div class="col-12">
+          <div class="card">
+
+            <div class="filter">
+              <a class="icon" href="#" data-bs-toggle="dropdown"><i class="bi bi-three-dots"></i></a>
+              <ul class="dropdown-menu dropdown-menu-end dropdown-menu-arrow">
+                <li class="dropdown-header text-start">
+                  <h6>Filter</h6>
+                </li>
+
+                <li><a class="dropdown-item" href="#">Today</a></li>
+                <li><a class="dropdown-item" href="#">This Month</a></li>
+                <li><a class="dropdown-item" href="#">This Year</a></li>
+              </ul>
+            </div>
+
+            <div class="card-body">
+              <h5 class="card-title">Our Social Networks <span>Follow us!</span></h5>
+              <div class="container">
+                <div class="row">
+                  <div class="col-sm" style="text-align: center;">
+                    <h1><a href="https://www.facebook.com/CIMPS/"><i class="bi bi-facebook" style="font-style: normal;"> </i></a></h1>
+                  </div>
+                  <div class="col-sm" style="text-align: center;">
+                    <h1><a href="https://www.instagram.com/conferencecimps"><i class="bi bi-instagram" style="font-style: normal;">  </i></a></h1>
+                  </div>
+                  <div class="col-sm " style="text-align: center;"><h1><a href="https://x.com/conferencecimps?lang=es"><i class="bi bi-twitter-x" style="font-style: normal;">  </i></a></h1></div>
+                </div>
+              </div>
+              
+              
+            </div>
+
+          </div>
+        </div><!-- End Reports -->
+
+      </div>
+    </section>
+
+  </main><!-- End #main -->
+
+  <!-- ======= Footer ======= -->
+  <footer id="footer" class="footer">
+    <div class="copyright">
+      &copy; Copyright <strong><span>CIMAT</span></strong>. All Rights Reserved
+    </div>
+    <div class="credits">
+      <!-- All the links in the footer should remain intact. -->
+      <!-- You can delete the links only if you purchased the pro version. -->
+      <!-- Licensing information: https://bootstrapmade.com/license/ -->
+      <!-- Purchase the pro version with working PHP/AJAX contact form: https://bootstrapmade.com/nice-admin-bootstrap-admin-html-template/ -->
+      Developed by MSwE. Victor Miguel Terrón Macias
+    </div>
+  </footer><!-- End Footer -->
+
+  <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
+
+  <!-- Vendor JS Files -->
+  <!-- Vendor JS Files -->
+  <script src="{% static 'assets/vendor/apexcharts/apexcharts.min.js' %}"></script>
+  <script src="{% static 'assets/vendor/bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+  <script src="{% static 'assets/vendor/chart.js/chart.umd.js' %}"></script>
+  <script src="{% static 'assets/vendor/echarts/echarts.min.js' %}"></script>
+  <script src="{% static 'assets/vendor/quill/quill.js' %}"></script>
+  <script src="{% static 'assets/vendor/simple-datatables/simple-datatables.js' %}"></script>
+  <script src="{% static 'assets/vendor/tinymce/tinymce.min.js' %}"></script>
+  <script src="{% static 'assets/vendor/php-email-form/validate.js' %}"></script>
+
+  <!-- Template Main JS File -->
+  <script src="{% static 'assets/js/main.js' %}"></script>
+
+</body>
+
+</html>

@@ -1,0 +1,56 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.min.css">
+  <link href="{% static 'images/favicon.ico'%}" rel="icon">
+
+    <title>All Registrations</title>
+</head>
+<body>
+    <div class="container mt-5">
+        <h1>All Registrations</h1>
+        <table id="registrationsTable" class="table">
+            <thead>
+                <tr>
+                    <th>User</th>
+                    <th>Event</th>
+                    <th>Date and Hour</th>
+                    <th>Assisted</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for registration in registrations %}
+                    <tr class="{% if registration.assisted %}table-success{% else %}table-danger{% endif %}">
+                        <td>
+                            Username: {{ registration.user.username }}, <br>
+                            Full Name: {{ registration.user.first_name }} {{ registration.user.last_name }}
+                        </td>
+                        <td>{{ registration.event.title }}</td>
+                        <td>{{ registration.event.date }}, {{ registration.event.start_time }}-{{ registration.event.end_time }} </td>
+                        <td>{{ registration.assisted|yesno:"Yes,No" }}</td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="4">No registrations found.</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            $('#registrationsTable').DataTable();
+        });
+    </script>
+</body>
+</html>
+

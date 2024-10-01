@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <div class="container mt-4">
+        <h2>Edit Congress Date</h2>
+        
+        <form method="post">
+            {% csrf_token %}
+            <div class="form-group">
+                {{ form.date.label_tag }}
+                {{ form.date }}
+            </div>
+            <div class="form-check mb-3">
+                {{ form.is_active }}
+                {{ form.is_active.label_tag }}
+            </div>
+            <button type="submit" class="btn btn-primary">Update Congress Date</button>
+            <a href="{% url 'manageCongressDates' %}" class="btn btn-secondary">Cancel</a>
+        </form>
+    </div>
+</body>
+</html>

@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <div class="container mt-4">
+        <h2>Manage Congress Dates</h2>
+        
+        <form method="post" class="mb-4">
+            {% csrf_token %}
+            <div class="form-group">
+                {{ form.date.label_tag }}
+                {{ form.date }}
+            </div>
+            <div class="form-check mb-3">
+                {{ form.is_active }}
+                {{ form.is_active.label_tag }}
+            </div>
+            <button type="submit" class="btn btn-primary">Add Congress Date</button>
+        </form>
+    
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Active</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for date in congress_dates %}
+                <tr>
+                    <td>{{ date.date }}</td>
+                    <td>{% if date.is_active %}Yes{% else %}No{% endif %}</td>
+                    <td>
+                        <a href="{% url 'editCongressDate' date.id %}" class="btn btn-sm btn-primary">Edit</a>
+                        <a href="{% url 'deleteCongressDate' date.id %}" class="btn btn-sm btn-danger">Delete</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    
+    
+</body>
+</html>

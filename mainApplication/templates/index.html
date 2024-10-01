@@ -1,0 +1,81 @@
+{% load static %}
+{% load socialaccount %}
+
+<!doctype html>
+<html lang="en">
+  <head>
+  	<title>Registration CIMPS {% now "Y" %}</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+	<link href="https://fonts.googleapis.com/css?family=Lato:300,400,700&display=swap" rel="stylesheet">
+
+	<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+	
+	<link rel="stylesheet" href="{% static 'css/style.css' %}">
+	<link rel="icon" href="{% static 'images/favicon.ico' %}" type="image/x-icon">
+
+
+	<script src="https://kit.fontawesome.com/02d8d9ea9b.js" crossorigin="anonymous"></script>
+
+
+	</head>
+	<body class="img js-fullheight" style="background-image: url('{% static "images/bg_anual_s.jpg" %}');">
+	<section class="ftco-section">
+		<div class="container">
+			<div class="row justify-content-center">
+				<div class="col-md-6 text-center mb-5">
+					<span>
+						<img src="{% static 'images/conf_logo.png' %}" style="width: 40%">
+					</span>
+					<h3 class="heading-section"><strong>International Conference on Software Process Improvement {% now "Y" %}</strong></h3>
+					<span style="color: #fff;">Select a form to register or login into your account.</span>
+				</div>
+			</div>
+
+			<div class="row justify-content-center">
+				<div class="col-md-6 col-lg-4">
+					<div class="login-wrap p-0">
+		      	<h3 class="mb-4 text-center">
+					
+				</h3>
+		      	<form action="#" class="signin-form">
+					<div class="form-group">
+						<a href="{% provider_login_url 'google' %}" class="form-control btn btn-primary submit px-3" style="border-color: #fff !important; background-color: #fff!important;"><i class="fa-brands fa-google"></i>      Google</a>
+					</div>
+					<div class="form-group">
+						<a href="{% provider_login_url 'facebook' %}" class="form-control btn btn-primary submit px-3" style="border-color: #fff !important; background-color: #fff!important;"> <i class="fa-brands fa-facebook"></i>     Facebook</a>
+					</div>
+					<div class="form-group">
+						<a href="{% provider_login_url 'microsoft' %}" class="form-control btn btn-primary submit px-3" style="border-color: #fff !important; background-color: #fff!important;"><i class="fa-brands fa-windows"></i>     Microsoft</a>
+					</div>
+	            <!-- <div class="form-group d-md-flex">
+	            	<div class="w-50">
+		            	<label class="checkbox-wrap checkbox-primary">Remember Me
+									  <input type="checkbox" checked>
+									  <span class="checkmark"></span>
+									</label>
+								</div>
+								<div class="w-50 text-md-right">
+									<a href="#" style="color: #fff">Forgot Password</a>
+								</div>
+	            </div> -->
+	          </form>
+	          <!-- <p class="w-100 text-center">&mdash; Or Sign In With &mdash;</p> -->
+	          <div class="social d-flex text-center">
+	          	
+	          </div>
+		      </div>
+				</div>
+			</div>
+		</div>
+	</section>
+
+	<script src="{% static 'js/jquery.min.js'%}"></script>
+  <script src="{% static 'js/popper.js'%}"></script>
+  <script src="{% static 'js/bootstrap.min.js'%}"></script>
+  <script src="{% static 'js/main.js'%}"></script>
+
+	</body>
+</html>
+

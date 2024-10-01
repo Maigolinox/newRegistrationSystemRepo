@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Event List</title>
+</head>
+<body>
+    <h2>Event List</h2>
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Event Name</th>
+                <th>Speaker</th>
+                <th>Affiliation</th>
+                <th>Moderators</th>
+                <th>Date</th>
+                <th>Location</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for event in events %}
+                <tr>
+                    <td>{{ event.title }}</td> <!-- Event title -->
+                    <td>{{ event.ponent_name }}</td> <!-- Speaker name -->
+                    <td>{{ event.affiliation }}</td> <!-- Speaker affiliation -->
+                    <td>{{ event.moderator }}</td> <!-- Moderator -->
+                    <td>{{ event.date }}</td> <!-- Event date -->
+                    <td>{{ event.place.name }}</td> <!-- Event location (place name) -->
+                    <td>
+                        <a href="{% url 'editEvent' event.id %}" class="btn btn-warning">Edit</a>
+                        <a href="{% url 'deleteEvent' event.id %}" class="btn btn-danger">Delete</a>
+                    </td>
+                </tr>
+            {% empty %}
+                <tr>
+                    <td colspan="5">No events found.</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>
