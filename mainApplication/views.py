@@ -11,6 +11,8 @@ from django.views.decorators.http import require_POST
 from django.http import JsonResponse
 from django.contrib import messages
 from django_countries import countries
+from django.core.exceptions import ObjectDoesNotExist
+
 import pycountry
 from io import BytesIO
 
@@ -23,8 +25,16 @@ def index(request):
 @login_required
 def dashboard(request):
     userID = request.user.id
-    userProfile = UserProfile.objects.get(user_id=userID)
-    paymentCompleted = userProfile.payment_completed
+    try:
+        userProfile = UserProfile.objects.get(user_id=userID)
+        paymentCompleted = userProfile.payment_completed
+        userType = userProfile.user_type
+    except ObjectDoesNotExist:
+        userProfile = None
+        paymentCompleted = False  # Assuming no payment if no profile exists
+        userType = "Uncompleted profile"
+    # userProfile = UserProfile.objects.get(user_id=userID)
+    # paymentCompleted = userProfile.payment_completed
     is_staff_user = request.user.is_staff  # This will be True or False
     is_staff_superuser = request.user.is_superuser  # This will be True or False
     try:
@@ -170,6 +180,77 @@ def schedule(request):
         'is_staff_superuser':is_staff_superuser,
     }
     return render(request, 'schedule.html', context=context)
+
+def schedulePublic(request):
+    userID = request.user.id
+    # userProfile = UserProfile.objects.get(user_id=userID)
+    paymentCompleted = False
+    # is_staff_user = request.user.is_staff  # This will be True or False
+    # is_staff_superuser = request.user.is_superuser  # This will be True or False
+
+    places = Place.objects.all()
+    congress_dates = CongressDate.objects.filter(is_active=True)
+    events_by_date = {}
+
+    # Recopilar todas las horas de inicio y fin de los eventos
+    all_events = Event.objects.all()
+    
+    # Crear un conjunto para los time slots
+    time_slots_set = set()
+
+    for event in all_events:
+        if event.date in congress_dates.values_list('date', flat=True):
+            # Agregar el inicio y fin del evento al conjunto
+            time_slots_set.add(event.start_time)
+            time_slots_set.add(event.end_time)
+
+    # Generar time slots a partir de las horas de inicio y fin de los eventos
+    time_slots = sorted(list(time_slots_set))
+
+    # Crear un diccionario para eventos por fecha y slot de tiempo
+    for date in congress_dates:
+        events_by_date[date.date] = {slot: {place.name: [] for place in places} for slot in time_slots}
+
+    for event in all_events:
+        if event.date in events_by_date:
+            event_start = event.start_time
+            event_end = event.end_time
+            
+            for start_time in time_slots:
+                # Añadir eventos a los slots correspondientes
+                if event_start == start_time or (event_start < start_time < event_end):
+                    # Calcula el número de usuarios registrados para cada evento
+                    registered_users_count = Registration.objects.filter(event=event).count()
+                    event.available_capacity = event.place.capacity - registered_users_count
+                    events_by_date[event.date][start_time][event.place.name].append(event)
+
+    # Limpiar los slots para que sean continuos
+    final_time_slots = []
+    last_slot = None
+    
+    for slot in time_slots:
+        if last_slot is None or slot != last_slot:
+            final_time_slots.append(slot)
+            last_slot = slot
+
+    user_registrations = set()
+    user_has_workshop = False
+    if request.user.is_authenticated:
+        user_registrations = set(Registration.objects.filter(user=request.user).values_list('event__title', flat=True))
+        user_has_workshop = Registration.objects.filter(user=request.user, event__event_type='workshop').exists()
+
+    context = {
+        'paymentCompleted': paymentCompleted,
+        'events_by_date': events_by_date,
+        'time_slots': time_slots,
+        'places': places,
+        'congress_dates': congress_dates,
+        'user_registrations': list(user_registrations),
+        'user_has_workshop': user_has_workshop,
+        # 'is_staff_user': is_staff_user,
+        # 'is_staff_superuser':is_staff_superuser,
+    }
+    return render(request, 'schedulePublic.html', context=context)
 
 @login_required
 def validPay(request):
