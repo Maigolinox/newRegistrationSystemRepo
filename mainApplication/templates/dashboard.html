@@ -236,7 +236,13 @@
           <li class="nav-item">Staff options</li>
             <a class="nav-link collapsed" href="{% url 'assistanceList' %}">
               <i class="bi bi-check2-square"></i>
-              <span>Assistance List</span>
+              <span>Assistance List (Events)</span>
+            </a>
+          </li>
+          <li class="nav-item"></li>
+            <a class="nav-link collapsed" href="{% url 'consultWelcomeKit' %}">
+              <i class="bi bi-box2-heart"></i>
+              <span>Welcome Kit Control</span>
             </a>
           </li>
           <li class="nav-item"></li>
@@ -420,6 +426,9 @@
         <div class="col-lg-4">
 
           <!-- Recent Activity -->
+           
+          
+
           <div class="card">
             <div class="filter">
               <a class="icon" href="#" data-bs-toggle="dropdown"><i class="bi bi-three-dots"></i></a>
@@ -462,6 +471,22 @@
             
           </div><!-- End Recent Activity -->
           <!-- Sales Card -->
+           
+          {% if paymentCompleted %}
+            <div class="card info-card sales-card">
+              <div class="card-body">
+                <h5 class="card-title">QR FOR YOU WELCOME KIT!<span></span></h5>
+                <div class="activity">
+                  <img src="data:image/png;base64,{{ qr }}" alt="QR Code" class="img-fluid" style="width: auto; height: auto;">
+                </div>
+  
+              </div>
+              
+            </div><!-- End Recent Activity -->
+          </div>
+          {% endif %}
+           
+
           <div class="col-xxl-12 col-md-6">
             <div class="card info-card sales-card">
 
@@ -475,13 +500,17 @@
                     <i class="bi bi bi-currency-dollar"></i>
                   </div>
                   <div class="ps-3">
-                    {% if not paymentCompleted %}
+                    {% if not paymentCompleted and not allowRegistration %}
                     <h6>Pending</h6>
                     <span class="text-danger small pt-1 fw-bold">You cannot register into any event.</span> <span class="text-muted small pt-2 ps-1"></span>
                     {% endif %}
-                    {% if paymentCompleted %}
+                    {% if paymentCompleted and not allowRegistration %}
                     <h6>Completed</h6>
                     <span class="text-success small pt-1 fw-bold">Thank you for your payment!</span> <span class="text-muted small pt-2 ps-1"></span>
+                    {% endif %}
+                    {% if not paymentCompleted and allowRegistration %}
+                    <h6>Scholarship</h6>
+                    <span class="text-warning small pt-1 fw-bold">Scholarship registration</span> <span class="text-muted small pt-2 ps-1"></span>
                     {% endif %}
 
                   </div>

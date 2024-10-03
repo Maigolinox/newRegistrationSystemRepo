@@ -11,10 +11,12 @@ urlpatterns = [
     path('completeProfile/',views.complete_profile,name="complete_profile"),
     path('payment/',views.payment,name="payment"),
     path('schedule/',views.schedule,name="schedule"),
+    path('schedulePublic/',views.schedulePublic,name="schedulePublic"),
     path('validatePayment/',views.validPay,name="validatePayment"),
     path('registerintoEvent/', views.registerintoEvent, name='registerintoEvent'),
     path('seeSchedule/', views.seeMySchedule, name='seeMySchedule'),
     path('assist/<int:user_id>/<int:registration_id>/', views.assistanceControl, name='assistanceControl'),#admin/staff
+    path('welcomeKit/<int:user_id>/', views.welcomeKit, name='welcomeKit'),#admin/staff control de kits de bienvenida
     path('registerPlace/', views.register_place, name='registerPlace'),#admin/staff
     path('registerEvent/', views.register_event, name='registerEvent'),#admin/staff
     path('edit-event/<int:event_id>/', views.edit_event, name='editEvent'),#admin/staff
@@ -24,7 +26,10 @@ urlpatterns = [
     path('editCongressDate/<int:date_id>/', views.edit_congress_date, name='editCongressDate'),#admin/staff
     path('deleteCongressDate/<int:date_id>/', views.delete_congress_date, name='deleteCongressDate'),#admin/staff
     path('checkAssistance/', views.assistanceList, name='assistanceList'),#admin/staff
-    path('validatePaymentAdmin/',views.validatePayment,name="validatePaymentAdmin")
+    path('validatePaymentAdmin/',views.validatePayment,name="validatePaymentAdmin"),#admin/staff
+    path('kitAlreadyReceived/', views.kitAlreadyReceived,name="kitAlreadyReceived"),#admin/staff
+    path('kitAlreadyReceived/', views.kitReceivedSuccessfully,name="kitReceivedSuccessfully"),#admin/staff
+    path('consultWelcomeKit/', views.listarRecibioKit, name='consultWelcomeKit'),#admin/staff
 
 ]
 urlpatterns += staticfiles_urlpatterns() 

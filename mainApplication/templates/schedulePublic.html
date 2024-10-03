@@ -56,11 +56,10 @@
   <header id="header" class="header fixed-top d-flex align-items-center">
 
     <div class="d-flex align-items-center justify-content-between">
-      <a href="index.html" class="logo d-flex align-items-center">
+      <a href="cimps.cimat.mx" class="logo d-flex align-items-center">
         <img src="{% static 'images/black_logo.png' %}" alt="">
         <span class="d-none d-lg-block">CIMPS {% now 'Y' %}</span>
       </a>
-      <i class="bi bi-list toggle-sidebar-btn"></i>
     </div><!-- End Logo -->
 
     
@@ -70,106 +69,11 @@
 
         
 
-          <ul class="dropdown-menu dropdown-menu-end dropdown-menu-arrow notifications">
-            <li class="dropdown-header">
-              You have 4 new notifications
-              <a href="#"><span class="badge rounded-pill bg-primary p-2 ms-2">View all</span></a>
-            </li>
-            <li>
-              <hr class="dropdown-divider">
-            </li>
-
-            <li class="notification-item">
-              <i class="bi bi-exclamation-circle text-warning"></i>
-              <div>
-                <h4>Lorem Ipsum</h4>
-                <p>Quae dolorem earum veritatis oditseno</p>
-                <p>30 min. ago</p>
-              </div>
-            </li>
-
-            <li>
-              <hr class="dropdown-divider">
-            </li>
-
-            <li class="notification-item">
-              <i class="bi bi-x-circle text-danger"></i>
-              <div>
-                <h4>Atque rerum nesciunt</h4>
-                <p>Quae dolorem earum veritatis oditseno</p>
-                <p>1 hr. ago</p>
-              </div>
-            </li>
-
-            <li>
-              <hr class="dropdown-divider">
-            </li>
-
-            <li class="notification-item">
-              <i class="bi bi-check-circle text-success"></i>
-              <div>
-                <h4>Sit rerum fuga</h4>
-                <p>Quae dolorem earum veritatis oditseno</p>
-                <p>2 hrs. ago</p>
-              </div>
-            </li>
-
-            <li>
-              <hr class="dropdown-divider">
-            </li>
-
-            <li class="notification-item">
-              <i class="bi bi-info-circle text-primary"></i>
-              <div>
-                <h4>Dicta reprehenderit</h4>
-                <p>Quae dolorem earum veritatis oditseno</p>
-                <p>4 hrs. ago</p>
-              </div>
-            </li>
-
-            <li>
-              <hr class="dropdown-divider">
-            </li>
-            <li class="dropdown-footer">
-              <a href="#">Show all notifications</a>
-            </li>
-
-          </ul><!-- End Notification Dropdown Items -->
+          
 
         </li><!-- End Notification Nav -->
 
-        <li class="nav-item dropdown">
-
-          
-
-          <ul class="dropdown-menu dropdown-menu-end dropdown-menu-arrow messages">
-            <li class="dropdown-header">
-              You have 3 new messages
-              <a href="#"><span class="badge rounded-pill bg-primary p-2 ms-2">View all</span></a>
-            </li>
-            <li>
-              <hr class="dropdown-divider">
-            </li>
-
-            
-            <li>
-              <hr class="dropdown-divider">
-            </li>
-
-            
-            <li>
-              <hr class="dropdown-divider">
-            </li>
-
-            
-            <li>
-              <hr class="dropdown-divider">
-            </li>
-
-            
-
-          </ul><!-- End Messages Dropdown Items -->
-
+        
         </li><!-- End Messages Nav -->
 
         <li class="nav-item dropdown pe-3">
@@ -189,32 +93,6 @@
 
   
 
-  <main id="main" class="main">
-    {% if not paymentCompleted %}
-    <div id="no-completed-payment" class="alert alert-danger" role="alert">
-        <pre><h3>VERY IMPORTANT: </h3> 
-            <ol>
-                <li>
-                    Until you have completed payment, the system will not allow you to register for a talk, workshop, or any event.</pre>
-                </li>
-                
-            </ol>
-    </div>
-    {% else %}
-    <div id="completed-payment" class="alert alert-warning" role="alert">
-        <pre><h3>VERY IMPORTANT: </h3> </pre>
-            <ol>
-                <li>
-                    Registration for events is subject to the capacity of the space.
-                </li>
-                <li>
-                    The registration opening / apertura de registro will be conducted in the Auditorio "Posgrados-Educ. Continua" as equal as the keynotes of the event o 09:00 - 10:00, meaning that during this time other spaces will not be used.
-                </li>
-                <li>Please review the workshops carefully, as once you have registered for one you will not be able to register for others and it will not be possible to change your registration.</li>
-            </ol>
-        
-    </div>
-    {% endif %}
 
     <div class="pagetitle">
       <h1>Schedule</h1>
@@ -251,7 +129,7 @@
         var userHasWorkshop = {{ user_has_workshop|yesno:"true,false" }};
     </script>
 
-    <section class="section dashboard">
+    <section class=" dashboard">
       <div class="row">
 
         <!-- Left side columns -->
@@ -273,19 +151,23 @@
                     text-align: center;
                     vertical-align: middle;
                 }
+                .nav-tabs .nav-link.active {
+    background-color: #007bff; /* Cambia este color por el que prefieras */
+    color: #fff; /* Esto cambia el color del texto */
+}
                 </style>
                 <div class="card-body">
                     <h5 class="card-title">Schedule of the congress <span> - CIMPS {% now "Y" %}</span></h5>
                     
                     <ul class="nav nav-tabs nav-justified" id="congressTabs" role="tablist">
-                        {% for date in congress_dates %}
-                            <li class="nav-item" role="presentation">
-                                <a class="nav-link {% if forloop.first %}active{% endif %}" id="tab-{{ date.date|date:'Y-m-d' }}" data-bs-toggle="tab" href="#content-{{ date.date|date:'Y-m-d' }}" role="tab" aria-controls="content-{{ date.date|date:'Y-m-d' }}" aria-selected="{% if forloop.first %}true{% else %}false{% endif %}">
-                                    {{ date.date|date:"d M Y" }}
-                                </a>
-                            </li>
-                        {% endfor %}
-                    </ul>
+                      {% for date in congress_dates %}
+                          <li class="nav-item" role="presentation">
+                              <a class="nav-link {% if forloop.first %}active{% endif %}" id="tab-{{ date.date|date:'Y-m-d' }}" data-bs-toggle="tab" href="#content-{{ date.date|date:'Y-m-d' }}" role="tab" aria-controls="content-{{ date.date|date:'Y-m-d' }}" aria-selected="{% if forloop.first %}true{% else %}false{% endif %}">
+                                  {{ date.date|date:"d M Y" }} 
+                              </a>
+                          </li>
+                      {% endfor %}
+                  </ul>
                     
                     <div class="tab-content" id="congressTabsContent">
                         {% for date, time_slots_events in events_by_date.items %}
@@ -326,54 +208,541 @@
                                         color: inherit;
                                         text-decoration: underline;
                                     }
-                                    
+                                    .event {
+                                      border-radius: 10px;
+                                    }
                                 </style>
                                 
+                                
                                 <table class="table table-borderless text-center table-schedule" style="height:fit-content">
-                                    <thead class="text-center">
-                                        <tr>
-                                            <th></th>
-                                            {% for place in places %}
-                                                <th>{{ place.name }} (Capacity: {{ place.capacity }})</th>
-                                            {% endfor %}
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {% for time_slot, places_events in time_slots_events.items %}
-    <tr>
-        <td>{{ time_slot }}</td>
-        {% for place in places %}
-            <td class="place-column">
-                {% with place_events=places_events|get_item:place.name %}
-                    {% for event in place_events %}
-                        <div class="event {% if event.event_type == 'ieee' %}bg-warning{% elif event.event_type == 'springer' or event.event_type == 'keynote' %}bg-danger{% elif event.event_type == 'lunch' %}bg-info{% elif event.event_type == 'workshop' %}bg-secondary{% else %}bg-success{% endif %}">
-                            <strong>{{ event.title }}</strong><br>
-                            <span>{{ event.start_time|time:"H:i" }} - {{ event.end_time|time:"H:i" }}</span><br>
-                            {% if event.ponent_name %}
-                            <strong><span>Speaker: {{event.ponent_name}}</span></strong><br><br>
-                            {% endif %}
-                            {% if event.moderator %}
-                            <strong><span>Moderator: {{event.moderator}}</span></strong><br>
-                            {% endif %}
-                            {% if not event.event_type == 'other' and not event.event_type == 'lunch' %}
-                            Available spaces: {{ event.available_capacity }} <br>
-                            {% endif %}
-                            {% if event.event_type != 'lunch' %}
-                            <a href="#" class="see-details" data-toggle="modal" data-target="#eventModal" data-title="{{ event.title }}" data-description="{{ event.description }}">See Details</a>
-                            {% endif %}
-                            {% if paymentCompleted and event.event_type != 'lunch' %} <br>
-                            <button class="btn btn-light rounded-pill register-event" data-event-title="{{ event.title }}" data-event-id="{{ event.id }}" data-event-type="{{ event.event_type }}">Register</button>
-                            {% endif %}
+                                  <thead class="text-center">
+                                      <tr>
+                                          <th></th>
+                                          {% for place in places %}
+                                              <th id="place-{{ place.name|slugify }}">{{ place.name }} (Capacity: {{ place.capacity }})</th>
+                                          {% endfor %}
+                                      </tr>
+                                  </thead>
+                                  <tbody>
+                                      {% for time_slot, places_events in time_slots_events.items %}
+                                      <tr>
+                                          <td id="time-slot-{{ forloop.counter }}">{{ time_slot }}</td>
+                                          {% if forloop.counter == 2 or forloop.counter == 1 or forloop.counter == 14 or forloop.counter == 6 %}
+                                              {% with first_place=places.1 %}
+                                              {% with place_events=places_events|get_item:first_place.name %}
+                                              {% with event=place_events.0 %}
+                                              <td id="event-{{ forloop.counter }}-{{ event.id }}" colspan="7" class="place-column">
+                                                  <div class="event {% if event.event_type == 'ieee' %}bg-warning{% elif event.event_type == 'springer' or event.event_type == 'keynote' %}bg-danger{% elif event.event_type == 'lunch' %}bg-info{% elif event.event_type == 'workshop' %}bg-secondary{% else %}bg-success{% endif %}" {% if event.available_capacity == 0 %}disabled{% endif %}>
+                                                      <strong>{{ event.title }}</strong><br>
+                                                      <span>{{ event.start_time|time:"H:i" }} - {{ event.end_time|time:"H:i" }}</span><br>
+                                                      {% if event.ponent_name %}
+                                                      <strong><span>Speaker: {{ event.ponent_name }}</span></strong><br><br>
+                                                      {% endif %}
+                                                      {% if event.moderator %}
+                                                      <strong><span>Moderator: {{ event.moderator }}</span></strong><br>
+                                                      {% endif %}
+                                                      {% if not event.event_type == 'other' and not event.event_type == 'lunch' %}
+                                                      Available spaces: {{ event.available_capacity }} <br>
+                                                      {% endif %}
+                                                      {% if event.event_type != 'lunch' %}
+                                                      <a href="#" class="see-details" data-toggle="modal" data-target="#eventModal" data-title="{{ event.title }}" data-description="{{ event.description }}">See Details</a>
+                                                      {% endif %}
+                                                      {% if paymentCompleted and event.event_type != 'lunch' %} <br>
+                                                      <button class="btn btn-light rounded-pill register-event" data-event-title="{{ event.title }}" data-event-id="{{ event.id }}" data-event-type="{{ event.event_type }}">Register</button>
+                                                      {% endif %}
+                                                  </div>
+                                              </td>
+                                              {% endwith %}
+                                              {% endwith %}
+                                              {% endwith %}
+                                          {% else %}
+                                              {% for place in places %}
+                                              <td id="place-event-{{ forloop.parentloop.counter }}-{{ place.name|slugify }}" class="place-column" 
+                                                  {% if forloop.counter == 1 and event_should_span %} rowspan="2"{% endif %}>
+                                                  {% with place_events=places_events|get_item:place.name %}
+                                                  {% for event in place_events %}
+                                                  <div id="event-{{ forloop.parentloop.counter }}-{{ event.id }}" class="event {% if event.event_type == 'ieee' %}bg-warning{% elif event.event_type == 'springer' or event.event_type == 'keynote' %}bg-danger{% elif event.event_type == 'lunch' %}bg-info{% elif event.event_type == 'workshop' %}bg-secondary{% else %}bg-success{% endif %}" {% if event == 'other'%}colspan="2" {% endif %}  {% if event.available_capacity == 0 %}disabled{% endif %}>
+                                                      <strong>{{ event.title }}</strong><br>
+                                                      <span>{{ event.start_time|time:"H:i" }} - {{ event.end_time|time:"H:i" }}</span><br>
+                                                      {% if event.ponent_name %}
+                                                      <strong><span>Speaker: {{ event.ponent_name }}</span></strong><br><br>
+                                                      {% endif %}
+                                                      {% if event.moderator %}
+                                                      <strong><span>Moderator: {{ event.moderator }}</span></strong><br>
+                                                      {% endif %}
+                                                      {% if not event.event_type == 'other' and not event.event_type == 'lunch' %}
+                                                      Available spaces: {{ event.available_capacity }} <br>
+                                                      {% endif %}
+                                                      {% if event.event_type != 'lunch' %}
+                                                      <a href="#" class="see-details" data-toggle="modal" data-target="#eventModal" data-title="{{ event.title }}" data-description="{{ event.description }}">See Details</a>
+                                                      {% endif %}
+                                                      {% if paymentCompleted and event.event_type != 'lunch' %} <br>
+                                                      <button class="btn btn-light rounded-pill register-event" data-event-title="{{ event.title }}" data-event-id="{{ event.id }}" data-event-type="{{ event.event_type }}">Register</button>
+                                                      {% endif %}
+                                                  </div>
+                                                  {% endfor %}
+                                                  {% endwith %}
+                                              </td>
+                                              {% endfor %}
+                                          {% endif %}
+                                      </tr>
+                                      {% endfor %}
+                                  </tbody>
+                              </table>
+                              <style>
+                                #event-7-85, #event-3-79, #event-4-88,#event-5-87,#event-6-86 ,#event-3-80,#event-4-81,#event-5-82,#event-6-83,#event-7-84,#event-3-123,#event-4-124,#event-5-125,#event-6-126,#event-7-127 {
+                                    display: flex; /* Usa flexbox para centrar */
+                                    flex-direction: column; /* Alinea el contenido en columna */
+                                    justify-content: center; /* Centra verticalmente */
+                                    align-items: center; /* Centra horizontalmente */
+                                    height: 100%; /* O ajusta según sea necesario */
+                                }
+                            </style>
+                              <script>
+                                document.addEventListener("DOMContentLoaded", function() {
+                                    // Crear un objeto para rastrear los IDs que ya hemos encontrado
+                                    const seenIds = {};
+                            
+                                    // Obtener todos los divs que tienen un id
+                                    const divs = document.querySelectorAll("div[id]");
+                            
+                                    divs.forEach(div => {
+                                        const id = div.id;
+                            
+                                        // Si el ID ya ha sido visto, eliminar el div
+                                        if (seenIds[id]) {
+                                            div.remove();
+                                        } else {
+                                            // Si no ha sido visto, marcarlo como visto
+                                            seenIds[id] = true;
+                                        }
+                                    });
+                                });
+                                document.addEventListener("DOMContentLoaded", function() {
+                                  var targetDiv = document.getElementById("event-3-123");
+                                  if (targetDiv) {
+                                    const parentTd = targetDiv.closest("td");
+                                    if (parentTd) {
+                                      parentTd.setAttribute("rowspan", "3");
+                                      const divs = parentTd.querySelectorAll("div");
+                                      divs.forEach(div => {
+                                        if (div.id !== targetDiv.id) {
+                                          div.remove();
+                                        }
+                                      });
+                                    }
+                                  }
+                                  var targetDiv = document.getElementById("event-7-84");
+                                  if (targetDiv) {
+                                    const parentTd = targetDiv.closest("td");
+                                    if (parentTd) {
+                                      parentTd.setAttribute("rowspan", "7");
+                                      const divs = parentTd.querySelectorAll("div");
+                                      divs.forEach(div => {
+                                        if (div.id !== targetDiv.id) {
+                                          div.remove();
+                                        }
+                                      });
+                                    }
+                                  }
+                                  var targetDiv = document.getElementById("event-3-131");
+                                  if (targetDiv) {
+                                    const parentTd = targetDiv.closest("td");
+                                    if (parentTd) {
+                                      parentTd.setAttribute("rowspan", "7");
+                                      const divs = parentTd.querySelectorAll("div");
+                                      divs.forEach(div => {
+                                        if (div.id !== targetDiv.id) {
+                                          div.remove();
+                                        }
+                                      });
+                                    }
+                                  }
+                                  var targetDiv = document.getElementById("event-4-132");
+                                  if (targetDiv) {
+                                    const parentTd = targetDiv.closest("td");
+                                    if (parentTd) {
+                                      parentTd.setAttribute("rowspan", "7");
+                                      const divs = parentTd.querySelectorAll("div");
+                                      divs.forEach(div => {
+                                        if (div.id !== targetDiv.id) {
+                                          div.remove();
+                                        }
+                                      });
+                                    }
+                                  }
+                                  var targetDiv = document.getElementById("event-5-133");
+                                  if (targetDiv) {
+                                    const parentTd = targetDiv.closest("td");
+                                    if (parentTd) {
+                                      parentTd.setAttribute("rowspan", "7");
+                                      const divs = parentTd.querySelectorAll("div");
+                                      divs.forEach(div => {
+                                        if (div.id !== targetDiv.id) {
+                                          div.remove();
+                                        }
+                                      });
+                                    }
+                                  }
+                                  var targetDiv = document.getElementById("event-6-134");
+                                  if (targetDiv) {
+                                    const parentTd = targetDiv.closest("td");
+                                    if (parentTd) {
+                                      parentTd.setAttribute("rowspan", "7");
+                                      const divs = parentTd.querySelectorAll("div");
+                                      divs.forEach(div => {
+                                        if (div.id !== targetDiv.id) {
+                                          div.remove();
+                                        }
+                                      });
+                                    }
+                                  }
+                                  var targetDiv = document.getElementById("event-5-133");
+                                  if (targetDiv) {
+                                    const parentTd = targetDiv.closest("td");
+                                    if (parentTd) {
+                                      parentTd.setAttribute("rowspan", "7");
+                                      const divs = parentTd.querySelectorAll("div");
+                                      divs.forEach(div => {
+                                        if (div.id !== targetDiv.id) {
+                                          div.remove();
+                                        }
+                                      });
+                                    }
+                                  }
+                                  var targetDiv = document.getElementById("event-6-134");
+                                  if (targetDiv) {
+                                    const parentTd = targetDiv.closest("td");
+                                    if (parentTd) {
+                                      parentTd.setAttribute("rowspan", "7");
+                                      const divs = parentTd.querySelectorAll("div");
+                                      divs.forEach(div => {
+                                        if (div.id !== targetDiv.id) {
+                                          div.remove();
+                                        }
+                                      });
+                                    }
+                                  }
+                                  var targetDiv = document.getElementById("event-7-129");
+                                  if (targetDiv) {
+                                    const parentTd = targetDiv.closest("td");
+                                    if (parentTd) {
+                                      parentTd.setAttribute("rowspan", "7");
+                                      const divs = parentTd.querySelectorAll("div");
+                                      divs.forEach(div => {
+                                        if (div.id !== targetDiv.id) {
+                                          div.remove();
+                                        }
+                                      });
+                                    }
+                                  }
+                                  var targetDiv = document.getElementById("event-3-166");
+                                  if (targetDiv) {
+                                    const parentTd = targetDiv.closest("td");
+                                    if (parentTd) {
+                                      parentTd.setAttribute("rowspan", "7");
+                                      const divs = parentTd.querySelectorAll("div");
+                                      divs.forEach(div => {
+                                        if (div.id !== targetDiv.id) {
+                                          div.remove();
+                                        }
+                                      });
+                                    }
+                                  }
+                                  var targetDiv = document.getElementById("event-4-165");
+                                  if (targetDiv) {
+                                    const parentTd = targetDiv.closest("td");
+                                    if (parentTd) {
+                                      parentTd.setAttribute("rowspan", "7");
+                                      const divs = parentTd.querySelectorAll("div");
+                                      divs.forEach(div => {
+                                        if (div.id !== targetDiv.id) {
+                                          div.remove();
+                                        }
+                                      });
+                                    }
+                                  }
+                                  var targetDiv = document.getElementById("event-5-162");
+                                  if (targetDiv) {
+                                    const parentTd = targetDiv.closest("td");
+                                    if (parentTd) {
+                                      parentTd.setAttribute("rowspan", "7");
+                                      const divs = parentTd.querySelectorAll("div");
+                                      divs.forEach(div => {
+                                        if (div.id !== targetDiv.id) {
+                                          div.remove();
+                                        }
+                                      });
+                                    }
+                                  }
+                                  var targetDiv = document.getElementById("event-6-161");
+                                  if (targetDiv) {
+                                    const parentTd = targetDiv.closest("td");
+                                    if (parentTd) {
+                                      parentTd.setAttribute("rowspan", "7");
+                                      const divs = parentTd.querySelectorAll("div");
+                                      divs.forEach(div => {
+                                        if (div.id !== targetDiv.id) {
+                                          div.remove();
+                                        }
+                                      });
+                                    }
+                                  }
+                                  var targetDiv = document.getElementById("event-7-130");
+                                  if (targetDiv) {
+                                    const parentTd = targetDiv.closest("td");
+                                    if (parentTd) {
+                                      parentTd.setAttribute("rowspan", "7");
+                                      const divs = parentTd.querySelectorAll("div");
+                                      divs.forEach(div => {
+                                        if (div.id !== targetDiv.id) {
+                                          div.remove();
+                                        }
+                                      });
+                                    }
+                                  }
+                                  var targetDiv = document.getElementById("event-4-124");
+                                  if (targetDiv) {
+                                    const parentTd = targetDiv.closest("td");
+                                    if (parentTd) {
+                                      parentTd.setAttribute("rowspan", "3");
+                                      const divs = parentTd.querySelectorAll("div");
+                                      divs.forEach(div => {
+                                        if (div.id !== targetDiv.id) {
+                                          div.remove();
+                                        }
+                                      });
+                                    }
+                                  }
+                                  var targetDiv = document.getElementById("event-5-125");
+                                  if (targetDiv) {
+                                    const parentTd = targetDiv.closest("td");
+                                    if (parentTd) {
+                                      parentTd.setAttribute("rowspan", "3");
+                                      const divs = parentTd.querySelectorAll("div");
+                                      divs.forEach(div => {
+                                        if (div.id !== targetDiv.id) {
+                                          div.remove();
+                                        }
+                                      });
+                                    }
+                                  }
+                                  var targetDiv = document.getElementById("event-6-126");
+                                  if (targetDiv) {
+                                    const parentTd = targetDiv.closest("td");
+                                    if (parentTd) {
+                                      parentTd.setAttribute("rowspan", "3");
+                                      const divs = parentTd.querySelectorAll("div");
+                                      divs.forEach(div => {
+                                        if (div.id !== targetDiv.id) {
+                                          div.remove();
+                                        }
+                                      });
+                                    }
+                                  }
+                                  var targetDiv = document.getElementById("event-7-127");
+                                  if (targetDiv) {
+                                    const parentTd = targetDiv.closest("td");
+                                    if (parentTd) {
+                                      parentTd.setAttribute("rowspan", "3");
+                                      const divs = parentTd.querySelectorAll("div");
+                                      divs.forEach(div => {
+                                        if (div.id !== targetDiv.id) {
+                                          div.remove();
+                                        }
+                                      });
+                                    }
+                                  }
+                                  var targetDiv = document.getElementById("event-3-167");
+                                  if (targetDiv) {
+                                    const parentTd = targetDiv.closest("td");
+                                    if (parentTd) {
+                                      parentTd.setAttribute("rowspan", "3");
+                                      const divs = parentTd.querySelectorAll("div");
+                                      divs.forEach(div => {
+                                        if (div.id !== targetDiv.id) {
+                                          div.remove();
+                                        }
+                                      });
+                                    }
+                                  }
+                                  var targetDiv = document.getElementById("event-4-164");
+                                  if (targetDiv) {
+                                    const parentTd = targetDiv.closest("td");
+                                    if (parentTd) {
+                                      parentTd.setAttribute("rowspan", "3");
+                                      const divs = parentTd.querySelectorAll("div");
+                                      divs.forEach(div => {
+                                        if (div.id !== targetDiv.id) {
+                                          div.remove();
+                                        }
+                                      });
+                                    }
+                                  }
+                                  var targetDiv = document.getElementById("event-5-163");
+                                  if (targetDiv) {
+                                    const parentTd = targetDiv.closest("td");
+                                    if (parentTd) {
+                                      parentTd.setAttribute("rowspan", "3");
+                                      const divs = parentTd.querySelectorAll("div");
+                                      divs.forEach(div => {
+                                        if (div.id !== targetDiv.id) {
+                                          div.remove();
+                                        }
+                                      });
+                                    }
+                                  }
+                                  var targetDiv = document.getElementById("event-6-160");
+                                  if (targetDiv) {
+                                    const parentTd = targetDiv.closest("td");
+                                    if (parentTd) {
+                                      parentTd.setAttribute("rowspan", "3");
+                                      const divs = parentTd.querySelectorAll("div");
+                                      divs.forEach(div => {
+                                        if (div.id !== targetDiv.id) {
+                                          div.remove();
+                                        }
+                                      });
+                                    }
+                                  }
+                                  var targetDiv = document.getElementById("event-7-128");
+                                  if (targetDiv) {
+                                    const parentTd = targetDiv.closest("td");
+                                    if (parentTd) {
+                                      parentTd.setAttribute("rowspan", "3");
+                                      const divs = parentTd.querySelectorAll("div");
+                                      divs.forEach(div => {
+                                        if (div.id !== targetDiv.id) {
+                                          div.remove();
+                                        }
+                                      });
+                                    }
+                                  }
+                                  var targetDiv = document.getElementById("event-3-79");
+                                  if (targetDiv) {
+                                    const parentTd = targetDiv.closest("td");
+                                    if (parentTd) {
+                                      parentTd.setAttribute("rowspan", "3");
+                                      const divs = parentTd.querySelectorAll("div");
+                                      divs.forEach(div => {
+                                        if (div.id !== targetDiv.id) {
+                                          div.remove();
+                                        }
+                                      });
+                                    }
+                                  }
+                                  var targetDiv = document.getElementById("event-4-88");
+                                  if (targetDiv) {
+                                    const parentTd = targetDiv.closest("td");
+                                    if (parentTd) {
+                                      parentTd.setAttribute("rowspan", "3");
+                                      const divs = parentTd.querySelectorAll("div");
+                                      divs.forEach(div => {
+                                        if (div.id !== targetDiv.id) {
+                                          div.remove();
+                                        }
+                                      });
+                                    }
+                                  }
+                                  var targetDiv = document.getElementById("event-5-87");
+                                  if (targetDiv) {
+                                    const parentTd = targetDiv.closest("td");
+                                    if (parentTd) {
+                                      parentTd.setAttribute("rowspan", "3");
+                                      const divs = parentTd.querySelectorAll("div");
+                                      divs.forEach(div => {
+                                        if (div.id !== targetDiv.id) {
+                                          div.remove();
+                                        }
+                                      });
+                                    }
+                                  }
+                                  var targetDiv = document.getElementById("event-6-86");
+                                  if (targetDiv) {
+                                    const parentTd = targetDiv.closest("td");
+                                    if (parentTd) {
+                                      parentTd.setAttribute("rowspan", "3");
+                                      const divs = parentTd.querySelectorAll("div");
+                                      divs.forEach(div => {
+                                        if (div.id !== targetDiv.id) {
+                                          div.remove();
+                                        }
+                                      });
+                                    }
+                                  }
+                                  var targetDiv = document.getElementById("event-7-85");
+                                  if (targetDiv) {
+                                    const parentTd = targetDiv.closest("td");
+                                    if (parentTd) {
+                                      parentTd.setAttribute("rowspan", "3");
+                                      const divs = parentTd.querySelectorAll("div");
+                                      divs.forEach(div => {
+                                        if (div.id !== targetDiv.id) {
+                                          div.remove();
+                                        }
+                                      });
+                                    }
+                                  }
+                                  var targetDiv = document.getElementById("event-3-80");
+                                  if (targetDiv) {
+                                    const parentTd = targetDiv.closest("td");
+                                    if (parentTd) {
+                                      parentTd.setAttribute("rowspan", "7");
+                                      const divs = parentTd.querySelectorAll("div");
+                                      divs.forEach(div => {
+                                        if (div.id !== targetDiv.id) {
+                                          div.remove();
+                                        }
+                                      });
+                                    }
+                                  }
+                                  var targetDiv = document.getElementById("event-4-81");
+                                  if (targetDiv) {
+                                    const parentTd = targetDiv.closest("td");
+                                    if (parentTd) {
+                                      parentTd.setAttribute("rowspan", "7");
+                                      const divs = parentTd.querySelectorAll("div");
+                                      divs.forEach(div => {
+                                        if (div.id !== targetDiv.id) {
+                                          div.remove();
+                                        }
+                                      });
+                                    }
+                                  }
+                                  var targetDiv = document.getElementById("event-5-82");
+                                  if (targetDiv) {
+                                    const parentTd = targetDiv.closest("td");
+                                    if (parentTd) {
+                                      parentTd.setAttribute("rowspan", "7");
+                                      const divs = parentTd.querySelectorAll("div");
+                                      divs.forEach(div => {
+                                        if (div.id !== targetDiv.id) {
+                                          div.remove();
+                                        }
+                                      });
+                                    }
+                                  }
+                                  var targetDiv = document.getElementById("event-6-83");
+                                  if (targetDiv) {
+                                    const parentTd = targetDiv.closest("td");
+                                    if (parentTd) {
+                                      parentTd.setAttribute("rowspan", "7");
+                                      const divs = parentTd.querySelectorAll("div");
+                                      divs.forEach(div => {
+                                        if (div.id !== targetDiv.id) {
+                                          div.remove();
+                                        }
+                                      });
+                                    }
+                                  }
+                                  
 
-                        </div>
-                    {% endfor %}
-                {% endwith %}
-            </td>
-        {% endfor %}
-    </tr>
-{% endfor %}
-                                    </tbody>
-                                </table>
+                                });
+                              </script>
+                                                          
+                              
+                              
+                              
                                 
                                 <!-- Modal -->
                                 <div class="modal fade" id="eventModal" tabindex="-1" role="dialog" aria-labelledby="eventModalLabel" aria-hidden="true">

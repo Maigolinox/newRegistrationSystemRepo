@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kit ya recibido</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/sweetalert/1.1.3/sweetalert.min.css">
+</head>
+<body>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sweetalert/1.1.3/sweetalert.min.js"></script>
+    
+    <script>
+        swal({
+            title: "Kit ya recibido",
+            text: "Este usuario ya ha recibido el kit anteriormente. No se puede entregar más.",
+            icon: "warning",
+            buttons: {
+                confirm: {
+                    text: "Aceptar",
+                    value: true,
+                    visible: true,
+                    className: "btn-warning",
+                    closeModal: true
+                }
+            }
+        }).then((willRedirect) => {
+            if (willRedirect) {
+                // Redirige a la página de inicio o a donde desees
+                window.location.href = "{% url 'dashboard' %}";  // Cambia esto por tu URL de destino
+            }
+        });
+    </script>
+</body>
+</html>

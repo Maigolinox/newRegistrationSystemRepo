@@ -27,8 +27,10 @@ class UserProfile(models.Model):
     university_address = models.CharField(max_length=255)
     user_type = models.CharField(max_length=20, choices=USER_TYPE_CHOICES)
     payment_completed=models.BooleanField(default=0)
-    payment_observarions=models.CharField(default=" ",max_length=255)
+    payment_observarions=models.CharField(default=" ",max_length=255,null=True, blank=True)
     transactionID=models.CharField(default=" ",max_length=255, null=True, blank=True)
+    recibioKIT=models.BooleanField(default=False)
+    permitirRegistro=models.BooleanField(default=False)
 
 
     # paper_id = models.CharField(max_length=100, blank=True, null=True)  # ID del artículo

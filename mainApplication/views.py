@@ -15,6 +15,8 @@ from django.core.exceptions import ObjectDoesNotExist
 
 import pycountry
 from io import BytesIO
+from collections import defaultdict
+
 
 
 # Create your views here.
@@ -28,11 +30,27 @@ def dashboard(request):
     try:
         userProfile = UserProfile.objects.get(user_id=userID)
         paymentCompleted = userProfile.payment_completed
+        allowRegistration = userProfile.permitirRegistro
+        
         userType = userProfile.user_type
     except ObjectDoesNotExist:
         userProfile = None
         paymentCompleted = False  # Assuming no payment if no profile exists
         userType = "Uncompleted profile"
+
+    base_url = f"{request.scheme}://{request.get_host()}/"
+    # Generate QR codes for each registration
+    qr_text = f"{base_url}welcomeKit/{userID}/" # Update URL as needed
+    qr_image = qrcode.make(qr_text)
+
+        # Save the QR code to a BytesIO object
+    buffered = BytesIO()
+    qr_image.save(buffered, format="PNG")
+    qr_code_image = base64.b64encode(buffered.getvalue()).decode('utf-8')
+
+        # Add the QR code image to the registration object for rendering
+    qr_code = qr_code_image
+
     # userProfile = UserProfile.objects.get(user_id=userID)
     # paymentCompleted = userProfile.payment_completed
     is_staff_user = request.user.is_staff  # This will be True or False
@@ -42,6 +60,8 @@ def dashboard(request):
     except:
         userType="Uncompleted profile"
     context = {
+        'qr':qr_code,
+        'allowRegistration':allowRegistration,
         'paymentCompleted': paymentCompleted,
         'userType':userProfile,
         'is_staff_user': is_staff_user,
@@ -97,7 +117,21 @@ def payment(request):
     else:
         form = PaymentProofForm()
 
+    base_url = f"{request.scheme}://{request.get_host()}/"
+    # Generate QR codes for each registration
+    qr_text = f"{base_url}welcomeKit/{userID}/" # Update URL as needed
+    qr_image = qrcode.make(qr_text)
+
+        # Save the QR code to a BytesIO object
+    buffered = BytesIO()
+    qr_image.save(buffered, format="PNG")
+    qr_code_image = base64.b64encode(buffered.getvalue()).decode('utf-8')
+
+        # Add the QR code image to the registration object for rendering
+    qr_code = qr_code_image
+
     context = {
+        'qr':qr_code,
         'userType': userProfile.get_user_type_display(),
         'paymentCompleted': paymentCompleted,
         'paymentObservations': paymentObservations,
@@ -109,6 +143,9 @@ def payment(request):
     }
     return render(request, 'payments.html', context=context)
 
+from itertools import groupby
+from operator import attrgetter
+
 @login_required
 def schedule(request):
     userID = request.user.id
@@ -116,6 +153,8 @@ def schedule(request):
     paymentCompleted = userProfile.payment_completed
     is_staff_user = request.user.is_staff  # This will be True or False
     is_staff_superuser = request.user.is_superuser  # This will be True or False
+    allowRegistration = userProfile.permitirRegistro
+
 
     places = Place.objects.all()
     congress_dates = CongressDate.objects.filter(is_active=True)
@@ -167,8 +206,14 @@ def schedule(request):
     if request.user.is_authenticated:
         user_registrations = set(Registration.objects.filter(user=request.user).values_list('event__title', flat=True))
         user_has_workshop = Registration.objects.filter(user=request.user, event__event_type='workshop').exists()
+    
+    identificadoresSiete=["event-3-131","event-4-132","event-5-133","event-6-134","event-7-129"]
+
+    
 
     context = {
+        'allowRegistration':allowRegistration,
+        'identificadoresSiete':identificadoresSiete,
         'paymentCompleted': paymentCompleted,
         'events_by_date': events_by_date,
         'time_slots': time_slots,
@@ -233,11 +278,7 @@ def schedulePublic(request):
             final_time_slots.append(slot)
             last_slot = slot
 
-    user_registrations = set()
-    user_has_workshop = False
-    if request.user.is_authenticated:
-        user_registrations = set(Registration.objects.filter(user=request.user).values_list('event__title', flat=True))
-        user_has_workshop = Registration.objects.filter(user=request.user, event__event_type='workshop').exists()
+    
 
     context = {
         'paymentCompleted': paymentCompleted,
@@ -245,8 +286,8 @@ def schedulePublic(request):
         'time_slots': time_slots,
         'places': places,
         'congress_dates': congress_dates,
-        'user_registrations': list(user_registrations),
-        'user_has_workshop': user_has_workshop,
+        # 'user_registrations': list(user_registrations),
+        # 'user_has_workshop': user_has_workshop,
         # 'is_staff_user': is_staff_user,
         # 'is_staff_superuser':is_staff_superuser,
     }
@@ -434,6 +475,46 @@ def assistanceControl(request, user_id, registration_id):
     
     # Optionally, redirect to a success page or back to the registration list
     return redirect('dashboard')  # Replace with your desired redirect URL
+
+@staff_member_required
+def welcomeKit(request, user_id):
+    # Obtén el objeto de perfil del usuario según su ID
+    registration = get_object_or_404(UserProfile, user_id=user_id)
+    
+    # Verifica si el kit ya ha sido recibido
+    if registration.recibioKIT:
+        # Redirige a una vista que indica que ya ha recibido el kit
+        return redirect('kitAlreadyReceived')  # Cambia esto por la URL de tu vista
+        
+    # Si no se ha recibido, actualiza el campo a True
+    registration.recibioKIT = True
+    registration.save()
+    
+    # Redirige a una vista que confirma que se registró el recibo del kit
+    return redirect('kitReceivedSuccessfully')  # Cambia esto por la URL de tu vista
+@staff_member_required
+def kitReceivedSuccessfully(request):
+    return render(request,'kitReceivedSuccessfully.html')
+@staff_member_required
+def kitAlreadyReceived(request):
+    return render(request,'kitAlreadyReceived.html')
+
+@staff_member_required
+def listarRecibioKit(request):
+    users = UserProfile.objects.all()
+    saved = False  # Agregamos esta variable para el contexto
+    
+    if request.method == "POST":
+        user_ids = request.POST.getlist('user_ids')
+        UserProfile.objects.update(recibioKIT=False)
+        for user_id in user_ids:
+            user_profile = UserProfile.objects.get(id=user_id)
+            user_profile.recibioKIT = True
+            user_profile.save()
+        saved = True  # Cambiamos a True cuando guardamos
+        return redirect('consultWelcomeKit')
+
+    return render(request, 'registroKits.html', {'users': users, 'saved': saved})
 
 @staff_member_required
 def assistanceList(request):

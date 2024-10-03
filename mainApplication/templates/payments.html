@@ -222,9 +222,15 @@
       <li class="nav-item">Staff options</li>
         <a class="nav-link collapsed" href="{% url 'assistanceList' %}">
           <i class="bi bi-check2-square"></i>
-          <span>Assistance List</span>
+          <span>Assistance List (Events)</span>
         </a>
       </li>
+      <li class="nav-item"></li>
+            <a class="nav-link collapsed" href="{% url 'consultWelcomeKit' %}">
+              <i class="bi bi-box2-heart"></i>
+              <span>Welcome Kit Control</span>
+            </a>
+          </li>
       <li class="nav-item"></li>
         <a class="nav-link collapsed" href="{% url 'validatePaymentAdmin' %}">
           <i class="bi bi-wallet2"></i>
@@ -749,6 +755,32 @@ function calculateAndSubmit(currency) {
                 <li><a class="dropdown-item" href="#">This Year</a></li>
               </ul>
             </div>
+            {% if paymentCompleted %}
+            <div class="card-body">
+              <h5 class="card-title">QR FOR YOU WELCOME KIT!<span></span></h5>
+              <div class="activity">
+                <img src="data:image/png;base64,{{ qr }}" alt="QR Code" class="img-fluid" style="width: 200px; height: auto;">
+              </div>
+
+            </div>
+            
+          </div><!-- End Recent Activity -->
+          {% endif %}
+
+          <div class="card">
+            <div class="filter">
+              <a class="icon" href="#" data-bs-toggle="dropdown"><i class="bi bi-three-dots"></i></a>
+              <ul class="dropdown-menu dropdown-menu-end dropdown-menu-arrow">
+                <li class="dropdown-header text-start">
+                  <h6>Filter</h6>
+                </li>
+
+                <li><a class="dropdown-item" href="#">Today</a></li>
+                <li><a class="dropdown-item" href="#">This Month</a></li>
+                <li><a class="dropdown-item" href="#">This Year</a></li>
+              </ul>
+            </div>
+            
 
             <div class="card-body">
               <h5 class="card-title">BANK DEPOSIT OR ELECTRONIC TRANSFER<span></span></h5>

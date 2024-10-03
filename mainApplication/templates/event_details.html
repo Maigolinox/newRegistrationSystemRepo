@@ -1,0 +1,17 @@
+<strong>{{ event.title }}</strong><br>
+<span>{{ event.start_time|time:"H:i" }} - {{ event.end_time|time:"H:i" }}</span><br>
+{% if event.ponent_name %}
+<strong><span>Speaker: {{event.ponent_name}}</span></strong><br><br>
+{% endif %}
+{% if event.moderator %}
+<strong><span>Moderator: {{event.moderator}}</span></strong><br>
+{% endif %}
+{% if not event.event_type == 'other' and not event.event_type == 'lunch' %}
+Available spaces: {{ event.available_capacity }} <br>
+{% endif %}
+{% if event.event_type != 'lunch' %}
+<a href="#" class="see-details" data-toggle="modal" data-target="#eventModal" data-title="{{ event.title }}" data-description="{{ event.description }}">See Details</a>
+{% endif %}
+{% if paymentCompleted and event.event_type != 'lunch' %} <br>
+<button class="btn btn-light rounded-pill register-event" data-event-title="{{ event.title }}" data-event-id="{{ event.id }}" data-event-type="{{ event.event_type }}">Register</button>
+{% endif %}
