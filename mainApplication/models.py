@@ -67,31 +67,16 @@ class Event(models.Model):
     date = models.DateField()
     start_time = models.TimeField()
     end_time = models.TimeField()
-    place = models.ForeignKey(Place, on_delete=models.CASCADE)  # Assign events to places
-    event_type = models.CharField(max_length=50, choices=EVENT_TYPES,default="other")  # Event type field
-    ponent_name = models.CharField(max_length=255, blank=True)  # New field for the ponent's full name
-    affiliation = models.CharField(max_length=255, blank=True)  # New field for the ponent's affiliation
-    moderator = models.CharField(max_length=255, blank=True)  # New field for the moderator
-
-
+    place = models.ForeignKey(Place, on_delete=models.CASCADE)
+    event_type = models.CharField(max_length=50, choices=EVENT_TYPES, default="other")
+    ponent_name = models.CharField(max_length=255, blank=True)
+    affiliation = models.CharField(max_length=255, blank=True)
+    moderator = models.CharField(max_length=255, blank=True)
 
     def __str__(self):
         return f"{self.title} ({self.get_event_type_display()}) - {self.ponent_name} - {self.affiliation}"
-    
-    
-    def save(self, *args, **kwargs):
-        if not self.pk:  # Only for new registrations
-            if self.event.available_capacity > 0:
-                self.event.place.current_capacity += 1
-                self.event.place.save()
-            else:
-                raise ValidationError("This event has reached its maximum capacity.")
-        super().save(*args, **kwargs)
 
-    def delete(self, *args, **kwargs):
-        self.event.place.current_capacity -= 1
-        self.event.place.save()
-        super().delete(*args, **kwargs)
+    
     
 class Registration(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
