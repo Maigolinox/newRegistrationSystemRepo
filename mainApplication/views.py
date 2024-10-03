@@ -27,6 +27,7 @@ def index(request):
 @login_required
 def dashboard(request):
     userID = request.user.id
+    allowRegistration=False
     try:
         userProfile = UserProfile.objects.get(user_id=userID)
         paymentCompleted = userProfile.payment_completed
