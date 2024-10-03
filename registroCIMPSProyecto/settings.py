@@ -24,6 +24,9 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 ALLOWED_HOSTS=['52.40.72.178','cimps.org','127.0.0.1','localhost']
 
+CSRF_TRUSTED_ORIGINS = ['https://cimps.org']
+
+
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
