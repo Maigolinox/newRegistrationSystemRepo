@@ -472,18 +472,18 @@
           </div><!-- End Recent Activity -->
           <!-- Sales Card -->
            
-          <!-- {% if paymentCompleted %} -->
-          <!-- {% endif %} -->
-            <div class="card info-card sales-card">
-              <div class="card-body">
-                <h5 class="card-title">QR FOR YOU WELCOME KIT!<span></span></h5>
-                <div class="activity">
-                  <img src="data:image/png;base64,{{ qr }}" alt="QR Code" class="img-fluid" style="width: auto; height: auto;">
-                </div>
-  
+          {% if paymentCompleted or allowRegistration %}
+          <div class="card info-card sales-card">
+            <div class="card-body">
+              <h5 class="card-title">QR FOR YOU WELCOME KIT!<span></span></h5>
+              <div class="activity">
+                <img src="data:image/png;base64,{{ qr }}" alt="QR Code" class="img-fluid" style="width: auto; height: auto;">
               </div>
               
-            </div><!-- End Recent Activity -->
+            </div>
+            
+          </div><!-- End Recent Activity -->
+          {% endif %}
           </div>
            
 

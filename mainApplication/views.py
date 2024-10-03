@@ -485,14 +485,13 @@ def welcomeKit(request, user_id):
     # Verifica si el kit ya ha sido recibido
     if registration.recibioKIT:
         # Redirige a una vista que indica que ya ha recibido el kit
-        return redirect('kitAlreadyReceived')  # Cambia esto por la URL de tu vista
-        
-    # Si no se ha recibido, actualiza el campo a True
-    registration.recibioKIT = True
-    registration.save()
-    
-    # Redirige a una vista que confirma que se registró el recibo del kit
-    return redirect('kitReceivedSuccessfully')  # Cambia esto por la URL de tu vista
+        return redirect('kitAlreadyReceived')  
+    else:
+        # Si no se ha recibido, actualiza el campo a True
+        registration.recibioKIT = True
+        registration.save()
+        # Redirige a una vista que confirma que se registró el recibo del kit
+        return redirect('kitReceivedSuccessfully')  
 @staff_member_required
 def kitReceivedSuccessfully(request):
     return render(request,'kitReceivedSuccessfully.html')
