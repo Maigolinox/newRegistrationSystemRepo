@@ -22,6 +22,7 @@
                         <th>Last Name</th>
                         <th>User Type</th>
                         <th>Payment Completed</th>
+                        <th>File</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -36,13 +37,21 @@
                                        name="payment_completed_{{ user_profile.user.id }}" 
                                        {% if user_profile.payment_completed %}checked{% endif %}>
                             </td>
+                            <td>
+                                {% for payment in user_profile.paymentproof_set.all %}
+                                    <a href="{{request.scheme}}://{{ request.get_host }}{{ payment.file.url }}" target="_blank">{{ payment.file.name }}</a><br>
+                                {% empty %}
+                                    No files uploaded.
+                                {% endfor %}
+                            </td>
                         </tr>
                     {% empty %}
                         <tr>
-                            <td colspan="5">No user profiles found.</td>
+                            <td colspan="6">No user profiles found.</td>
                         </tr>
                     {% endfor %}
                 </tbody>
+                
             </table>
             <button type="submit" class="btn btn-primary">Update Payment Status</button>
         </form>

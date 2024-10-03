@@ -100,13 +100,10 @@ def payment(request):
     userProfile = UserProfile.objects.get(user_id=userID)
     paymentCompleted = userProfile.payment_completed
     paymentObservations = userProfile.payment_completed
-    uploadFile=PaymentProof.objects.filter(user_profile=userProfile).first()
+    uploadFiles = PaymentProof.objects.filter(user_profile=userProfile)  # Obtén todos los archivos subidos
     is_staff_user = request.user.is_staff  # This will be True or False
     is_staff_superuser = request.user.is_superuser  # This will be True or False
-    if uploadFile:
-        isRejected=uploadFile.rejected
-    else:
-        isRejected=False
+    isRejected = uploadFiles.first().rejected if uploadFiles.exists() else False  # Verifica si hay archivos
 
     if request.method == 'POST':
         form = PaymentProofForm(request.POST, request.FILES)
@@ -120,27 +117,27 @@ def payment(request):
 
     base_url = f"{request.scheme}://{request.get_host()}/"
     # Generate QR codes for each registration
-    qr_text = f"{base_url}welcomeKit/{userID}/" # Update URL as needed
+    qr_text = f"{base_url}welcomeKit/{userID}/"  # Update URL as needed
     qr_image = qrcode.make(qr_text)
 
-        # Save the QR code to a BytesIO object
+    # Save the QR code to a BytesIO object
     buffered = BytesIO()
     qr_image.save(buffered, format="PNG")
     qr_code_image = base64.b64encode(buffered.getvalue()).decode('utf-8')
 
-        # Add the QR code image to the registration object for rendering
+    # Add the QR code image to the registration object for rendering
     qr_code = qr_code_image
 
     context = {
-        'qr':qr_code,
+        'qr': qr_code,
         'userType': userProfile.get_user_type_display(),
         'paymentCompleted': paymentCompleted,
         'paymentObservations': paymentObservations,
-        'uploadFile':uploadFile,
-        'isRejected':isRejected,
+        'uploadFiles': uploadFiles,  # Cambiado para pasar todos los archivos subidos
+        'isRejected': isRejected,
         'form': form,  # Pass the form to the template
         'is_staff_user': is_staff_user,
-        'is_staff_superuser':is_staff_superuser,
+        'is_staff_superuser': is_staff_superuser,
     }
     return render(request, 'payments.html', context=context)
 
@@ -543,17 +540,16 @@ def assistanceList(request):
 
 @staff_member_required
 def validatePayment(request):
-    user_profiles = UserProfile.objects.select_related('user').all()
-    
+    user_profiles = UserProfile.objects.select_related('user').prefetch_related('paymentproof_set').all()  # Usa prefetch_related para optimizar la consulta
+
     if request.method == 'POST':
         for user_profile in user_profiles:
             payment_completed = request.POST.get(f'payment_completed_{user_profile.user.id}') == 'on'
             user_profile.payment_completed = payment_completed
             user_profile.save()
-        return redirect('validatePaymentAdmin')  # Adjust this to your actual URL name for this view
+        return redirect('validatePaymentAdmin')  # Ajusta esto a tu URL real
 
-
-    context={
+    context = {
         'user_profiles': user_profiles,
     }
-    return render(request,'validatePayment.html',context)
+    return render(request, 'validatePayment.html', context)

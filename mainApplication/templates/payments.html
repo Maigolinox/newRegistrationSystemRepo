@@ -675,35 +675,57 @@ function calculateAndSubmit(currency) {
               
             </div><!-- End Reports -->
 <!-- INICIO DE SUBIR COMPROBANTES -->
-            <div class="col-12">
-                <div class="card">
-  
-                  <div class="filter">
-                    <a class="icon" href="#" data-bs-toggle="dropdown"><i class="bi bi-three-dots"></i></a>
-                    <ul class="dropdown-menu dropdown-menu-end dropdown-menu-arrow">
-                      <li class="dropdown-header text-start">
-                        <h6>Filter</h6>
-                      </li>
-                      <li><a class="dropdown-item" href="#">Today</a></li>
-                      
-                    </ul>
-                  </div>
-  
-                  <form method="POST" enctype="multipart/form-data">
-                    {% csrf_token %}
-                    <div class="card-body" style="text-align: center;">
-                        <h5 class="card-title">Upload proof of payment <span>Step 2</span></h5>
-                        <pre><strong>The file size must be less than 2 MB.</strong></pre>
-                        {{ form.as_p }}
-                        <button type="submit" class="btn btn-primary">Upload proof of payment</button>
-                    </div>
-                </form>
-  
-                  
-  
-                </div>
-                
-              </div>
+<div class="col-12">
+  <div class="card">
+
+      <div class="filter">
+          <a class="icon" href="#" data-bs-toggle="dropdown"><i class="bi bi-three-dots"></i></a>
+          <ul class="dropdown-menu dropdown-menu-end dropdown-menu-arrow">
+              <li class="dropdown-header text-start">
+                  <h6>Filter</h6>
+              </li>
+              <li><a class="dropdown-item" href="#">Today</a></li>
+          </ul>
+      </div>
+
+      <form method="POST" enctype="multipart/form-data" onsubmit="showSuccessAlert();">
+          {% csrf_token %}
+          <div class="card-body" style="text-align: center;">
+              <h5 class="card-title">Upload proof of payment <span>Step 2</span></h5>
+              <pre><strong>The file size must be less than 2 MB.</strong></pre>
+              {{ form.as_p }}
+              <button type="submit" class="btn btn-primary">Upload proof of payment</button>
+          </div>
+      </form>
+
+      <!-- Lista de archivos subidos -->
+      <div class="uploaded-files">
+        <h6>Uploaded Files:</h6>
+        <ul>
+            {% for file in uploadFiles %}
+                <li>
+                    <a href="{{ file.file.url }}" target="_blank">{{ file.file.name }}</a>
+                </li> 
+            {% empty %}
+                <li>No files uploaded yet.</li>
+            {% endfor %}
+        </ul>
+    </div>
+      
+  </div>
+</div>
+
+<!-- SweetAlert -->
+<script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+<script>
+  function showSuccessAlert() {
+      // Verifica si hay un archivo subido y luego muestra la alerta
+      {% if form.is_valid %}
+          swal("Success!", "The file has been uploaded successfully!", "success");
+      {% endif %}
+  }
+</script>
+
               <!-- INICIO DE VALIDACIÓN -->
               <div class="col-12">
                 <div class="card">
