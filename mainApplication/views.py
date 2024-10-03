@@ -147,6 +147,23 @@ def payment(request):
 from itertools import groupby
 from operator import attrgetter
 
+
+@staff_member_required
+def scholarshipAssignations(request):
+    profiles = UserProfile.objects.select_related('user').all()
+
+    if request.method == 'POST':
+        for profile in profiles:
+            becado = request.POST.get(f"becado_{profile.id}", "off") == "on"
+            profile.permitirRegistro = becado
+            profile.save()
+        return redirect('scholarshipAssignations')
+
+    context = {
+        'profiles': profiles
+    }
+    return render(request, 'scholarshipAssignations.html', context)
+
 @login_required
 def schedule(request):
     userID = request.user.id

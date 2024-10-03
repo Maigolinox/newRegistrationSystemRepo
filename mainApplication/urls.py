@@ -30,6 +30,7 @@ urlpatterns = [
     path('kitAlreadyReceived/', views.kitAlreadyReceived,name="kitAlreadyReceived"),#admin/staff
     path('kitAlreadyReceived/', views.kitReceivedSuccessfully,name="kitReceivedSuccessfully"),#admin/staff
     path('consultWelcomeKit/', views.listarRecibioKit, name='consultWelcomeKit'),#admin/staff
+    path('scholarshipAssignations/', views.scholarshipAssignations, name='scholarshipAssignations'),#admin/staff
 
 ]
 urlpatterns += staticfiles_urlpatterns() 
