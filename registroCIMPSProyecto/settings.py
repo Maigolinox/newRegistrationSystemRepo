@@ -34,7 +34,7 @@ SECRET_KEY = 'django-insecure-$lh%1s$b*un7qv5ro=@ngct*#=w(9sdl%4pbz3afptrr=_+qa2
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+# ALLOWED_HOSTS = ['cimps.org']
 
 STATIC_URL = 'static/'
 STATICFILES_DIRS= ['mainApplication/static']
@@ -82,22 +82,15 @@ MIDDLEWARE = [
 SOCIALACCOUNT_PROVIDERS={
     'google': {
         'APP': {
-            'client_id': '942043186188-1q99919qmptaalt5gmhpi4m33dqog0nk.apps.googleusercontent.com',
-            'secret': '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',
+            'client_id': '328935690203-gk0ru5mtqq98veg25d41u9h70374sdv3.apps.googleusercontent.com',
+            'secret': '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',
             'key': ''
         }
     },
     'facebook': {
         'APP': {
-            'client_id': '915782416537920',
-            'secret': '1f302c07d68f9ca29ba3873eb1e2e98c',
-            'key': ''
-        }
-    },
-    'microsoft': {
-        'APP': {
-            'client_id': '915782416537920',
-            'secret': '1f302c07d68f9ca29ba3873eb1e2e98c',
+            'client_id': '2058281721272413',
+            'secret': 'fb80c3e5d5a0ef5d03d81b7db5822436',
             'key': ''
         }
     }
