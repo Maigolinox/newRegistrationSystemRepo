@@ -56,7 +56,7 @@
   <header id="header" class="header fixed-top d-flex align-items-center">
 
     <div class="d-flex align-items-center justify-content-between">
-      <a href="cimps.cimat.mx" class="logo d-flex align-items-center">
+      <a href="http://cimps.cimat.mx" class="logo d-flex align-items-center">
         <img src="{% static 'images/black_logo.png' %}" alt="">
         <span class="d-none d-lg-block">CIMPS {% now 'Y' %}</span>
       </a>
@@ -78,10 +78,10 @@
 
         <li class="nav-item dropdown pe-3">
 
-          <a class="nav-link nav-profile d-flex align-items-center pe-0" href="#" data-bs-toggle="dropdown">
-            <!-- <img src="" alt="Profile" class="rounded-circle"> -->
-            <span class="d-none d-md-block  ps-2">Hi, Guest</span>
-          </a><!-- End Profile Iamge Icon -->
+          <a href="https://cimps.org/" class="nav-link nav-profile d-flex align-items-center pe-0">
+            <i class="bi bi-person"></i> Login or Register
+        </a>
+        
 
           
         </li><!-- End Profile Nav -->
@@ -219,8 +219,16 @@
                                       <tr>
                                           <th></th>
                                           {% for place in places %}
-                                              <th id="place-{{ place.name|slugify }}">{{ place.name }} (Capacity: {{ place.capacity }})</th>
-                                          {% endfor %}
+    <th id="place-{{ place.name|slugify }}" 
+        class="
+            {% if forloop.first %} bg-danger 
+            {% elif forloop.counter == 2 %} bg-warning 
+            {% else %} bg-secondary 
+            {% endif %}
+        ">
+        {{ place.name }} (Capacity: {{ place.capacity }})
+    </th>
+{% endfor %}
                                       </tr>
                                   </thead>
                                   <tbody>

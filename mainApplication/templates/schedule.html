@@ -443,8 +443,17 @@
                                       <tr>
                                           <th></th>
                                           {% for place in places %}
-                                              <th id="place-{{ place.name|slugify }}">{{ place.name }} (Capacity: {{ place.capacity }})</th>
-                                          {% endfor %}
+    <th id="place-{{ place.name|slugify }}" 
+        class="
+            {% if forloop.first %} bg-danger 
+            {% elif forloop.counter == 2 %} bg-warning 
+            {% else %} bg-secondary 
+            {% endif %}
+        ">
+        {{ place.name }} (Capacity: {{ place.capacity }})
+    </th>
+{% endfor %}
+
                                       </tr>
                                   </thead>
                                   <tbody>
