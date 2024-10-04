@@ -485,8 +485,11 @@
                                                       {% if event.event_type != 'lunch' %}
                                                       <a href="#" class="see-details" data-toggle="modal" data-target="#eventModal" 
    data-title="{{ event.title }}" 
-   data-description="{{ event.description }}"
-   {% if event.banner %}data-banner="{{ event.banner.url }}"{% endif %}>
+   data-description="{% if event.description %}{{ event.description }}{% endif %}{% if event.links %}Link of event: {{ event.links|safe }}{% endif %}"
+
+   {% if event.banner %}data-banner="{{ event.banner.url }}"{% endif %}
+   {% if event.links %}data-link="{{ event.links }}"{% endif %}>
+
    See Details
 </a>
                                                       {% endif %}
@@ -524,10 +527,14 @@
                                                       {% if event.event_type != 'lunch' %}
                                                       <a href="#" class="see-details" data-toggle="modal" data-target="#eventModal" 
    data-title="{{ event.title }}" 
-   data-description="{{ event.description }}"
-   {% if event.banner %}data-banner="{{ event.banner.url }}"{% endif %}>
+   data-description="{% if event.description %}{{ event.description }} {% endif %}{% if event.links %}Link of event: {{ event.links|safe }}{% endif %}"
+
+
+   {% if event.banner %}data-banner="{{ event.banner.url }}"{% endif %}
+   {% if event.links %}data-link="{{ event.links }}"{% endif %}>
    See Details
 </a>
+
 
                                                       {% endif %}
                                                       {% if paymentCompleted or allowRegistration and not event.event_type == 'other' and event.event_type != 'lunch' %} <br>
@@ -543,6 +550,7 @@
                                       {% endfor %}
                                   </tbody>
                               </table>
+
                               <style>
                                 #event-7-85, #event-3-79, #event-4-88,#event-5-87,#event-6-86 ,#event-3-80,#event-4-81,#event-5-82,#event-6-83,#event-7-84,#event-3-123,#event-4-124,#event-5-125,#event-6-126,#event-7-127 {
                                     display: flex; /* Usa flexbox para centrar */
@@ -552,6 +560,8 @@
                                     height: 100%; /* O ajusta según sea necesario */
                                 }
                             </style>
+
+                            <!-- ESTILOS PARA LOGRAR EL CALENDARIO -->
                               <script>
                                 document.addEventListener("DOMContentLoaded", function() {
                                     // Crear un objeto para rastrear los IDs que ya hemos encontrado
@@ -1112,11 +1122,13 @@
               <div class="modal-body">
                   <!-- Imagen del banner (oculta por defecto) -->
                   <img id="modal-banner" src="" alt="Event Banner" class="img-fluid mb-3" style="display: none; max-width: 100%; height: auto;">
-
                   
                   <!-- Título y descripción del evento -->
                   <h6 id="modal-event-title"></h6>
                   <p id="modal-event-description"></p>
+                  
+                  <!-- Enlace de acceso (oculto por defecto) -->
+                  <p id="modal-event-link" style="display: none;"></p>
               </div>
               <div class="modal-footer">
                   <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
@@ -1125,25 +1137,39 @@
       </div>
   </div>
   
+  
+  
     
   <script>
-    $('#eventModal').on('show.bs.modal', function (event) {
-var button = $(event.relatedTarget);  // Botón que activó el modal
-var title = button.data('title');     // Extraer título del evento
-var description = button.data('description');  // Extraer descripción del evento
-var banner = button.data('banner');   // Extraer URL del banner si existe
+    $(document).ready(function() {
+    // ... (Tu código existente para manejar registros)
 
-var modal = $(this);
-modal.find('#modal-event-title').text(title);  // Actualizar título del modal
-modal.find('#modal-event-description').text(description);  // Actualizar descripción del modal
+    $('.see-details').click(function() {
+        var title = $(this).data('title');
+        var description = $(this).data('description');
+        var banner = $(this).data('banner');
+        var link = $(this).data('link');
 
-if (banner) {
-modal.find('#modal-banner').attr('src', banner).show();  // Mostrar el banner si existe
-} else {
-modal.find('#modal-banner').hide();  // Ocultar el banner si no existe
-}
+        // Rellenar el título y la descripción
+        $('#modal-event-title').text(title);
+        $('#modal-event-description').text(description);
+
+        // Rellenar y mostrar el banner si existe
+        if (banner) {
+            $('#modal-banner').attr('src', banner).show();
+        } else {
+            $('#modal-banner').hide();
+        }
+
+        // Rellenar y mostrar el enlace si existe
+        if (link) {
+            $('#modal-event-link').html('<a href="' + link + '" target="_blank">Access Event Link</a>').show();
+        } else {
+            $('#modal-event-link').hide();
+        }
+    });
 });
-</script>
+  </script>
 
   </main><!-- End #main -->
 

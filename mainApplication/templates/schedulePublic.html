@@ -229,6 +229,7 @@
         {{ place.name }} (Capacity: {{ place.capacity }})
     </th>
 {% endfor %}
+
                                       </tr>
                                   </thead>
                                   <tbody>
@@ -253,11 +254,23 @@
                                                       Available spaces: {{ event.available_capacity }} <br>
                                                       {% endif %}
                                                       {% if event.event_type != 'lunch' %}
-                                                      <a href="#" class="see-details" data-toggle="modal" data-target="#eventModal" data-title="{{ event.title }}" data-description="{{ event.description }}">See Details</a>
+                                                      <a href="#" class="see-details" data-toggle="modal" data-target="#eventModal" 
+   data-title="{{ event.title }}" 
+   data-description="{{ event.description }}"
+   {% if event.banner %}data-banner="{{ event.banner.url }}"{% endif %}
+   {% if event.link %}data-link="{{ event.link }}"{% endif %}>
+
+   See Details
+</a>
                                                       {% endif %}
-                                                      {% if paymentCompleted and event.event_type != 'lunch' %} <br>
+                                                      {% if paymentCompleted or allowRegistration %} <br>
+                                                      {% if not event.event_type == 'other' and event.event_type != 'lunch'%}
                                                       <button class="btn btn-light rounded-pill register-event" data-event-title="{{ event.title }}" data-event-id="{{ event.id }}" data-event-type="{{ event.event_type }}">Register</button>
                                                       {% endif %}
+                                                      
+                                                      {% endif %}
+                                                      
+                                                      
                                                   </div>
                                               </td>
                                               {% endwith %}
@@ -282,9 +295,17 @@
                                                       Available spaces: {{ event.available_capacity }} <br>
                                                       {% endif %}
                                                       {% if event.event_type != 'lunch' %}
-                                                      <a href="#" class="see-details" data-toggle="modal" data-target="#eventModal" data-title="{{ event.title }}" data-description="{{ event.description }}">See Details</a>
+                                                      <a href="#" class="see-details" data-toggle="modal" data-target="#eventModal" 
+   data-title="{{ event.title }}" 
+   data-description="{{ event.description }}"
+   {% if event.banner %}data-banner="{{ event.banner.url }}"{% endif %}
+   {% if event.link %}data-link="{{ event.link }}"{% endif %}>
+   See Details
+</a>
+
+
                                                       {% endif %}
-                                                      {% if paymentCompleted and event.event_type != 'lunch' %} <br>
+                                                      {% if paymentCompleted or allowRegistration and not event.event_type == 'other' and event.event_type != 'lunch' %} <br>
                                                       <button class="btn btn-light rounded-pill register-event" data-event-title="{{ event.title }}" data-event-id="{{ event.id }}" data-event-type="{{ event.event_type }}">Register</button>
                                                       {% endif %}
                                                   </div>
@@ -752,120 +773,73 @@
                               
                               
                                 
-                                <!-- Modal -->
-                                <div class="modal fade" id="eventModal" tabindex="-1" role="dialog" aria-labelledby="eventModalLabel" aria-hidden="true">
-                                    <div class="modal-dialog" role="document">
-                                        <div class="modal-content">
-                                            <div class="modal-header">
-                                                <h5 class="modal-title" id="eventModalLabel">Event Details</h5>
-                                            </div>
-                                            <div class="modal-body">
-                                                <h6 id="modal-event-title"></h6>
-                                                <p id="modal-event-description"></p>
-                                            </div>
-                                            <div class="modal-footer">
-                                                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
                                 
-                                <script>
-                                    $(document).on('click', '.see-details', function() {
-                                        var title = $(this).data('title');
-                                        var description = $(this).data('description');
-                                        
-                                        $('#modal-event-title').text(title);
-                                        $('#modal-event-description').text(description);
-                                    });
-                                </script>
-                                <script>
-                                    $(document).ready(function() {
-                                        // Disable buttons for events the user is already registered for
-                                        userRegistrations.forEach(function(eventTitle) {
-                                            $('button.register-event[data-event-title="' + eventTitle + '"]').prop('disabled', true).text('Registered');
-                                        });
                                 
-                                        // If user has a workshop, disable all other workshop buttons
-                                        if (userHasWorkshop) {
-                                            $('button.register-event[data-event-type="workshop"]').not(':disabled').prop('disabled', true).text('Workshop Limit Reached');
-                                        }
                                 
-                                        $('.register-event').click(function() {
-                                            var eventTitle = $(this).data('event-title');
-                                            var eventType = $(this).data('event-type');
-                                            var button = $(this);
-                                            
-                                            if (userRegistrations.includes(eventTitle)) {
-                                                Swal.fire('Already Registered', 'You are already registered for this event.', 'info');
-                                                return;
-                                            }
-                                
-                                            if (eventType === 'workshop' && userHasWorkshop) {
-                                                Swal.fire('Workshop Limit Reached', 'You can only register for one workshop.', 'info');
-                                                return;
-                                            }
-                                
-                                            Swal.fire({
-                                                title: 'Confirm Registration',
-                                                text: 'Do you want to register for the event: ' + eventTitle + '?',
-                                                icon: 'question',
-                                                showCancelButton: true,
-                                                confirmButtonColor: '#3085d6',
-                                                cancelButtonColor: '#d33',
-                                                confirmButtonText: 'Yes, register me!'
-                                            }).then((result) => {
-                                                if (result.isConfirmed) {
-                                                    $.ajax({
-                                                        url: '{% url "registerintoEvent" %}',
-                                                        type: 'POST',
-                                                        data: {
-                                                            'event_title': eventTitle,
-                                                            'csrfmiddlewaretoken': '{{ csrf_token }}'
-                                                        },
-                                                        success: function(response) {
-                                                            if (response.success) {
-                                                                Swal.fire(
-                                                                    'Registered!',
-                                                                    'You have been successfully registered for the event.',
-                                                                    'success'
-                                                                );
-                                                                // Disable all buttons for this event across all places
-                                                                $('button.register-event[data-event-title="' + eventTitle + '"]').prop('disabled', true).text('Registered');
-                                                                // Add the event to the user's registrations
-                                                                userRegistrations.push(eventTitle);
-                                                                
-                                                                // If it's a workshop, disable all other workshop buttons
-                                                                if (eventType === 'workshop') {
-                                                                    userHasWorkshop = true;
-                                                                    $('button.register-event[data-event-type="workshop"]').not(':disabled').prop('disabled', true).text('Workshop Limit Reached');
-                                                                }
-                                                            } else {
-                                                                Swal.fire(
-                                                                    'Registration Failed',
-                                                                    response.error,
-                                                                    'error'
-                                                                );
-                                                            }
-                                                        },
-                                                        error: function() {
-                                                            Swal.fire(
-                                                                'Error',
-                                                                'An error occurred. Please try again.',
-                                                                'error'
-                                                            );
-                                                        }
-                                                    });
-                                                }
-                                            });
-                                        });
-                                    });
-                                </script>
                             </div>
                         {% endfor %}
                     </div>
                 </div>
 
+                <!-- Modal -->
+                <div class="modal fade" id="eventModal" tabindex="-1" role="dialog" aria-labelledby="eventModalLabel" aria-hidden="true">
+                  <div class="modal-dialog" role="document">
+                      <div class="modal-content">
+                          <div class="modal-header">
+                              <h5 class="modal-title" id="eventModalLabel">Event Details</h5>
+                              <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                  <span aria-hidden="true">&times;</span>
+                              </button>
+                          </div>
+                          <div class="modal-body">
+                              <!-- Imagen del banner (oculta por defecto) -->
+                              <img id="modal-banner" src="" alt="Event Banner" class="img-fluid mb-3" style="display: none; max-width: 100%; height: auto;">
+                              
+                              <!-- Título y descripción del evento -->
+                              <h6 id="modal-event-title"></h6>
+                              <p id="modal-event-description"></p>
+                              
+                              <!-- Enlace de acceso (oculto por defecto) -->
+                              <p id="modal-event-link" style="display: none;"></p>
+                          </div>
+                          <div class="modal-footer">
+                              <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                          </div>
+                      </div>
+                  </div>
+              </div>
+              
+
+              <script>
+                $(document).ready(function() {
+                // ... (Tu código existente para manejar registros)
+            
+                $('.see-details').click(function() {
+                    var title = $(this).data('title');
+                    var description = $(this).data('description');
+                    var banner = $(this).data('banner');
+                    var link = $(this).data('link');
+            
+                    // Rellenar el título y la descripción
+                    $('#modal-event-title').text(title);
+                    $('#modal-event-description').text(description);
+            
+                    // Rellenar y mostrar el banner si existe
+                    if (banner) {
+                        $('#modal-banner').attr('src', banner).show();
+                    } else {
+                        $('#modal-banner').hide();
+                    }
+            
+                    // Rellenar y mostrar el enlace si existe
+                    if (link) {
+                        $('#modal-event-link').html('<a href="' + link + '" target="_blank">Access Event Link</a>').show();
+                    } else {
+                        $('#modal-event-link').hide();
+                    }
+                });
+            });
+              </script>
               </div>
             </div><!-- End Reports -->
 
