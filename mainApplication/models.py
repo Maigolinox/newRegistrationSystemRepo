@@ -31,6 +31,7 @@ class UserProfile(models.Model):
     transactionID=models.CharField(default=" ",max_length=255, null=True, blank=True)
     recibioKIT=models.BooleanField(default=False)
     permitirRegistro=models.BooleanField(default=False)
+    FullName=models.CharField(max_length=255, blank=True, null=True, verbose_name="Full Name (The name you write will be the one under which your certificates will be issued)")  # Nombre completo
 
 
     # paper_id = models.CharField(max_length=100, blank=True, null=True)  # ID del artículo

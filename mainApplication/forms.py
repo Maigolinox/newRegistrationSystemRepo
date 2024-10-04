@@ -8,12 +8,13 @@ class UserProfileForm(forms.ModelForm):
 
     class Meta:
         model = UserProfile
-        fields = ['gender', 'country', 'state', 'university_name', 'university_address', 'user_type']
+        fields = ['gender', 'country', 'state', 'university_name', 'university_address', 'user_type','FullName']
         widgets = {
             'gender': forms.Select(attrs={'class': 'form-select'}),
             'state': forms.TextInput(attrs={'class': 'form-control'}),
             'university_name': forms.TextInput(attrs={'class': 'form-control'}),
             'university_address': forms.TextInput(attrs={'class': 'form-control'}),
+            'FullName': forms.TextInput(attrs={'class': 'form-control'}),
             'user_type': forms.Select(attrs={'class': 'form-select'}),
         }
 
