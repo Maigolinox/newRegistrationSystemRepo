@@ -53,6 +53,7 @@ class Place(models.Model):
     def __str__(self):
         return self.name
 
+
 class Event(models.Model):
     EVENT_TYPES = [
         ('ieee', 'IEEE Article'),
@@ -72,6 +73,7 @@ class Event(models.Model):
     ponent_name = models.CharField(max_length=255, blank=True)
     affiliation = models.CharField(max_length=255, blank=True)
     moderator = models.CharField(max_length=255, blank=True)
+    banner = models.ImageField(upload_to='event_banners/', blank=True, null=True)
 
     def __str__(self):
         return f"{self.title} ({self.get_event_type_display()}) - {self.ponent_name} - {self.affiliation}"

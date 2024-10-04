@@ -7,7 +7,7 @@
 <body>
     <div class="container">
         <h1>Register Event</h1>
-        <form method="POST">
+        <form method="POST" enctype="multipart/form-data">  
             {% csrf_token %}
             {{ form.as_p }}
             <button type="submit" class="btn btn-primary">Register Event</button>
@@ -16,3 +16,4 @@
     </div>
 </body>
 </html>
+

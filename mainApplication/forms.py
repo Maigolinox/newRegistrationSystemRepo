@@ -37,7 +37,7 @@ class PlaceForm(forms.ModelForm):
 class EventForm(forms.ModelForm):
     class Meta:
         model = Event
-        fields = ['title', 'description', 'date', 'start_time', 'end_time', 'place', 'event_type', 'ponent_name','affiliation','moderator']  # Include ponent_name
+        fields = ['title', 'description', 'date', 'start_time', 'end_time', 'place', 'event_type', 'ponent_name', 'affiliation', 'moderator', 'banner']
         widgets = {
             'title': forms.TextInput(attrs={'class': 'form-control'}),
             'description': forms.Textarea(attrs={'class': 'form-control'}),
@@ -46,10 +46,13 @@ class EventForm(forms.ModelForm):
             'end_time': forms.TimeInput(attrs={'class': 'form-control', 'type': 'time'}),
             'place': forms.Select(attrs={'class': 'form-control'}),
             'event_type': forms.Select(attrs={'class': 'form-control'}),
-            'ponent_name': forms.TextInput(attrs={'class': 'form-control'}),  # New input for ponent's full name
-            'affiliation': forms.TextInput(attrs={'class': 'form-control'}),  # New input for ponent's full name
-            'moderator': forms.TextInput(attrs={'class': 'form-control'}),  # New input for ponent's full name
+            'ponent_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'affiliation': forms.TextInput(attrs={'class': 'form-control'}),
+            'moderator': forms.TextInput(attrs={'class': 'form-control'}),
+            'banner': forms.ClearableFileInput(attrs={'class': 'form-control'}),
         }
+
+    banner = forms.ImageField(required=False)
 
 class CongressDateForm(forms.ModelForm):
     class Meta:

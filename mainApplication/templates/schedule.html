@@ -483,7 +483,12 @@
                                                       Available spaces: {{ event.available_capacity }} <br>
                                                       {% endif %}
                                                       {% if event.event_type != 'lunch' %}
-                                                      <a href="#" class="see-details" data-toggle="modal" data-target="#eventModal" data-title="{{ event.title }}" data-description="{{ event.description }}">See Details</a>
+                                                      <a href="#" class="see-details" data-toggle="modal" data-target="#eventModal" 
+   data-title="{{ event.title }}" 
+   data-description="{{ event.description }}"
+   {% if event.banner %}data-banner="{{ event.banner.url }}"{% endif %}>
+   See Details
+</a>
                                                       {% endif %}
                                                       {% if paymentCompleted or allowRegistration %} <br>
                                                       {% if not event.event_type == 'other' and event.event_type != 'lunch'%}
@@ -517,7 +522,13 @@
                                                       Available spaces: {{ event.available_capacity }} <br>
                                                       {% endif %}
                                                       {% if event.event_type != 'lunch' %}
-                                                      <a href="#" class="see-details" data-toggle="modal" data-target="#eventModal" data-title="{{ event.title }}" data-description="{{ event.description }}">See Details</a>
+                                                      <a href="#" class="see-details" data-toggle="modal" data-target="#eventModal" 
+   data-title="{{ event.title }}" 
+   data-description="{{ event.description }}"
+   {% if event.banner %}data-banner="{{ event.banner.url }}"{% endif %}>
+   See Details
+</a>
+
                                                       {% endif %}
                                                       {% if paymentCompleted or allowRegistration and not event.event_type == 'other' and event.event_type != 'lunch' %} <br>
                                                       <button class="btn btn-light rounded-pill register-event" data-event-title="{{ event.title }}" data-event-id="{{ event.id }}" data-event-type="{{ event.event_type }}">Register</button>
@@ -988,32 +999,7 @@
                               
                                 
                                 <!-- Modal -->
-                                <div class="modal fade" id="eventModal" tabindex="-1" role="dialog" aria-labelledby="eventModalLabel" aria-hidden="true">
-                                    <div class="modal-dialog" role="document">
-                                        <div class="modal-content">
-                                            <div class="modal-header">
-                                                <h5 class="modal-title" id="eventModalLabel">Event Details</h5>
-                                            </div>
-                                            <div class="modal-body">
-                                                <h6 id="modal-event-title"></h6>
-                                                <p id="modal-event-description"></p>
-                                            </div>
-                                            <div class="modal-footer">
-                                                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
                                 
-                                <script>
-                                    $(document).on('click', '.see-details', function() {
-                                        var title = $(this).data('title');
-                                        var description = $(this).data('description');
-                                        
-                                        $('#modal-event-title').text(title);
-                                        $('#modal-event-description').text(description);
-                                    });
-                                </script>
                                 <script>
                                     $(document).ready(function() {
                                         // Disable buttons for events the user is already registered for
@@ -1114,6 +1100,50 @@
 
       </div>
     </section>
+    <div class="modal fade" id="eventModal" tabindex="-1" role="dialog" aria-labelledby="eventModalLabel" aria-hidden="true">
+      <div class="modal-dialog" role="document">
+          <div class="modal-content">
+              <div class="modal-header">
+                  <h5 class="modal-title" id="eventModalLabel">Event Details</h5>
+                  <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                      <span aria-hidden="true">&times;</span>
+                  </button>
+              </div>
+              <div class="modal-body">
+                  <!-- Imagen del banner (oculta por defecto) -->
+                  <img id="modal-banner" src="" alt="Event Banner" class="img-fluid mb-3" style="display: none; max-width: 100%; height: auto;">
+
+                  
+                  <!-- Título y descripción del evento -->
+                  <h6 id="modal-event-title"></h6>
+                  <p id="modal-event-description"></p>
+              </div>
+              <div class="modal-footer">
+                  <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+              </div>
+          </div>
+      </div>
+  </div>
+  
+    
+  <script>
+    $('#eventModal').on('show.bs.modal', function (event) {
+var button = $(event.relatedTarget);  // Botón que activó el modal
+var title = button.data('title');     // Extraer título del evento
+var description = button.data('description');  // Extraer descripción del evento
+var banner = button.data('banner');   // Extraer URL del banner si existe
+
+var modal = $(this);
+modal.find('#modal-event-title').text(title);  // Actualizar título del modal
+modal.find('#modal-event-description').text(description);  // Actualizar descripción del modal
+
+if (banner) {
+modal.find('#modal-banner').attr('src', banner).show();  // Mostrar el banner si existe
+} else {
+modal.find('#modal-banner').hide();  // Ocultar el banner si no existe
+}
+});
+</script>
 
   </main><!-- End #main -->
 

@@ -364,10 +364,10 @@ def registerintoEvent(request):
 @staff_member_required
 def register_event(request):
     if request.method == 'POST':
-        form = EventForm(request.POST)
+        form = EventForm(request.POST, request.FILES)
         if form.is_valid():
-            form.save()  # Save the new event to the database
-            return redirect('schedule')  # Redirect to the schedule or another page
+            event = form.save()  # No es necesario usar commit=False aquí
+            return redirect('schedule')
     else:
         form = EventForm()
     
@@ -391,16 +391,16 @@ def delete_event(request, event_id):
 
 @staff_member_required
 def edit_event(request, event_id):
-    event = get_object_or_404(Event, id=event_id)  # Fetch the event object by ID
+    event = get_object_or_404(Event, id=event_id)
 
     if request.method == 'POST':
-        form = EventForm(request.POST, instance=event)  # Load the form with the event instance
+        form = EventForm(request.POST, request.FILES, instance=event)  # Añade request.FILES aquí
         if form.is_valid():
-            form.save()  # Save changes to the event
+            form.save()
             messages.success(request, 'Event updated successfully.')
-            return redirect('schedule')  # Redirect to the schedule or another page
+            return redirect('schedule')
     else:
-        form = EventForm(instance=event)  # Pre-fill the form with the event data
+        form = EventForm(instance=event)
     
     return render(request, 'editEvent.html', {'form': form, 'event': event})
 
