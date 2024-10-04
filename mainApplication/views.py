@@ -97,9 +97,13 @@ def complete_profile(request):
 @login_required
 def payment(request):
     userID = request.user.id
-    userProfile = UserProfile.objects.get(user_id=userID)
-    paymentCompleted = userProfile.payment_completed
-    paymentObservations = userProfile.payment_completed
+    try:
+        userProfile = UserProfile.objects.get(user_id=userID)
+        paymentObservations = userProfile.payment_completed
+        paymentCompleted = userProfile.payment_completed
+    except:
+        return redirect('complete_profile')
+    # userProfile = UserProfile.objects.get(user_id=userID)
     uploadFiles = PaymentProof.objects.filter(user_profile=userProfile)  # Obtén todos los archivos subidos
     is_staff_user = request.user.is_staff  # This will be True or False
     is_staff_superuser = request.user.is_superuser  # This will be True or False
@@ -164,6 +168,10 @@ def scholarshipAssignations(request):
 @login_required
 def schedule(request):
     userID = request.user.id
+    try:
+        userProfile = UserProfile.objects.get(user_id=userID)
+    except:
+        return redirect('complete_profile')
     userProfile = UserProfile.objects.get(user_id=userID)
     paymentCompleted = userProfile.payment_completed
     is_staff_user = request.user.is_staff  # This will be True or False
@@ -450,6 +458,10 @@ def delete_congress_date(request, date_id):
 @login_required
 def seeMySchedule(request):
     userID = request.user.id
+    try:
+        userProfile = UserProfile.objects.get(user_id=userID)
+    except:
+        return redirect('complete_profile')
     userProfile = UserProfile.objects.get(user_id=userID)
     paymentCompleted = userProfile.payment_completed
     is_staff_user = request.user.is_staff  # This will be True or False
