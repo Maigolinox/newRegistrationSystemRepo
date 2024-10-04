@@ -74,6 +74,8 @@ class Event(models.Model):
     affiliation = models.CharField(max_length=255, blank=True)
     moderator = models.CharField(max_length=255, blank=True)
     banner = models.ImageField(upload_to='event_banners/', blank=True, null=True)
+    links=models.CharField(default=" ",max_length=255,null=True, blank=True,verbose_name="Links of online meeting: ")
+
 
     def __str__(self):
         return f"{self.title} ({self.get_event_type_display()}) - {self.ponent_name} - {self.affiliation}"

@@ -19,8 +19,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 ACCOUNT_SIGNUP_REDIRECT_URL = '/completeProfile/'
 LOGIN_REDIRECT_URL='/dashboard/'
 
-MEDIA_URL='/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+MEDIA_URL='/mainApplication/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'mainApplication', 'media')
+
 
 ALLOWED_HOSTS=['52.40.72.178','cimps.org','127.0.0.1','localhost']
 
