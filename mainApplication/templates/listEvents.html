@@ -4,11 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Event List</title>
+    <!-- DataTables CSS -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.5/css/jquery.dataTables.min.css">
 </head>
 <body>
     <h2>Event List</h2>
 
-    <table class="table">
+    <table id="eventTable" class="display">
         <thead>
             <tr>
                 <th>Event Name</th>
@@ -36,10 +38,20 @@
                 </tr>
             {% empty %}
                 <tr>
-                    <td colspan="5">No events found.</td>
+                    <td colspan="7">No events found.</td>
                 </tr>
             {% endfor %}
         </tbody>
     </table>
+
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- DataTables JS -->
+    <script src="https://cdn.datatables.net/1.13.5/js/jquery.dataTables.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            $('#eventTable').DataTable(); // Initialize DataTable
+        });
+    </script>
 </body>
 </html>
