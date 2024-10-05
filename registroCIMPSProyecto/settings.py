@@ -22,7 +22,6 @@ LOGIN_REDIRECT_URL='/dashboard/'
 MEDIA_URL='/mainApplication/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'mainApplication', 'media')
 
-
 ALLOWED_HOSTS=['52.40.72.178','cimps.org','127.0.0.1','localhost']
 
 CSRF_TRUSTED_ORIGINS = ['https://cimps.org']
@@ -89,7 +88,9 @@ SOCIALACCOUNT_PROVIDERS={
             'client_id': '328935690203-gk0ru5mtqq98veg25d41u9h70374sdv3.apps.googleusercontent.com',
             'secret': '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',
             'key': ''
-        }
+        },
+        'SCOPE': ['https://www.googleapis.com/auth/userinfo.profile', 'https://www.googleapis.com/auth/userinfo.email'],
+        'AUTH_PARAMS': {'access_type': 'online'}
     },
     'facebook': {
         'APP': {
