@@ -479,6 +479,9 @@
                                                       {% if event.moderator %}
                                                       <strong><span>Moderator: {{ event.moderator }}</span></strong><br>
                                                       {% endif %}
+                                                      {% if event.affiliation %}
+                                                      <strong><span>Affiliation: {{ event.affiliation }}</span></strong><br>
+                                                      {% endif %}
                                                       {% if not event.event_type == 'other' and not event.event_type == 'lunch' %}
                                                       Available spaces: {{ event.available_capacity }} <br>
                                                       {% endif %}
@@ -489,6 +492,7 @@
 
    {% if event.banner %}data-banner="{{ event.banner.url }}"{% endif %}
    {% if event.links %}data-link="{{ event.links }}"{% endif %}
+   {% if event.affiliation %}data-link="{{ event.affiliation }}"{% endif %}
    >
 
    See Details
@@ -522,6 +526,9 @@
                                                       {% if event.moderator %}
                                                       <strong><span>Moderator: {{ event.moderator }}</span></strong><br>
                                                       {% endif %}
+                                                      {% if event.affiliation %}
+                                                      <strong><span>Affiliation: {{ event.affiliation }}</span></strong><br>
+                                                      {% endif %}
                                                       {% if not event.event_type == 'other' and not event.event_type == 'lunch' %}
                                                       Available spaces: {{ event.available_capacity }} <br>
                                                       {% endif %}
@@ -532,8 +539,13 @@
 
 
    {% if event.banner %}data-banner="{{ event.banner.url }}"{% endif %}
-   {% if event.links %}data-link="{{ event.links }}"{% endif %}>
-   See Details
+   {% if event.links %}data-link="{{ event.links }}"{% endif %}
+   {% if event.affiliation %}data-link="{{ event.affiliation }}"{% endif %}>
+
+   See Details <br>
+   {% if is_staff_user %}
+   <a href="{% url 'editEvent' event.id %}" class="btn btn-warning">Edit Event</a>
+   {% endif %}
 </a>
 
 
@@ -1130,6 +1142,7 @@
                   
                   <!-- Enlace de acceso (oculto por defecto) -->
                   <p id="modal-event-link" style="display: none;"></p>
+                  <p id="modal-event-affiliation" style="display: none;"></p>
               </div>
               <div class="modal-footer">
                   <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
@@ -1150,6 +1163,7 @@
         var description = $(this).data('description');
         var banner = $(this).data('banner');
         var link = $(this).data('link');
+        var affiliation = $(this).data('affiliation');
 
         // Rellenar el título y la descripción
         $('#modal-event-title').text(title);
@@ -1167,6 +1181,11 @@
             $('#modal-event-link').html('<a href="' + link + '" target="_blank">Access Event Link</a>').show();
         } else {
             $('#modal-event-link').hide();
+        }
+        if (affiliation) {
+            $('#modal-event-affiliation').html('<strong>Affiliation: </strong>' + affiliation + '</strong>').show();
+        } else {
+            $('#modal-event-affiliation').hide();
         }
     });
 });
