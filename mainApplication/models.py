@@ -76,6 +76,7 @@ class Event(models.Model):
     moderator = models.CharField(max_length=255, blank=True)
     banner = models.ImageField(upload_to='event_banners/', blank=True, null=True)
     links=models.CharField(default=" ",max_length=255,null=True, blank=True,verbose_name="Links of online meeting: ")
+    requisites=models.CharField(default=" ",max_length=255,null=True, blank=True,verbose_name="Requisites: ")
 
 
     def __str__(self):
