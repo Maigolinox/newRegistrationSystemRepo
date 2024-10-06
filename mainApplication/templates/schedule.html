@@ -441,128 +441,94 @@
                                       border-radius: 10px;
                                     }
                                 </style>
+                                <table
+                                class="table table-borderless text-center table-schedule"
+                                style="height: fit-content"
+                              >
+                                <thead class="text-center">
+                                  <tr>
+                                    <th></th>
+                                    {% for place in places %}
+                                    <th
+                                      class="{% if forloop.counter == 1 %}bg-danger{% elif forloop.counter == 2 %}bg-warning{% else %}bg-secondary{% endif %}"
+                                    >
+                                      {{ place.name }} (Capacity: {{ place.capacity }})
+                                    </th>
+                                    {% endfor %}
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  {% for time_slot, places_events in time_slots_events.items %}
+                                  <tr>
+                                    <td>{{ time_slot }}</td>
+                                    {% for place in places %}
+                                    <td class="place-column">
+                                      {% with place_events=places_events|get_item:place.name %} {% for event in place_events %}
+                                      <div
+                                        id="event-{{ event.id }}-{{ forloop.parentloop.counter }}-{{ forloop.counter }}"
+                                        class="event {% if event.event_type == 'ieee' %}bg-warning{% elif event.event_type == 'springer' or event.event_type == 'keynote' %}bg-danger{% elif event.event_type == 'lunch' %}bg-info{% elif event.event_type == 'workshop' %}bg-secondary{% else %}bg-success{% endif %}"
+                                      >
+                                        <strong>{{ event.title }}</strong><br />
+                                        <span
+                                          >{{ event.start_time|time:"H:i" }} - {{event.end_time|time:"H:i"}}</span
+                                        ><br />
+                                        {% if event.ponent_name %}
+                                        <strong><span>Speaker: {{ event.ponent_name }}</span></strong
+                                        ><br /><br />
+                                        {% endif %}
+                                        {% if event.affiliation %}
+                                        <strong><span>Affiliation: {{ event.affiliation }}</span></strong
+                                        ><br /><br />
+                                        {% endif %}
+                                         {% if event.moderator %}
+                                        <strong><span>Moderator: {{ event.moderator }}</span></strong
+                                        ><br />
+                                        {% endif %} {% if not event.event_type == 'other' and not event.event_type == 'lunch' %} Available spaces: {{event.available_capacity }} <br />
+                                        {% endif %} {% if event.event_type != 'lunch' %}
+                                        <a
+                                          href="#"
+                                          class="see-details"
+                                          data-toggle="modal"
+                                          data-target="#eventModal"
+                                          data-title="{{ event.title }}"
+                                          data-description="{{ event.description }}"
+                                          {% if event.banner %}data-banner="{{ event.banner.url }}"{% endif %}
+                                          data-link="{{ event.link }}"
+                                          data-requisites="{{ event.requisites }}"
+                                          data-ponent_name="{{ event.ponent_name }}"
+                                          data-affiliation="{{ event.affiliation }}"
+                                          >See Details</a
+                                        >
+                                        {% endif %} {% if paymentCompleted or allowRegistration %}
+                                        <br />
+                                        {% if  event.event_type != 'lunch' and event.event_type != 'other'  %}
+                                        <button
+                                          class="btn btn-light rounded-pill register-event"
+                                          data-event-title="{{ event.title }}"
+                                          data-event-id="{{ event.id }}"
+                                          data-event-type="{{ event.event_type }}"
+                                        >
+                                          Register
+                                        </button>
+                                        {% endif %}
+                                        {% endif %}
+                                        {% if is_staff_superuser %}
+                                        <br><br>
+                                        <a href="{% url 'editEvent' event.id %}" class="btn btn-warning">Edit Event</a>
+                                        <br><br>
+                                        {% endif %}
+                                      </div>
+                                      {% endfor %} {% endwith %}
+                                    </td>
+                                    {% endfor %}
+                                  </tr>
+                                  {% endfor %}
+                                </tbody>
                                 
-                                
-                                <table class="table table-borderless text-center table-schedule" style="height:fit-content">
-                                  <thead class="text-center">
-                                      <tr>
-                                          <th></th>
-                                          {% for place in places %}
-    <th id="place-{{ place.name|slugify }}" 
-        class="
-            {% if forloop.first %} bg-danger 
-            {% elif forloop.counter == 2 %} bg-warning 
-            {% else %} bg-secondary 
-            {% endif %}
-        ">
-        {{ place.name }} (Capacity: {{ place.capacity }})
-    </th>
-{% endfor %}
-
-                                      </tr>
-                                  </thead>
-                                  <tbody>
-                                      {% for time_slot, places_events in time_slots_events.items %}
-                                      <tr>
-                                          <td id="time-slot-{{ forloop.counter }}">{{ time_slot }}</td>
-                                          {% if forloop.counter == 2 or forloop.counter == 1 or forloop.counter == 14 or forloop.counter == 6 %}
-                                              {% with first_place=places.1 %}
-                                              {% with place_events=places_events|get_item:first_place.name %}
-                                              {% with event=place_events.0 %}
-                                              <td id="event-{{ forloop.counter }}-{{ event.id }}" colspan="7" class="place-column">
-                                                  <div class="event {% if event.event_type == 'ieee' %}bg-warning{% elif event.event_type == 'springer' or event.event_type == 'keynote' %}bg-danger{% elif event.event_type == 'lunch' %}bg-info{% elif event.event_type == 'workshop' %}bg-secondary{% else %}bg-success{% endif %}" {% if event.available_capacity == 0 %}disabled{% endif %}>
-                                                      <strong>{{ event.title }}</strong><br>
-                                                      <span>{{ event.start_time|time:"H:i" }} - {{ event.end_time|time:"H:i" }}</span><br>
-                                                      {% if event.ponent_name %}
-                                                      <strong><span>Speaker: {{ event.ponent_name }}</span></strong><br><br>
-                                                      {% endif %}
-                                                      {% if event.moderator %}
-                                                      <strong><span>Moderator: {{ event.moderator }}</span></strong><br>
-                                                      {% endif %}
-                                                      {% if event.affiliation %}
-                                                      <strong><span>Affiliation: {{ event.affiliation }}</span></strong><br>
-                                                      {% endif %}
-                                                      {% if not event.event_type == 'other' and not event.event_type == 'lunch' %}
-                                                      Available spaces: {{ event.available_capacity }} <br>
-                                                      {% endif %}
-                                                      {% if event.event_type != 'lunch' %}
-                                                      <a href="#" class="see-details" data-toggle="modal" data-target="#eventModal" 
-   data-title="{{ event.title }}" 
-   data-description="{% if event.description %}{{ event.description }}{% endif %}{% if event.links %}Link of event: {{ event.links|safe }}{% endif %}"
-
-   {% if event.banner %}data-banner="{{ event.banner.url }}"{% endif %}
-   {% if event.links %}data-link="{{ event.links }}"{% endif %}
-   {% if event.affiliation %}data-link="{{ event.affiliation }}"{% endif %}
-   >
-
-   See Details
-</a>
-                                                      {% endif %}
-                                                      {% if paymentCompleted or allowRegistration %} <br>
-                                                      {% if not event.event_type == 'other' and event.event_type != 'lunch'%}
-                                                      <button class="btn btn-light rounded-pill register-event" data-event-title="{{ event.title }}" data-event-id="{{ event.id }}" data-event-type="{{ event.event_type }}">Register</button>
-                                                      {% endif %}
-                                                      
-                                                      {% endif %}
-                                                      
-                                                      
-                                                  </div>
-                                              </td>
-                                              {% endwith %}
-                                              {% endwith %}
-                                              {% endwith %}
-                                          {% else %}
-                                              {% for place in places %}
-                                              <td id="place-event-{{ forloop.parentloop.counter }}-{{ place.name|slugify }}" class="place-column" 
-                                                  {% if forloop.counter == 1 and event_should_span %} rowspan="2"{% endif %}>
-                                                  {% with place_events=places_events|get_item:place.name %}
-                                                  {% for event in place_events %}
-                                                  <div id="event-{{ forloop.parentloop.counter }}-{{ event.id }}" class="event {% if event.event_type == 'ieee' %}bg-warning{% elif event.event_type == 'springer' or event.event_type == 'keynote' %}bg-danger{% elif event.event_type == 'lunch' %}bg-info{% elif event.event_type == 'workshop' %}bg-secondary{% else %}bg-success{% endif %}" {% if event == 'other'%}colspan="2" {% endif %}  {% if event.available_capacity == 0 %}disabled{% endif %}>
-                                                      <strong>{{ event.title }}</strong><br>
-                                                      <span>{{ event.start_time|time:"H:i" }} - {{ event.end_time|time:"H:i" }}</span><br>
-                                                      {% if event.ponent_name %}
-                                                      <strong><span>Speaker: {{ event.ponent_name }}</span></strong><br><br>
-                                                      {% endif %}
-                                                      {% if event.moderator %}
-                                                      <strong><span>Moderator: {{ event.moderator }}</span></strong><br>
-                                                      {% endif %}
-                                                      {% if event.affiliation %}
-                                                      <strong><span>Affiliation: {{ event.affiliation }}</span></strong><br>
-                                                      {% endif %}
-                                                      {% if not event.event_type == 'other' and not event.event_type == 'lunch' %}
-                                                      Available spaces: {{ event.available_capacity }} <br>
-                                                      {% endif %}
-                                                      {% if event.event_type != 'lunch' %}
-                                                      <a href="#" class="see-details" data-toggle="modal" data-target="#eventModal" 
-   data-title="{{ event.title }}" 
-   data-description="{% if event.description %}{{ event.description }} {% endif %}{% if event.links %}Link of event: {{ event.links|safe }}{% endif %}"
-
-
-   {% if event.banner %}data-banner="{{ event.banner.url }}"{% endif %}
-   {% if event.links %}data-link="{{ event.links }}"{% endif %}
-   {% if event.affiliation %}data-link="{{ event.affiliation }}"{% endif %}>
-
-   See Details <br>
-   {% if is_staff_user %}
-   <a href="{% url 'editEvent' event.id %}" class="btn btn-warning">Edit Event</a>
-   {% endif %}
-</a>
-
-
-                                                      {% endif %}
-                                                      {% if paymentCompleted or allowRegistration and not event.event_type == 'other' and event.event_type != 'lunch' %} <br>
-                                                      <button class="btn btn-light rounded-pill register-event" data-event-title="{{ event.title }}" data-event-id="{{ event.id }}" data-event-type="{{ event.event_type }}">Register</button>
-                                                      {% endif %}
-                                                  </div>
-                                                  {% endfor %}
-                                                  {% endwith %}
-                                              </td>
-                                              {% endfor %}
-                                          {% endif %}
-                                      </tr>
-                                      {% endfor %}
-                                  </tbody>
                               </table>
+                              
+                              
+
 
                               <style>
                                 #event-7-85, #event-3-79, #event-4-88,#event-5-87,#event-6-86 ,#event-3-80,#event-4-81,#event-5-82,#event-6-83,#event-7-84,#event-3-123,#event-4-124,#event-5-125,#event-6-126,#event-7-127 {
@@ -574,29 +540,118 @@
                                 }
                             </style>
 
-                            <!-- ESTILOS PARA LOGRAR EL CALENDARIO -->
-                              <script>
-                                document.addEventListener("DOMContentLoaded", function() {
-                                    // Crear un objeto para rastrear los IDs que ya hemos encontrado
-                                    const seenIds = {};
-                            
-                                    // Obtener todos los divs que tienen un id
-                                    const divs = document.querySelectorAll("div[id]");
-                            
-                                    divs.forEach(div => {
-                                        const id = div.id;
-                            
-                                        // Si el ID ya ha sido visto, eliminar el div
-                                        if (seenIds[id]) {
-                                            div.remove();
-                                        } else {
-                                            // Si no ha sido visto, marcarlo como visto
-                                            seenIds[id] = true;
+                            <script>
+                              var targetDiv = document.getElementById("event-9-1-1");
+                                  if (targetDiv) {
+                                    const parentTd = targetDiv.closest("td");
+                                    if (parentTd) {
+                                      parentTd.setAttribute("colspan", "7");
+                                      const divs = parentTd.querySelectorAll("div");
+                                      divs.forEach(div => {
+                                        if (div.id !== targetDiv.id) {
+                                          div.remove();
                                         }
-                                    });
-                                });
-                                document.addEventListener("DOMContentLoaded", function() {
-                                  var targetDiv = document.getElementById("event-3-123");
+                                      });
+                                    }
+                                  }var targetDiv = document.getElementById("event-66-1-1");
+                                  if (targetDiv) {
+                                    const parentTd = targetDiv.closest("td");
+                                    if (parentTd) {
+                                      parentTd.setAttribute("colspan", "7");
+                                      const divs = parentTd.querySelectorAll("div");
+                                      divs.forEach(div => {
+                                        if (div.id !== targetDiv.id) {
+                                          div.remove();
+                                        }
+                                      });
+                                    }
+                                  }var targetDiv = document.getElementById("event-177-1-1");
+                                  if (targetDiv) {
+                                    const parentTd = targetDiv.closest("td");
+                                    if (parentTd) {
+                                      parentTd.setAttribute("colspan", "7");
+                                      const divs = parentTd.querySelectorAll("div");
+                                      divs.forEach(div => {
+                                        if (div.id !== targetDiv.id) {
+                                          div.remove();
+                                        }
+                                      });
+                                    }
+                                  }var targetDiv = document.getElementById("event-25-1-1");
+                                  if (targetDiv) {
+                                    const parentTd = targetDiv.closest("td");
+                                    if (parentTd) {
+                                      parentTd.setAttribute("colspan", "7");
+                                      const divs = parentTd.querySelectorAll("div");
+                                      divs.forEach(div => {
+                                        if (div.id !== targetDiv.id) {
+                                          div.remove();
+                                        }
+                                      });
+                                    }
+                                  }
+                                  var targetDiv = document.getElementById("event-89-1-1");
+                                  if (targetDiv) {
+                                    const parentTd = targetDiv.closest("td");
+                                    if (parentTd) {
+                                      parentTd.setAttribute("colspan", "7");
+                                      const divs = parentTd.querySelectorAll("div");
+                                      divs.forEach(div => {
+                                        if (div.id !== targetDiv.id) {
+                                          div.remove();
+                                        }
+                                      });
+                                    }
+                                  }var targetDiv = document.getElementById("event-106-1-1");
+                                  if (targetDiv) {
+                                    const parentTd = targetDiv.closest("td");
+                                    if (parentTd) {
+                                      parentTd.setAttribute("colspan", "7");
+                                      const divs = parentTd.querySelectorAll("div");
+                                      divs.forEach(div => {
+                                        if (div.id !== targetDiv.id) {
+                                          div.remove();
+                                        }
+                                      });
+                                    }
+                                  }var targetDiv = document.getElementById("event-38-1-1");
+                                  if (targetDiv) {
+                                    const parentTd = targetDiv.closest("td");
+                                    if (parentTd) {
+                                      parentTd.setAttribute("colspan", "7");
+                                      const divs = parentTd.querySelectorAll("div");
+                                      divs.forEach(div => {
+                                        if (div.id !== targetDiv.id) {
+                                          div.remove();
+                                        }
+                                      });
+                                    }
+                                  }var targetDiv = document.getElementById("event-135-1-1");
+                                  if (targetDiv) {
+                                    const parentTd = targetDiv.closest("td");
+                                    if (parentTd) {
+                                      parentTd.setAttribute("colspan", "7");
+                                      const divs = parentTd.querySelectorAll("div");
+                                      divs.forEach(div => {
+                                        if (div.id !== targetDiv.id) {
+                                          div.remove();
+                                        }
+                                      });
+                                    }
+                                  }var targetDiv = document.getElementById("event-152-1-1");
+                                  if (targetDiv) {
+                                    const parentTd = targetDiv.closest("td");
+                                    if (parentTd) {
+                                      parentTd.setAttribute("colspan", "7");
+                                      const divs = parentTd.querySelectorAll("div");
+                                      divs.forEach(div => {
+                                        if (div.id !== targetDiv.id) {
+                                          div.remove();
+                                        }
+                                      });
+                                    }
+                                  }
+                                  var targetDiv = document.getElementById("event-79-3-1");
                                   if (targetDiv) {
                                     const parentTd = targetDiv.closest("td");
                                     if (parentTd) {
@@ -609,176 +664,7 @@
                                       });
                                     }
                                   }
-                                  var targetDiv = document.getElementById("event-7-84");
-                                  if (targetDiv) {
-                                    const parentTd = targetDiv.closest("td");
-                                    if (parentTd) {
-                                      parentTd.setAttribute("rowspan", "7");
-                                      const divs = parentTd.querySelectorAll("div");
-                                      divs.forEach(div => {
-                                        if (div.id !== targetDiv.id) {
-                                          div.remove();
-                                        }
-                                      });
-                                    }
-                                  }
-                                  var targetDiv = document.getElementById("event-3-131");
-                                  if (targetDiv) {
-                                    const parentTd = targetDiv.closest("td");
-                                    if (parentTd) {
-                                      parentTd.setAttribute("rowspan", "7");
-                                      const divs = parentTd.querySelectorAll("div");
-                                      divs.forEach(div => {
-                                        if (div.id !== targetDiv.id) {
-                                          div.remove();
-                                        }
-                                      });
-                                    }
-                                  }
-                                  var targetDiv = document.getElementById("event-4-132");
-                                  if (targetDiv) {
-                                    const parentTd = targetDiv.closest("td");
-                                    if (parentTd) {
-                                      parentTd.setAttribute("rowspan", "7");
-                                      const divs = parentTd.querySelectorAll("div");
-                                      divs.forEach(div => {
-                                        if (div.id !== targetDiv.id) {
-                                          div.remove();
-                                        }
-                                      });
-                                    }
-                                  }
-                                  var targetDiv = document.getElementById("event-5-133");
-                                  if (targetDiv) {
-                                    const parentTd = targetDiv.closest("td");
-                                    if (parentTd) {
-                                      parentTd.setAttribute("rowspan", "7");
-                                      const divs = parentTd.querySelectorAll("div");
-                                      divs.forEach(div => {
-                                        if (div.id !== targetDiv.id) {
-                                          div.remove();
-                                        }
-                                      });
-                                    }
-                                  }
-                                  var targetDiv = document.getElementById("event-6-134");
-                                  if (targetDiv) {
-                                    const parentTd = targetDiv.closest("td");
-                                    if (parentTd) {
-                                      parentTd.setAttribute("rowspan", "7");
-                                      const divs = parentTd.querySelectorAll("div");
-                                      divs.forEach(div => {
-                                        if (div.id !== targetDiv.id) {
-                                          div.remove();
-                                        }
-                                      });
-                                    }
-                                  }
-                                  var targetDiv = document.getElementById("event-5-133");
-                                  if (targetDiv) {
-                                    const parentTd = targetDiv.closest("td");
-                                    if (parentTd) {
-                                      parentTd.setAttribute("rowspan", "7");
-                                      const divs = parentTd.querySelectorAll("div");
-                                      divs.forEach(div => {
-                                        if (div.id !== targetDiv.id) {
-                                          div.remove();
-                                        }
-                                      });
-                                    }
-                                  }
-                                  var targetDiv = document.getElementById("event-6-134");
-                                  if (targetDiv) {
-                                    const parentTd = targetDiv.closest("td");
-                                    if (parentTd) {
-                                      parentTd.setAttribute("rowspan", "7");
-                                      const divs = parentTd.querySelectorAll("div");
-                                      divs.forEach(div => {
-                                        if (div.id !== targetDiv.id) {
-                                          div.remove();
-                                        }
-                                      });
-                                    }
-                                  }
-                                  var targetDiv = document.getElementById("event-7-129");
-                                  if (targetDiv) {
-                                    const parentTd = targetDiv.closest("td");
-                                    if (parentTd) {
-                                      parentTd.setAttribute("rowspan", "7");
-                                      const divs = parentTd.querySelectorAll("div");
-                                      divs.forEach(div => {
-                                        if (div.id !== targetDiv.id) {
-                                          div.remove();
-                                        }
-                                      });
-                                    }
-                                  }
-                                  var targetDiv = document.getElementById("event-3-166");
-                                  if (targetDiv) {
-                                    const parentTd = targetDiv.closest("td");
-                                    if (parentTd) {
-                                      parentTd.setAttribute("rowspan", "7");
-                                      const divs = parentTd.querySelectorAll("div");
-                                      divs.forEach(div => {
-                                        if (div.id !== targetDiv.id) {
-                                          div.remove();
-                                        }
-                                      });
-                                    }
-                                  }
-                                  var targetDiv = document.getElementById("event-4-165");
-                                  if (targetDiv) {
-                                    const parentTd = targetDiv.closest("td");
-                                    if (parentTd) {
-                                      parentTd.setAttribute("rowspan", "7");
-                                      const divs = parentTd.querySelectorAll("div");
-                                      divs.forEach(div => {
-                                        if (div.id !== targetDiv.id) {
-                                          div.remove();
-                                        }
-                                      });
-                                    }
-                                  }
-                                  var targetDiv = document.getElementById("event-5-162");
-                                  if (targetDiv) {
-                                    const parentTd = targetDiv.closest("td");
-                                    if (parentTd) {
-                                      parentTd.setAttribute("rowspan", "7");
-                                      const divs = parentTd.querySelectorAll("div");
-                                      divs.forEach(div => {
-                                        if (div.id !== targetDiv.id) {
-                                          div.remove();
-                                        }
-                                      });
-                                    }
-                                  }
-                                  var targetDiv = document.getElementById("event-6-161");
-                                  if (targetDiv) {
-                                    const parentTd = targetDiv.closest("td");
-                                    if (parentTd) {
-                                      parentTd.setAttribute("rowspan", "7");
-                                      const divs = parentTd.querySelectorAll("div");
-                                      divs.forEach(div => {
-                                        if (div.id !== targetDiv.id) {
-                                          div.remove();
-                                        }
-                                      });
-                                    }
-                                  }
-                                  var targetDiv = document.getElementById("event-7-130");
-                                  if (targetDiv) {
-                                    const parentTd = targetDiv.closest("td");
-                                    if (parentTd) {
-                                      parentTd.setAttribute("rowspan", "7");
-                                      const divs = parentTd.querySelectorAll("div");
-                                      divs.forEach(div => {
-                                        if (div.id !== targetDiv.id) {
-                                          div.remove();
-                                        }
-                                      });
-                                    }
-                                  }
-                                  var targetDiv = document.getElementById("event-4-124");
+                                  var targetDiv = document.getElementById("event-88-4-1");
                                   if (targetDiv) {
                                     const parentTd = targetDiv.closest("td");
                                     if (parentTd) {
@@ -790,8 +676,7 @@
                                         }
                                       });
                                     }
-                                  }
-                                  var targetDiv = document.getElementById("event-5-125");
+                                  }var targetDiv = document.getElementById("event-87-5-1");
                                   if (targetDiv) {
                                     const parentTd = targetDiv.closest("td");
                                     if (parentTd) {
@@ -803,8 +688,7 @@
                                         }
                                       });
                                     }
-                                  }
-                                  var targetDiv = document.getElementById("event-6-126");
+                                  }var targetDiv = document.getElementById("event-86-6-1");
                                   if (targetDiv) {
                                     const parentTd = targetDiv.closest("td");
                                     if (parentTd) {
@@ -816,8 +700,7 @@
                                         }
                                       });
                                     }
-                                  }
-                                  var targetDiv = document.getElementById("event-7-127");
+                                  }var targetDiv = document.getElementById("event-85-7-1");
                                   if (targetDiv) {
                                     const parentTd = targetDiv.closest("td");
                                     if (parentTd) {
@@ -829,138 +712,7 @@
                                         }
                                       });
                                     }
-                                  }
-                                  var targetDiv = document.getElementById("event-3-167");
-                                  if (targetDiv) {
-                                    const parentTd = targetDiv.closest("td");
-                                    if (parentTd) {
-                                      parentTd.setAttribute("rowspan", "3");
-                                      const divs = parentTd.querySelectorAll("div");
-                                      divs.forEach(div => {
-                                        if (div.id !== targetDiv.id) {
-                                          div.remove();
-                                        }
-                                      });
-                                    }
-                                  }
-                                  var targetDiv = document.getElementById("event-4-164");
-                                  if (targetDiv) {
-                                    const parentTd = targetDiv.closest("td");
-                                    if (parentTd) {
-                                      parentTd.setAttribute("rowspan", "3");
-                                      const divs = parentTd.querySelectorAll("div");
-                                      divs.forEach(div => {
-                                        if (div.id !== targetDiv.id) {
-                                          div.remove();
-                                        }
-                                      });
-                                    }
-                                  }
-                                  var targetDiv = document.getElementById("event-5-163");
-                                  if (targetDiv) {
-                                    const parentTd = targetDiv.closest("td");
-                                    if (parentTd) {
-                                      parentTd.setAttribute("rowspan", "3");
-                                      const divs = parentTd.querySelectorAll("div");
-                                      divs.forEach(div => {
-                                        if (div.id !== targetDiv.id) {
-                                          div.remove();
-                                        }
-                                      });
-                                    }
-                                  }
-                                  var targetDiv = document.getElementById("event-6-160");
-                                  if (targetDiv) {
-                                    const parentTd = targetDiv.closest("td");
-                                    if (parentTd) {
-                                      parentTd.setAttribute("rowspan", "3");
-                                      const divs = parentTd.querySelectorAll("div");
-                                      divs.forEach(div => {
-                                        if (div.id !== targetDiv.id) {
-                                          div.remove();
-                                        }
-                                      });
-                                    }
-                                  }
-                                  var targetDiv = document.getElementById("event-7-128");
-                                  if (targetDiv) {
-                                    const parentTd = targetDiv.closest("td");
-                                    if (parentTd) {
-                                      parentTd.setAttribute("rowspan", "3");
-                                      const divs = parentTd.querySelectorAll("div");
-                                      divs.forEach(div => {
-                                        if (div.id !== targetDiv.id) {
-                                          div.remove();
-                                        }
-                                      });
-                                    }
-                                  }
-                                  var targetDiv = document.getElementById("event-3-79");
-                                  if (targetDiv) {
-                                    const parentTd = targetDiv.closest("td");
-                                    if (parentTd) {
-                                      parentTd.setAttribute("rowspan", "3");
-                                      const divs = parentTd.querySelectorAll("div");
-                                      divs.forEach(div => {
-                                        if (div.id !== targetDiv.id) {
-                                          div.remove();
-                                        }
-                                      });
-                                    }
-                                  }
-                                  var targetDiv = document.getElementById("event-4-88");
-                                  if (targetDiv) {
-                                    const parentTd = targetDiv.closest("td");
-                                    if (parentTd) {
-                                      parentTd.setAttribute("rowspan", "3");
-                                      const divs = parentTd.querySelectorAll("div");
-                                      divs.forEach(div => {
-                                        if (div.id !== targetDiv.id) {
-                                          div.remove();
-                                        }
-                                      });
-                                    }
-                                  }
-                                  var targetDiv = document.getElementById("event-5-87");
-                                  if (targetDiv) {
-                                    const parentTd = targetDiv.closest("td");
-                                    if (parentTd) {
-                                      parentTd.setAttribute("rowspan", "3");
-                                      const divs = parentTd.querySelectorAll("div");
-                                      divs.forEach(div => {
-                                        if (div.id !== targetDiv.id) {
-                                          div.remove();
-                                        }
-                                      });
-                                    }
-                                  }
-                                  var targetDiv = document.getElementById("event-6-86");
-                                  if (targetDiv) {
-                                    const parentTd = targetDiv.closest("td");
-                                    if (parentTd) {
-                                      parentTd.setAttribute("rowspan", "3");
-                                      const divs = parentTd.querySelectorAll("div");
-                                      divs.forEach(div => {
-                                        if (div.id !== targetDiv.id) {
-                                          div.remove();
-                                        }
-                                      });
-                                    }
-                                  }
-                                  var targetDiv = document.getElementById("event-7-85");
-                                  if (targetDiv) {
-                                    const parentTd = targetDiv.closest("td");
-                                    if (parentTd) {
-                                      parentTd.setAttribute("rowspan", "3");
-                                      const divs = parentTd.querySelectorAll("div");
-                                      divs.forEach(div => {
-                                        if (div.id !== targetDiv.id) {
-                                          div.remove();
-                                        }
-                                      });
-                                    }
-                                  }
-                                  var targetDiv = document.getElementById("event-3-80");
+                                  }var targetDiv = document.getElementById("event-80-3-1");
                                   if (targetDiv) {
                                     const parentTd = targetDiv.closest("td");
                                     if (parentTd) {
@@ -972,8 +724,7 @@
                                         }
                                       });
                                     }
-                                  }
-                                  var targetDiv = document.getElementById("event-4-81");
+                                  }var targetDiv = document.getElementById("event-81-4-1");
                                   if (targetDiv) {
                                     const parentTd = targetDiv.closest("td");
                                     if (parentTd) {
@@ -985,8 +736,7 @@
                                         }
                                       });
                                     }
-                                  }
-                                  var targetDiv = document.getElementById("event-5-82");
+                                  }var targetDiv = document.getElementById("event-82-5-1");
                                   if (targetDiv) {
                                     const parentTd = targetDiv.closest("td");
                                     if (parentTd) {
@@ -998,8 +748,7 @@
                                         }
                                       });
                                     }
-                                  }
-                                  var targetDiv = document.getElementById("event-6-83");
+                                  }var targetDiv = document.getElementById("event-83-6-1");
                                   if (targetDiv) {
                                     const parentTd = targetDiv.closest("td");
                                     if (parentTd) {
@@ -1011,18 +760,329 @@
                                         }
                                       });
                                     }
+                                  }var targetDiv = document.getElementById("event-84-7-1");
+                                  if (targetDiv) {
+                                    const parentTd = targetDiv.closest("td");
+                                    if (parentTd) {
+                                      parentTd.setAttribute("rowspan", "7");
+                                      const divs = parentTd.querySelectorAll("div");
+                                      divs.forEach(div => {
+                                        if (div.id !== targetDiv.id) {
+                                          div.remove();
+                                        }
+                                      });
+                                    }
+                                  }var targetDiv = document.getElementById("event-123-3-1");
+                                  if (targetDiv) {
+                                    const parentTd = targetDiv.closest("td");
+                                    if (parentTd) {
+                                      parentTd.setAttribute("rowspan", "3");
+                                      const divs = parentTd.querySelectorAll("div");
+                                      divs.forEach(div => {
+                                        if (div.id !== targetDiv.id) {
+                                          div.remove();
+                                        }
+                                      });
+                                    }
+                                  }var targetDiv = document.getElementById("event-124-4-1");
+                                  if (targetDiv) {
+                                    const parentTd = targetDiv.closest("td");
+                                    if (parentTd) {
+                                      parentTd.setAttribute("rowspan", "3");
+                                      const divs = parentTd.querySelectorAll("div");
+                                      divs.forEach(div => {
+                                        if (div.id !== targetDiv.id) {
+                                          div.remove();
+                                        }
+                                      });
+                                    }
+                                  }var targetDiv = document.getElementById("event-80-3-1");
+                                  if (targetDiv) {
+                                    const parentTd = targetDiv.closest("td");
+                                    if (parentTd) {
+                                      parentTd.setAttribute("rowspan", "7");
+                                      const divs = parentTd.querySelectorAll("div");
+                                      divs.forEach(div => {
+                                        if (div.id !== targetDiv.id) {
+                                          div.remove();
+                                        }
+                                      });
+                                    }
+                                  }var targetDiv = document.getElementById("event-125-5-1");
+                                  if (targetDiv) {
+                                    const parentTd = targetDiv.closest("td");
+                                    if (parentTd) {
+                                      parentTd.setAttribute("rowspan", "3");
+                                      const divs = parentTd.querySelectorAll("div");
+                                      divs.forEach(div => {
+                                        if (div.id !== targetDiv.id) {
+                                          div.remove();
+                                        }
+                                      });
+                                    }
+                                  }var targetDiv = document.getElementById("event-126-6-1");
+                                  if (targetDiv) {
+                                    const parentTd = targetDiv.closest("td");
+                                    if (parentTd) {
+                                      parentTd.setAttribute("rowspan", "3");
+                                      const divs = parentTd.querySelectorAll("div");
+                                      divs.forEach(div => {
+                                        if (div.id !== targetDiv.id) {
+                                          div.remove();
+                                        }
+                                      });
+                                    }
+                                  }var targetDiv = document.getElementById("event-127-7-1");
+                                  if (targetDiv) {
+                                    const parentTd = targetDiv.closest("td");
+                                    if (parentTd) {
+                                      parentTd.setAttribute("rowspan", "3");
+                                      const divs = parentTd.querySelectorAll("div");
+                                      divs.forEach(div => {
+                                        if (div.id !== targetDiv.id) {
+                                          div.remove();
+                                        }
+                                      });
+                                    }
+                                  }var targetDiv = document.getElementById("event-131-3-1");
+                                  if (targetDiv) {
+                                    const parentTd = targetDiv.closest("td");
+                                    if (parentTd) {
+                                      parentTd.setAttribute("rowspan", "7");
+                                      const divs = parentTd.querySelectorAll("div");
+                                      divs.forEach(div => {
+                                        if (div.id !== targetDiv.id) {
+                                          div.remove();
+                                        }
+                                      });
+                                    }
+                                  }var targetDiv = document.getElementById("event-132-4-1");
+                                  if (targetDiv) {
+                                    const parentTd = targetDiv.closest("td");
+                                    if (parentTd) {
+                                      parentTd.setAttribute("rowspan", "7");
+                                      const divs = parentTd.querySelectorAll("div");
+                                      divs.forEach(div => {
+                                        if (div.id !== targetDiv.id) {
+                                          div.remove();
+                                        }
+                                      });
+                                    }
+                                  }var targetDiv = document.getElementById("event-133-5-1");
+                                  if (targetDiv) {
+                                    const parentTd = targetDiv.closest("td");
+                                    if (parentTd) {
+                                      parentTd.setAttribute("rowspan", "7");
+                                      const divs = parentTd.querySelectorAll("div");
+                                      divs.forEach(div => {
+                                        if (div.id !== targetDiv.id) {
+                                          div.remove();
+                                        }
+                                      });
+                                    }
+                                  }var targetDiv = document.getElementById("event-134-6-1");
+                                  if (targetDiv) {
+                                    const parentTd = targetDiv.closest("td");
+                                    if (parentTd) {
+                                      parentTd.setAttribute("rowspan", "7");
+                                      const divs = parentTd.querySelectorAll("div");
+                                      divs.forEach(div => {
+                                        if (div.id !== targetDiv.id) {
+                                          div.remove();
+                                        }
+                                      });
+                                    }
+                                  }var targetDiv = document.getElementById("event-129-7-1");
+                                  if (targetDiv) {
+                                    const parentTd = targetDiv.closest("td");
+                                    if (parentTd) {
+                                      parentTd.setAttribute("rowspan", "7");
+                                      const divs = parentTd.querySelectorAll("div");
+                                      divs.forEach(div => {
+                                        if (div.id !== targetDiv.id) {
+                                          div.remove();
+                                        }
+                                      });
+                                    }
+                                  }var targetDiv = document.getElementById("event-167-3-1");
+                                  if (targetDiv) {
+                                    const parentTd = targetDiv.closest("td");
+                                    if (parentTd) {
+                                      parentTd.setAttribute("rowspan", "3");
+                                      const divs = parentTd.querySelectorAll("div");
+                                      divs.forEach(div => {
+                                        if (div.id !== targetDiv.id) {
+                                          div.remove();
+                                        }
+                                      });
+                                    }
+                                  }var targetDiv = document.getElementById("event-164-4-1");
+                                  if (targetDiv) {
+                                    const parentTd = targetDiv.closest("td");
+                                    if (parentTd) {
+                                      parentTd.setAttribute("rowspan", "3");
+                                      const divs = parentTd.querySelectorAll("div");
+                                      divs.forEach(div => {
+                                        if (div.id !== targetDiv.id) {
+                                          div.remove();
+                                        }
+                                      });
+                                    }
+                                  }var targetDiv = document.getElementById("event-163-5-1");
+                                  if (targetDiv) {
+                                    const parentTd = targetDiv.closest("td");
+                                    if (parentTd) {
+                                      parentTd.setAttribute("rowspan", "3");
+                                      const divs = parentTd.querySelectorAll("div");
+                                      divs.forEach(div => {
+                                        if (div.id !== targetDiv.id) {
+                                          div.remove();
+                                        }
+                                      });
+                                    }
+                                  }var targetDiv = document.getElementById("event-160-6-1");
+                                  if (targetDiv) {
+                                    const parentTd = targetDiv.closest("td");
+                                    if (parentTd) {
+                                      parentTd.setAttribute("rowspan", "3");
+                                      const divs = parentTd.querySelectorAll("div");
+                                      divs.forEach(div => {
+                                        if (div.id !== targetDiv.id) {
+                                          div.remove();
+                                        }
+                                      });
+                                    }
+                                  }var targetDiv = document.getElementById("event-128-7-1");
+                                  if (targetDiv) {
+                                    const parentTd = targetDiv.closest("td");
+                                    if (parentTd) {
+                                      parentTd.setAttribute("rowspan", "3");
+                                      const divs = parentTd.querySelectorAll("div");
+                                      divs.forEach(div => {
+                                        if (div.id !== targetDiv.id) {
+                                          div.remove();
+                                        }
+                                      });
+                                    }
+                                  }var targetDiv = document.getElementById("event-166-3-1");
+                                  if (targetDiv) {
+                                    const parentTd = targetDiv.closest("td");
+                                    if (parentTd) {
+                                      parentTd.setAttribute("rowspan", "7");
+                                      const divs = parentTd.querySelectorAll("div");
+                                      divs.forEach(div => {
+                                        if (div.id !== targetDiv.id) {
+                                          div.remove();
+                                        }
+                                      });
+                                    }
+                                  }var targetDiv = document.getElementById("event-165-4-1");
+                                  if (targetDiv) {
+                                    const parentTd = targetDiv.closest("td");
+                                    if (parentTd) {
+                                      parentTd.setAttribute("rowspan", "7");
+                                      const divs = parentTd.querySelectorAll("div");
+                                      divs.forEach(div => {
+                                        if (div.id !== targetDiv.id) {
+                                          div.remove();
+                                        }
+                                      });
+                                    }
+                                  }var targetDiv = document.getElementById("event-162-5-1");
+                                  if (targetDiv) {
+                                    const parentTd = targetDiv.closest("td");
+                                    if (parentTd) {
+                                      parentTd.setAttribute("rowspan", "7");
+                                      const divs = parentTd.querySelectorAll("div");
+                                      divs.forEach(div => {
+                                        if (div.id !== targetDiv.id) {
+                                          div.remove();
+                                        }
+                                      });
+                                    }
+                                  }var targetDiv = document.getElementById("event-161-6-1");
+                                  if (targetDiv) {
+                                    const parentTd = targetDiv.closest("td");
+                                    if (parentTd) {
+                                      parentTd.setAttribute("rowspan", "7");
+                                      const divs = parentTd.querySelectorAll("div");
+                                      divs.forEach(div => {
+                                        if (div.id !== targetDiv.id) {
+                                          div.remove();
+                                        }
+                                      });
+                                    }
+                                  }var targetDiv = document.getElementById("event-130-7-1");
+                                  if (targetDiv) {
+                                    const parentTd = targetDiv.closest("td");
+                                    if (parentTd) {
+                                      parentTd.setAttribute("rowspan", "7");
+                                      const divs = parentTd.querySelectorAll("div");
+                                      divs.forEach(div => {
+                                        if (div.id !== targetDiv.id) {
+                                          div.remove();
+                                        }
+                                      });
+                                    }
+                                  }var targetDiv = document.getElementById("event-39-1-1");
+                                  if (targetDiv) {
+                                    const parentTd = targetDiv.closest("td");
+                                    if (parentTd) {
+                                      parentTd.setAttribute("colspan", "7");
+                                      const divs = parentTd.querySelectorAll("div");
+                                      divs.forEach(div => {
+                                        if (div.id !== targetDiv.id) {
+                                          div.remove();
+                                        }
+                                      });
+                                    }
+                                  }var targetDiv = document.getElementById("event-18-1-1");
+                                  if (targetDiv) {
+                                    const parentTd = targetDiv.closest("td");
+                                    if (parentTd) {
+                                      parentTd.setAttribute("colspan", "7");
+                                      const divs = parentTd.querySelectorAll("div");
+                                      divs.forEach(div => {
+                                        if (div.id !== targetDiv.id) {
+                                          div.remove();
+                                        }
+                                      });
+                                    }
+                                  }var targetDiv = document.getElementById("event-11-1-1");
+                                  if (targetDiv) {
+                                    const parentTd = targetDiv.closest("td");
+                                    if (parentTd) {
+                                      parentTd.setAttribute("colspan", "7");
+                                      const divs = parentTd.querySelectorAll("div");
+                                      divs.forEach(div => {
+                                        if (div.id !== targetDiv.id) {
+                                          div.remove();
+                                        }
+                                      });
+                                    }
                                   }
-                                  
+                            </script>
+                            <script>
+                              $(document).ready(function() {
+    // Crear un objeto para llevar un registro de los IDs
+    var seenIds = {};
 
-                                });
-                              </script>
-                                                          
-                              
-                              
-                              
-                                
-                                <!-- Modal -->
-                                
+    // Buscar todos los divs que tienen un atributo 'id'
+    $('div[id]').each(function() {
+        var currentId = $(this).attr('id');
+
+        // Si el ID ya se ha visto antes, elimina el div
+        if (seenIds[currentId]) {
+            $(this).remove();
+        } else {
+            // Si no se ha visto, lo marcamos como visto
+            seenIds[currentId] = true;
+        }
+    });
+});
+                            </script>
+
+
                                 <script>
                                     $(document).ready(function() {
                                         // Disable buttons for events the user is already registered for
@@ -1142,7 +1202,10 @@
                   
                   <!-- Enlace de acceso (oculto por defecto) -->
                   <p id="modal-event-link" style="display: none;"></p>
+                  <br>
+                  <p id="modal-event-ponent_name" style="display: none;"></p>
                   <p id="modal-event-affiliation" style="display: none;"></p>
+                  <p id="modal-event-requisites" style="display: none;"></p>
               </div>
               <div class="modal-footer">
                   <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
@@ -1156,40 +1219,63 @@
     
   <script>
     $(document).ready(function() {
-    // ... (Tu código existente para manejar registros)
+        // Manejador del clic en el enlace "See Details"
+        $('.see-details').click(function() {
+            var title = $(this).data('title');
+            var description = $(this).data('description');
+            var banner = $(this).data('banner');
+            var link = $(this).data('link');
+            var affiliation = $(this).data('affiliation');
+            var requisites = $(this).data('requisites');
+            var ponent_name = $(this).data('ponent_name');
 
-    $('.see-details').click(function() {
-        var title = $(this).data('title');
-        var description = $(this).data('description');
-        var banner = $(this).data('banner');
-        var link = $(this).data('link');
-        var affiliation = $(this).data('affiliation');
+            // Actualiza los campos del modal con los datos
+            if (title) {
+                $('#modal-event-title').html('<strong>Title:</strong><br>' + title + '.').show();
+            } else {
+                $('#modal-event-title').hide();
+            }
 
-        // Rellenar el título y la descripción
-        $('#modal-event-title').text(title);
-        $('#modal-event-description').text(description);
+            if (ponent_name) {
+                $('#modal-event-ponent_name').html('<strong>Ponent Name:</strong><br>' + ponent_name + '.').show();
+            } else {
+                $('#modal-event-ponent_name').hide();
+            }
 
-        // Rellenar y mostrar el banner si existe
-        if (banner) {
-            $('#modal-banner').attr('src', banner).show();
-        } else {
-            $('#modal-banner').hide();
-        }
+            if (affiliation) {
+                $('#modal-event-affiliation').html('<strong>Affiliation:</strong><br>' + affiliation + '.').show();
+            } else {
+                $('#modal-event-affiliation').hide();
+            }
 
-        // Rellenar y mostrar el enlace si existe
-        if (link) {
-            $('#modal-event-link').html('<a href="' + link + '" target="_blank">Access Event Link</a>').show();
-        } else {
-            $('#modal-event-link').hide();
-        }
-        if (affiliation) {
-            $('#modal-event-affiliation').html('<strong>Affiliation: </strong>' + affiliation + '</strong>').show();
-        } else {
-            $('#modal-event-affiliation').hide();
-        }
+            if (description) {
+                $('#modal-event-description').html('<strong>Description:</strong><br>' + description + '.').show();
+            } else {
+                $('#modal-event-description').hide();
+            }
+
+            if (requisites) {
+                $('#modal-event-requisites').html('<strong>Requisites:</strong><br>' + requisites + '.').show();
+            } else {
+                $('#modal-event-requisites').hide();
+            }
+
+            // Mostrar el banner si existe
+            if (banner) {
+                $('#modal-banner').attr('src', banner).show();
+            } else {
+                $('#modal-banner').hide();
+            }
+
+            // Mostrar el enlace si existe
+            if (link) {
+                $('#modal-event-link').html('<a href="' + link + '" target="_blank">Access Event Link</a>').show();
+            } else {
+                $('#modal-event-link').hide();
+            }
+        });
     });
-});
-  </script>
+</script>
 
   </main><!-- End #main -->
 
