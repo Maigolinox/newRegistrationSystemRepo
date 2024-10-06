@@ -499,22 +499,32 @@
                                           data-affiliation="{{ event.affiliation }}"
                                           >See Details</a
                                         >
-                                        {% endif %} {% if paymentCompleted or allowRegistration %}
+                                        {% endif %} 
+                                        {% if paymentCompleted or allowRegistration %}
                                         <br />
                                         {% if  event.event_type != 'lunch' and event.event_type != 'other'  %}
-                                        <button
-                                          class="btn btn-light rounded-pill register-event"
-                                          data-event-title="{{ event.title }}"
-                                          data-event-id="{{ event.id }}"
-                                          data-event-type="{{ event.event_type }}"
-                                        >
-                                          Register
-                                        </button>
+                                        <button class="btn btn-light rounded-pill register-event"
+                                        data-event-title="{{ event.title }}"
+                                        data-event-date="{{ event.date|date:'Y-m-d' }}"
+                                        data-event-start-time="{{ event.start_time|time:'H:i' }}"
+                                        data-event-end-time="{{ event.end_time|time:'H:i' }}"
+                                        {% if event.title in user_registrations %}
+                                            disabled
+                                        {% endif %}>
+                                    {% if event.title in user_registrations %}
+                                        Registered
+                                    {% else %}
+                                        Register
+                                    {% endif %}
+                                </button>
+{% if conflict %}
+<p class="text-danger">No puedes registrarte en este evento debido a un conflicto de horarios o eventos paralelos.</p>
+{% endif %}
                                         {% endif %}
                                         {% endif %}
                                         {% if is_staff_superuser %}
                                         <br><br>
-                                        <a href="{% url 'editEvent' event.id %}" class="btn btn-warning">Edit Event</a>
+                                        <a href="{% url 'editEvent' event.id %}" class="btn btn-dark">Edit Event</a>
                                         <br><br>
                                         {% endif %}
                                       </div>
@@ -540,6 +550,9 @@
                                 }
                             </style>
 
+                            <script>
+                              
+                            </script>
                             <script>
                               var targetDiv = document.getElementById("event-9-1-1");
                                   if (targetDiv) {
@@ -1083,88 +1096,92 @@
                             </script>
 
 
-                                <script>
-                                    $(document).ready(function() {
-                                        // Disable buttons for events the user is already registered for
-                                        userRegistrations.forEach(function(eventTitle) {
-                                            $('button.register-event[data-event-title="' + eventTitle + '"]').prop('disabled', true).text('Registered');
-                                        });
-                                
-                                        // If user has a workshop, disable all other workshop buttons
-                                        if (userHasWorkshop) {
-                                            $('button.register-event[data-event-type="workshop"]').not(':disabled').prop('disabled', true).text('Workshop Limit Reached');
-                                        }
-                                
-                                        $('.register-event').click(function() {
-                                            var eventTitle = $(this).data('event-title');
-                                            var eventType = $(this).data('event-type');
-                                            var button = $(this);
-                                            
-                                            if (userRegistrations.includes(eventTitle)) {
-                                                Swal.fire('Already Registered', 'You are already registered for this event.', 'info');
-                                                return;
-                                            }
-                                
-                                            if (eventType === 'workshop' && userHasWorkshop) {
-                                                Swal.fire('Workshop Limit Reached', 'You can only register for one workshop.', 'info');
-                                                return;
-                                            }
-                                
-                                            Swal.fire({
-                                                title: 'Confirm Registration',
-                                                text: 'Do you want to register for the event: ' + eventTitle + '?',
-                                                icon: 'question',
-                                                showCancelButton: true,
-                                                confirmButtonColor: '#3085d6',
-                                                cancelButtonColor: '#d33',
-                                                confirmButtonText: 'Yes, register me!'
-                                            }).then((result) => {
-                                                if (result.isConfirmed) {
-                                                    $.ajax({
-                                                        url: '{% url "registerintoEvent" %}',
-                                                        type: 'POST',
-                                                        data: {
-                                                            'event_title': eventTitle,
-                                                            'csrfmiddlewaretoken': '{{ csrf_token }}'
-                                                        },
-                                                        success: function(response) {
-                                                            if (response.success) {
-                                                                Swal.fire(
-                                                                    'Registered!',
-                                                                    'You have been successfully registered for the event.',
-                                                                    'success'
-                                                                );
-                                                                // Disable all buttons for this event across all places
-                                                                $('button.register-event[data-event-title="' + eventTitle + '"]').prop('disabled', true).text('Registered');
-                                                                // Add the event to the user's registrations
-                                                                userRegistrations.push(eventTitle);
-                                                                
-                                                                // If it's a workshop, disable all other workshop buttons
-                                                                if (eventType === 'workshop') {
-                                                                    userHasWorkshop = true;
-                                                                    $('button.register-event[data-event-type="workshop"]').not(':disabled').prop('disabled', true).text('Workshop Limit Reached');
-                                                                }
-                                                            } else {
-                                                                Swal.fire(
-                                                                    'Registration Failed',
-                                                                    response.error,
-                                                                    'error'
-                                                                );
-                                                            }
-                                                        },
-                                                        error: function() {
-                                                            Swal.fire(
-                                                                'Error',
-                                                                'An error occurred. Please try again.',
-                                                                'error'
-                                                            );
-                                                        }
-                                                    });
-                                                }
-                                            });
-                                        });
-                                    });
-                                </script>
+<script>
+  $(document).ready(function() {
+      // Función para verificar si el usuario está registrado en un taller que dura todo el evento
+      function isRegisteredForFullEvent() {
+          return userRegistrations.some(event => event.isAllEvent);
+      }
+  
+      // Deshabilitar botones para eventos en los que el usuario ya está registrado
+      userRegistrations.forEach(function(event) {
+          $('button.register-event[data-event-title="' + event.title + '"]').prop('disabled', true).text('Registered');
+      });
+  
+      // Si el usuario está registrado en un taller de día completo, deshabilitar otros talleres
+      if (isRegisteredForFullEvent()) {
+          $('.register-event').each(function() {
+              if (!$(this).data('event-all')) {
+                  $(this).prop('disabled', true).text('Conflicting Workshop');
+              }
+          });
+      }
+  
+      $('.register-event').click(function() {
+          var eventTitle = $(this).data('event-title');
+          var eventType = $(this).data('event-type');
+          var isAllEvent = $(this).data('event-all');
+          var button = $(this);
+  
+          if (userRegistrations.some(event => event.title === eventTitle)) {
+              Swal.fire('Already Registered', 'You are already registered for this event.', 'info');
+              return;
+          }
+  
+          // Verificar si el evento es un taller que dura todo el congreso
+          if (isAllEvent && isRegisteredForFullEvent()) {
+              Swal.fire('Conflict', 'You cannot register for other workshops due to a full-week event.', 'info');
+              return;
+          }
+  
+          Swal.fire({
+              title: 'Confirm Registration',
+              text: 'Do you want to register for the event: ' + eventTitle + '?',
+              icon: 'question',
+              showCancelButton: true,
+              confirmButtonColor: '#3085d6',
+              cancelButtonColor: '#d33',
+              confirmButtonText: 'Yes, register me!'
+          }).then((result) => {
+              if (result.isConfirmed) {
+                  $.ajax({
+                      url: '{% url "registerintoEvent" %}',
+                      type: 'POST',
+                      data: {
+                          'event_title': eventTitle,
+                          'csrfmiddlewaretoken': '{{ csrf_token }}'
+                      },
+                      success: function(response) {
+                          if (response.success) {
+                              Swal.fire(
+                                  'Registered!',
+                                  'You have been successfully registered for the event.',
+                                  'success'
+                              );
+                              $('button.register-event[data-event-title="' + eventTitle + '"]').prop('disabled', true).text('Registered');
+                              userRegistrations.push({ title: eventTitle, isAllEvent: isAllEvent });
+                          } else {
+                              Swal.fire(
+                                  'Registration Failed',
+                                  response.error,
+                                  'error'
+                              );
+                          }
+                      },
+                      error: function() {
+                          Swal.fire(
+                              'Error',
+                              'An error occurred. Please try again.',
+                              'error'
+                          );
+                      }
+                  });
+              }
+          });
+      });
+  });
+  </script>
+  
                             </div>
                         {% endfor %}
                     </div>

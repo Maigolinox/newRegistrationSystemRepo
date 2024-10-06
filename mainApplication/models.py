@@ -77,6 +77,7 @@ class Event(models.Model):
     banner = models.ImageField(upload_to='event_banners/', blank=True, null=True)
     links=models.CharField(default=" ",max_length=255,null=True, blank=True,verbose_name="Links of online meeting: ")
     requisites=models.CharField(default=" ",max_length=255,null=True, blank=True,verbose_name="Requisites: ")
+    allEvent=models.BooleanField(default=False,verbose_name="This event last all the congress? ")
 
 
     def __str__(self):
@@ -89,6 +90,7 @@ class Registration(models.Model):
     event = models.ForeignKey(Event, on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
     assisted=models.BooleanField(default=False)
+    counter=models.IntegerField(default=0)
 
     class Meta:
         unique_together = ('user', 'event')  # Ensure a user can register for an event only once

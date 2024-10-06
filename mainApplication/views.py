@@ -12,6 +12,8 @@ from django.http import JsonResponse
 from django.contrib import messages
 from django_countries import countries
 from django.core.exceptions import ObjectDoesNotExist
+from django.db.models import Q
+
 
 import pycountry
 from io import BytesIO
@@ -172,12 +174,12 @@ def schedule(request):
         userProfile = UserProfile.objects.get(user_id=userID)
     except:
         return redirect('complete_profile')
+
     userProfile = UserProfile.objects.get(user_id=userID)
     paymentCompleted = userProfile.payment_completed
     is_staff_user = request.user.is_staff  # This will be True or False
     is_staff_superuser = request.user.is_superuser  # This will be True or False
     allowRegistration = userProfile.permitirRegistro
-
 
     places = Place.objects.all()
     congress_dates = CongressDate.objects.filter(is_active=True)
@@ -224,30 +226,41 @@ def schedule(request):
             final_time_slots.append(slot)
             last_slot = slot
 
+    # Validar si el usuario está registrado en un evento de todo el congreso (allEvent)
     user_registrations = set()
-    user_has_workshop = False
+    user_has_full_event = False
     if request.user.is_authenticated:
+        # Obtener eventos en los que el usuario está registrado
         user_registrations = set(Registration.objects.filter(user=request.user).values_list('event__title', flat=True))
-        user_has_workshop = Registration.objects.filter(user=request.user, event__event_type='workshop').exists()
-    
-    identificadoresSiete=["event-3-131","event-4-132","event-5-133","event-6-134","event-7-129"]
 
+        # Verificar si el usuario está registrado en un workshop de todo el evento (allEvent)
+        user_has_full_event = Registration.objects.filter(user=request.user, event__allEvent=True).exists()
     
+    # Obtener todos los registros para validación de conflictos de horario
+    user_registrations_for_validation = list(Registration.objects.filter(user=request.user).values(
+        'event__title', 
+        'event__date', 
+        'event__start_time', 
+        'event__end_time'
+    ))
+    user_registrations = set(Registration.objects.filter(user=request.user).values_list('event__title', flat=True))
+
 
     context = {
-        'allowRegistration':allowRegistration,
-        'identificadoresSiete':identificadoresSiete,
+        'allowRegistration': allowRegistration,
         'paymentCompleted': paymentCompleted,
         'events_by_date': events_by_date,
         'time_slots': time_slots,
         'places': places,
         'congress_dates': congress_dates,
         'user_registrations': list(user_registrations),
-        'user_has_workshop': user_has_workshop,
+        'user_registrations_new': list(user_registrations_for_validation),
+        'user_has_full_event': user_has_full_event,  # Se añade la variable al contexto
         'is_staff_user': is_staff_user,
-        'is_staff_superuser':is_staff_superuser,
+        'is_staff_superuser': is_staff_superuser,
     }
     return render(request, 'schedule.html', context=context)
+
 
 def schedulePublic(request):
     userID = request.user.id
@@ -343,30 +356,45 @@ def register_place(request):
 def registerintoEvent(request):
     event_title = request.POST.get('event_title')
     try:
-        # Get all events with the same title
+        # Obtener todos los eventos por título
         events = Event.objects.filter(title=event_title)
+
+        # Comprobar si hay eventos encontrados
         if not events.exists():
             return JsonResponse({'success': False, 'error': 'Event not found'})
-        
-        # Check if the event is a workshop
-        is_workshop = events.first().event_type == 'workshop'
-        
-        # Check if user is already registered for any of these events
-        if Registration.objects.filter(user=request.user, event__in=events).exists():
-            return JsonResponse({'success': False, 'error': 'You are already registered for this event'})
-        
-        # If it's a workshop, check if user is already registered for any workshop
-        if is_workshop and Registration.objects.filter(user=request.user, event__event_type='workshop').exists():
-            return JsonResponse({'success': False, 'error': 'You can only register for one workshop'})
-        
-        # Register the user for the first event in the list
-        Registration.objects.create(user=request.user, event=events.first())
+
+        user = request.user
+
+        # Obtener todos los registros del usuario
+        user_registrations = Registration.objects.filter(user=user).select_related('event')
+
+        # Verificar si el usuario ya está registrado en algún evento con el mismo título
+        registered_events = user_registrations.filter(event__title=event_title)
+        if registered_events.exists():
+            return JsonResponse({'success': False, 'error': 'You are already registered for one of these events'})
+
+        # Verificar conflictos de horario
+        conflicting_registrations = user_registrations.filter(
+            Q(event__date__in=events.values_list('date', flat=True)) &
+            (
+                Q(event__start_time__lt=events.values_list('end_time', flat=True)) &
+                Q(event__end_time__gt=events.values_list('start_time', flat=True))
+            )
+        )
+
+        if conflicting_registrations.exists():
+            return JsonResponse({'success': False, 'error': 'You cannot register for events with overlapping times'})
+
+        # Registrar al usuario para cada evento encontrado
+        for event in events:
+            Registration.objects.create(user=user, event=event)
+
         return JsonResponse({'success': True})
+
     except IntegrityError:
-        return JsonResponse({'success': False, 'error': 'You are already registered for this event'})
+        return JsonResponse({'success': False, 'error': 'You are already registered for one of these events'})
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)})
-
 
 
 @staff_member_required
@@ -498,6 +526,7 @@ def assistanceControl(request, user_id, registration_id):
     
     # Update the assisted field to True
     registration.assisted = True
+    registration.counter = registration.counter + 1
     registration.save()
     
     # Optionally, redirect to a success page or back to the registration list
