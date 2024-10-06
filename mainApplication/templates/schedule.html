@@ -61,6 +61,7 @@
       </a>
       <i class="bi bi-list toggle-sidebar-btn"></i>
     </div><!-- End Logo -->
+    
 
     
 
@@ -350,6 +351,18 @@
         }
         .event {
             margin-bottom: 1px;
+            top: 0; /* Inicia en la parte superior */
+                                        left: 0; /* Inicia a la izquierda */
+                                        right: 0; /* Se extiende a la derecha */
+                                        bottom: 0; /* Se extiende hasta la parte inferior */
+                                        padding: 1px; /* Espaciado interno */
+                                        margin: 0; /* Elimina margen para llenar completamente la celda */
+                                        border-radius: 0px;
+                                        font-size: 0.8em;
+                                        box-sizing: border-box; /* Incluye padding en el tamaño total */
+                                        /* max-height: 200px; Establece una altura máxima */
+                                        /* overflow: auto;  */
+                                        height: 100%;
         }
     </style>
     <script>
@@ -401,6 +414,16 @@
                     <div class="tab-content" id="congressTabsContent">
                         {% for date, time_slots_events in events_by_date.items %}
                             <div class="tab-pane fade {% if forloop.first %}show active{% endif %}" id="content-{{ date|date:'Y-m-d' }}" role="tabpanel" aria-labelledby="tab-{{ date|date:'Y-m-d' }}">
+                              <style>
+                                th, td {
+                                    text-align: center;
+                                    vertical-align: middle;
+                                }
+                                .nav-tabs .nav-link.active {
+                                  background-color: #007bff; /* Cambia este color por el que prefieras */
+                                  color: #fff; /* Esto cambia el color del texto */
+                }
+                                </style>
                                 <style>
                                     table{
                                         border: none;
@@ -440,9 +463,17 @@
                                     .event {
                                       border-radius: 10px;
                                     }
+                                    th, td {
+                    text-align: center;
+                    vertical-align: middle;
+                }
+                                    
                                 </style>
+                                
+                                
+
                                 <table
-                                class="table table-borderless text-center table-schedule"
+                                class="table table-borderless text-center table-schedule align-middle "
                                 style="height: fit-content"
                               >
                                 <thead class="text-center">
@@ -457,16 +488,17 @@
                                     {% endfor %}
                                   </tr>
                                 </thead>
-                                <tbody>
+                                
+                                <tbody >
                                   {% for time_slot, places_events in time_slots_events.items %}
-                                  <tr>
-                                    <td>{{ time_slot }}</td>
+                                  <tr class="text-center">
+                                    <td style="vertical-align: middle;">{{ time_slot }}</td>
                                     {% for place in places %}
-                                    <td class="place-column">
+                                    <td class="place-column " style="vertical-align: middle;" >
                                       {% with place_events=places_events|get_item:place.name %} {% for event in place_events %}
-                                      <div
+                                      <div 
                                         id="event-{{ event.id }}-{{ forloop.parentloop.counter }}-{{ forloop.counter }}"
-                                        class="event {% if event.event_type == 'ieee' %}bg-warning{% elif event.event_type == 'springer' or event.event_type == 'keynote' %}bg-danger{% elif event.event_type == 'lunch' %}bg-info{% elif event.event_type == 'workshop' %}bg-secondary{% else %}bg-success{% endif %}"
+                                        class="d-flex flex-column justify-content-center align-items-center text-center  event  {% if event.event_type == 'ieee' %}bg-warning{% elif event.event_type == 'springer' or event.event_type == 'keynote' %}bg-danger{% elif event.event_type == 'lunch' %}bg-info{% elif event.event_type == 'workshop' %}bg-secondary{% else %}bg-success{% endif %} "
                                       >
                                         <strong>{{ event.title }}</strong><br />
                                         <span
