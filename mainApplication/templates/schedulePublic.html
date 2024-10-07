@@ -954,6 +954,95 @@
 
       </div>
     </section>
+    <div class="modal fade" id="eventModal" tabindex="-1" role="dialog" aria-labelledby="eventModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered" role="document" style="max-width: 80%;">
+          <div class="modal-content">
+              <div class="modal-header">
+                  <h5 class="modal-title" id="eventModalLabel">Event Details</h5>
+                  <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                      <span aria-hidden="true">&times;</span>
+                  </button>
+              </div>
+              <div class="modal-body">
+                  <!-- Imagen del banner (oculta por defecto) -->
+                  <img id="modal-banner" src="" alt="Event Banner" class="img-fluid mb-3" style="display: none; max-width: 100%; height: auto;">
+                  
+                  <!-- Título y descripción del evento -->
+                  <h6 id="modal-event-title"></h6>
+                  <p id="modal-event-description"></p>
+                  
+                  <!-- Enlace de acceso (oculto por defecto) -->
+                  <p id="modal-event-link" style="display: none;"></p>
+                  <br>
+                  <p id="modal-event-ponent_name" style="display: none;"></p>
+                  <p id="modal-event-affiliation" style="display: none;"></p>
+                  <p id="modal-event-requisites" style="display: none;"></p>
+              </div>
+              <div class="modal-footer">
+                  <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+              </div>
+          </div>
+      </div>
+  </div>
+  <script>
+    $(document).ready(function() {
+        // Manejador del clic en el enlace "See Details"
+        $('.see-details').click(function() {
+            var title = $(this).data('title');
+            var description = $(this).data('description');
+            var banner = $(this).data('banner');
+            var link = $(this).data('link');
+            var affiliation = $(this).data('affiliation');
+            var requisites = $(this).data('requisites');
+            var ponent_name = $(this).data('ponent_name');
+
+            // Actualiza los campos del modal con los datos
+            if (title) {
+                $('#modal-event-title').html('<strong>Title:</strong><br>' + title + '.').show();
+            } else {
+                $('#modal-event-title').hide();
+            }
+
+            if (ponent_name) {
+                $('#modal-event-ponent_name').html('<strong>Ponent Name:</strong><br>' + ponent_name + '.').show();
+            } else {
+                $('#modal-event-ponent_name').hide();
+            }
+
+            if (affiliation) {
+                $('#modal-event-affiliation').html('<strong>Affiliation:</strong><br>' + affiliation + '.').show();
+            } else {
+                $('#modal-event-affiliation').hide();
+            }
+
+            if (description) {
+                $('#modal-event-description').html('<strong>Description:</strong><br>' + description + '.').show();
+            } else {
+                $('#modal-event-description').hide();
+            }
+
+            if (requisites) {
+                $('#modal-event-requisites').html('<strong>Requisites:</strong><br>' + requisites + '.').show();
+            } else {
+                $('#modal-event-requisites').hide();
+            }
+
+            // Mostrar el banner si existe
+            if (banner) {
+                $('#modal-banner').attr('src', banner).show();
+            } else {
+                $('#modal-banner').hide();
+            }
+
+            // Mostrar el enlace si existe
+            if (link) {
+                $('#modal-event-link').html('<a href="' + link + '" target="_blank">Access Event Link</a>').show();
+            } else {
+                $('#modal-event-link').hide();
+            }
+        });
+    });
+</script>
 
   </main><!-- End #main -->
 
