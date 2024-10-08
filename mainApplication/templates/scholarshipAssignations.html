@@ -32,6 +32,8 @@
                     <th>Last Name</th>
                     <th>Username</th>
                     <th>Written Full Name</th>
+                    <th>Affiliation</th>
+                    <th>Written Full Name</th>
                     <th>User type</th>
                     <th>Becado</th>
                 </tr>
@@ -43,6 +45,7 @@
                     <td>{{ profile.user.last_name }}</td>
                     <td>{{ profile.user.username }}</td>
                     <td>{{ profile.FullName }}</td>
+                    <td>{{ profile.university_name }}, <br> Address: {{ profile.university_address }}</td>
                     <td>{{ profile.user_type }}</td>
                     <td>
                         <input type="checkbox" name="becado_{{ profile.id }}" {% if profile.permitirRegistro %}checked{% endif %}>
