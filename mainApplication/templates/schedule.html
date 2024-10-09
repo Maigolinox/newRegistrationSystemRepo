@@ -464,10 +464,9 @@
                                       border-radius: 10px;
                                     }
                                     th, td {
-                    text-align: center;
-                    vertical-align: middle;
-                }
-                                    
+                                      text-align: center;
+                                      vertical-align: middle;
+                                    }
                                 </style>
                                 
                                 
@@ -500,17 +499,17 @@
                                         id="event-{{ event.id }}-{{ forloop.parentloop.counter }}-{{ forloop.counter }}"
                                         class="d-flex flex-column justify-content-center align-items-center text-center  event  {% if event.event_type == 'ieee' %}bg-warning{% elif event.event_type == 'springer' or event.event_type == 'keynote' %}bg-danger{% elif event.event_type == 'lunch' %}bg-info{% elif event.event_type == 'workshop' %}bg-secondary{% else %}bg-success{% endif %} "
                                       >
-                                        <strong>{{ event.title }}</strong><br />
+                                        <strong><br />{{ event.title }}</strong>
                                         <span
                                           >{{ event.start_time|time:"H:i" }} - {{event.end_time|time:"H:i"}}</span
-                                        ><br />
+                                        >
                                         {% if event.ponent_name %}
                                         <strong><span>Speaker: {{ event.ponent_name }}</span></strong
-                                        ><br /><br />
+                                        ><br />
                                         {% endif %}
                                         {% if event.affiliation %}
                                         <strong><span>Affiliation: {{ event.affiliation }}</span></strong
-                                        ><br /><br />
+                                        ><br />
                                         {% endif %}
                                          {% if event.moderator %}
                                         <strong><span>Moderator: {{ event.moderator }}</span></strong
@@ -530,7 +529,7 @@
                                           data-ponent_name="{{ event.ponent_name }}"
                                           data-affiliation="{{ event.affiliation }}"
                                           >See Details</a
-                                        >
+                                        ><br />
                                         {% endif %} 
                                         {% if paymentCompleted or allowRegistration %}
                                         <br />
