@@ -427,6 +427,7 @@
                                 <style>
                                     table{
                                         border: none;
+                                        font-size: 1.2rem;
                                     }
                                     .table-schedule {
                                         border-collapse: none;
@@ -467,6 +468,9 @@
                                       text-align: center;
                                       vertical-align: middle;
                                     }
+                                    .bg-danger{
+                                      color: white;
+                                    }
                                 </style>
                                 
                                 
@@ -480,7 +484,8 @@
                                     <th></th>
                                     {% for place in places %}
                                     <th
-                                      class="{% if forloop.counter == 1 %}bg-danger{% elif forloop.counter == 2 %}bg-warning{% else %}bg-secondary{% endif %}"
+                                      class="{% if forloop.counter == 1 %}bg-danger {% elif forloop.counter == 2 %}bg-warning{% else %}bg-secondary{% endif %}"
+                                      style="{% if forloop.counter == 1 %} color: white;{% endif %}"
                                     >
                                       {{ place.name }} (Capacity: {{ place.capacity }})
                                     </th>
