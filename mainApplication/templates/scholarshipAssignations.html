@@ -39,7 +39,7 @@
             </thead>
             <tbody>
                 {% for profile in profiles %}
-                {% if profile.user_type == "student" %}
+                {% if profile.user_type == "student" or profile.user_type == "public" %}
                 <tr>
                     <td>{{ profile.user.first_name }}</td>
                     <td>{{ profile.user.last_name }}</td>
