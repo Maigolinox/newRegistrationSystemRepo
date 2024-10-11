@@ -593,9 +593,25 @@ def validatePayment(request):
 
     if request.method == 'POST':
         for user_profile in user_profiles:
+            # Get the value of payment_completed checkbox
             payment_completed = request.POST.get(f'payment_completed_{user_profile.user.id}') == 'on'
             user_profile.payment_completed = payment_completed
+            
+            # Get the value of manualPayment checkbox
+            manual_payment = request.POST.get(f'manual_payment_{user_profile.user.id}') == 'on'
+            user_profile.manualPayment = manual_payment
+            
+            # Get the amount value and convert it to a float (or decimal, as needed)
+            amount = request.POST.get(f'amount_{user_profile.user.id}')
+            if amount:
+                try:
+                    user_profile.amount = float(amount)  # Use Decimal if needed
+                except ValueError:
+                    user_profile.amount = 0.0  # Default to 0 if conversion fails
+            
+            # Save the updated user profile
             user_profile.save()
+        
         return redirect('validatePaymentAdmin')
 
     # Pass user profiles and the social account data (extra_data) to the template

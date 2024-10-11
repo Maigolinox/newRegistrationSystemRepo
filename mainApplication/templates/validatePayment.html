@@ -25,13 +25,14 @@
                         <th>User Type</th>
                         <th>Payment Completed</th>
                         <th>File</th>
+                        <th>Pay in the event?</th>
+                        <th>Amount</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for user_profile in user_profiles %}
                         <tr>
                             <td>{{ user_profile.user.username }}</td>
-                            
                             <td>
                                 {% with email=social_extra_data|get_item:user_profile.user.id %}
                                     {{ email.email|default:"No email available" }}
@@ -52,10 +53,21 @@
                                     No files uploaded.
                                 {% endfor %}
                             </td>
+                            <td>
+                                <input type="checkbox" 
+                                       name="manual_payment_{{ user_profile.user.id }}" 
+                                       {% if user_profile.manualPayment %}checked{% endif %}>
+                            </td>
+                            <td>
+                                <input type="text" 
+                                       name="amount_{{ user_profile.user.id }}" 
+                                       value="{{ user_profile.amount|default:"0" }}" 
+                                       style="width: 100px;"> <!-- Field for amount -->
+                            </td>
                         </tr>
                     {% empty %}
                         <tr>
-                            <td colspan="7">No user profiles found.</td>
+                            <td colspan="10">No user profiles found.</td>
                         </tr>
                     {% endfor %}
                 </tbody>

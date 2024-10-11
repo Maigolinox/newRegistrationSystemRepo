@@ -14,8 +14,10 @@ class UserProfileForm(forms.ModelForm):
             'state': forms.TextInput(attrs={'class': 'form-control'}),
             'university_name': forms.TextInput(attrs={'class': 'form-control'}),
             'university_address': forms.TextInput(attrs={'class': 'form-control'}),
-            'FullName': forms.TextInput(attrs={'class': 'form-control'}),
             'user_type': forms.Select(attrs={'class': 'form-select'}),
+            'FullName': forms.TextInput(attrs={'class': 'form-control'}),
+            # 'manualPayment': forms.TextInput(attrs={'class': 'form-control'}),
+            # 'amount': forms.TextInput(attrs={'class': 'form-control'}),
         }
 
 class PaymentProofForm(forms.ModelForm):
