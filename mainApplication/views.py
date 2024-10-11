@@ -540,7 +540,7 @@ def welcomeKit(request, user_id):
     registration = get_object_or_404(UserProfile, user_id=user_id)
     
     # Verifica si el kit ya ha sido recibido
-    if registration.recibioKIT:
+    if not registration.recibioKIT:
         # Redirige a una vista que indica que ya ha recibido el kit
         return redirect('kitAlreadyReceived')  
     else:
