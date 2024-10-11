@@ -20,7 +20,11 @@
                 {% for user in users %}
                     <tr>
                         <td>{{ user.username }}</td>
-                        <td>{{ social_extra_data|get_item:user.id|get_item:'email'|default:"No email available" }}</td>
+                        <td>
+                            {% with email=social_extra_data|get_item:user.id %}
+                                {{ email.email|default:"No email available" }}
+                            {% endwith %}
+                        </td>
 
                             
                         </td>
