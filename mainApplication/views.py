@@ -559,16 +559,27 @@ def kitAlreadyReceived(request):
 @staff_member_required
 def listarRecibioKit(request):
     users = UserProfile.objects.all()
-    saved = False  # Agregamos esta variable para el contexto
+    saved = False
     
     if request.method == "POST":
-        user_ids = request.POST.getlist('user_ids')
+        # Primero, establecemos todos los usuarios como no recibidos
         UserProfile.objects.update(recibioKIT=False)
-        for user_id in user_ids:
-            user_profile = UserProfile.objects.get(id=user_id)
-            user_profile.recibioKIT = True
-            user_profile.save()
-        saved = True  # Cambiamos a True cuando guardamos
+        
+        # Luego, procesamos los datos enviados
+        for key, value in request.POST.items():
+            if key.startswith('user_status['):
+                user_id = key[12:-1]  # Extraer el ID del usuario
+                received_kit = (value == 'on')
+                
+                try:
+                    user_profile = UserProfile.objects.get(id=user_id)
+                    user_profile.recibioKIT = received_kit
+                    user_profile.save()
+                except UserProfile.DoesNotExist:
+                    # Manejar el caso en que el perfil de usuario no existe
+                    pass
+        
+        saved = True
         return redirect('consultWelcomeKit')
 
     return render(request, 'registroKits.html', {'users': users, 'saved': saved})
