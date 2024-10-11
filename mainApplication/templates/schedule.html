@@ -221,13 +221,18 @@
       <span>See my schedule</span>
     </a>
   </li>
+  <li class="nav-item"></li>
+        <a class="nav-link collapsed" href="{% url 'seeMyDiplomas' %}">
+          <i class="bx bxs-certification"></i>
+          <span>My Diplomas</span>
+        </a>
+      </li>
       <li class="nav-item"></li>
         <a class="nav-link collapsed" href="{% url 'account_logout' %}">
           <i class="bi bi-door-closed-fill"></i>
           <span>Log Out</span>
         </a>
       </li>
-      
       {% if is_staff_user %}
       <li class="nav-item">Staff options</li>
         <a class="nav-link collapsed" href="{% url 'assistanceList' %}">
@@ -236,17 +241,17 @@
         </a>
       </li>
       <li class="nav-item"></li>
-            <a class="nav-link collapsed" href="{% url 'scholarshipAssignations' %}">
-              <i class="bi bi-mortarboard"></i>
-              <span>Scholarship assignations</span>
-            </a>
-          </li>
+        <a class="nav-link collapsed" href="{% url 'scholarshipAssignations' %}">
+          <i class="bi bi-mortarboard"></i>
+          <span>Scholarship assignations</span>
+        </a>
+      </li>
       <li class="nav-item"></li>
-            <a class="nav-link collapsed" href="{% url 'consultWelcomeKit' %}">
-              <i class="bi bi-box2-heart"></i>
-              <span>Welcome Kit Control</span>
-            </a>
-          </li>
+        <a class="nav-link collapsed" href="{% url 'consultWelcomeKit' %}">
+          <i class="bi bi-box2-heart"></i>
+          <span>Welcome Kit Control</span>
+        </a>
+      </li>
       <li class="nav-item"></li>
         <a class="nav-link collapsed" href="{% url 'validatePaymentAdmin' %}">
           <i class="bi bi-wallet2"></i>
@@ -260,6 +265,12 @@
         <a class="nav-link collapsed" href="{{request.scheme}}://{{ request.get_host }}/admin">
           <i class="bi bi-terminal"></i>
           <span>Super Admin Console</span>
+        </a>
+      </li>
+      <li class="nav-item">Super Admin options</li>
+        <a class="nav-link collapsed" href="{% url 'registerStaff' %}">
+          <i class="bi file-earmark-person"></i>
+          <span>Register Staff members</span>
         </a>
       </li>
       <li class="nav-item"></li>

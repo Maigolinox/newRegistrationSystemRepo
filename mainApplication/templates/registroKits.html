@@ -59,6 +59,26 @@
                 "ordering": true
             });
         });
+        
+        $('form').on('submit', function(e) {
+            // Iterar sobre todas las filas de la tabla, visibles y no visibles
+            table.rows().every(function(rowIdx, tableLoop, rowLoop) {
+                var row = this.node(); // Obtener la fila correspondiente
+                var checkbox = $(row).find('input[type="checkbox"]'); // Encontrar el checkbox
+
+                // Si el checkbox existe en la fila
+                if (checkbox.length > 0) {
+                    // Crear un input hidden para asegurar que se envíe el valor
+                    var hiddenInput = $('<input>').attr({
+                        type: 'hidden',
+                        name: checkbox.attr('name'), // Usar el mismo nombre del checkbox
+                        value: checkbox.is(':checked') ? 'on' : 'off' // Valor según si está marcado o no
+                    });
+                    // Agregar el input hidden al formulario
+                    $(e.target).append(hiddenInput);
+                }
+            });
+        });
 
         // Mensaje de éxito después de guardar los cambios
         {% if saved %}

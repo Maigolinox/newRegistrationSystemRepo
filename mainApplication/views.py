@@ -13,6 +13,8 @@ from django.contrib import messages
 from django_countries import countries
 from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import Q
+from allauth.socialaccount.models import SocialAccount
+from django.contrib.auth.models import User
 
 
 import pycountry
@@ -581,16 +583,62 @@ def assistanceList(request):
 
 @staff_member_required
 def validatePayment(request):
-    user_profiles = UserProfile.objects.select_related('user').prefetch_related('paymentproof_set').all()  # Usa prefetch_related para optimizar la consulta
+    user_profiles = UserProfile.objects.select_related('user').prefetch_related('paymentproof_set').all()
+
+    # Get the social accounts for all users in the user profiles
+    social_accounts = SocialAccount.objects.filter(user__in=[profile.user for profile in user_profiles])
+
+    # Create a dictionary to map user_id to their extra_data (JSON field)
+    social_extra_data = {account.user_id: account.extra_data for account in social_accounts}
 
     if request.method == 'POST':
         for user_profile in user_profiles:
             payment_completed = request.POST.get(f'payment_completed_{user_profile.user.id}') == 'on'
             user_profile.payment_completed = payment_completed
             user_profile.save()
-        return redirect('validatePaymentAdmin')  # Ajusta esto a tu URL real
+        return redirect('validatePaymentAdmin')
 
+    # Pass user profiles and the social account data (extra_data) to the template
     context = {
         'user_profiles': user_profiles,
+        'social_extra_data': social_extra_data,  # Passing the social account data to the template
     }
     return render(request, 'validatePayment.html', context)
+
+
+def seeMyDiplomas(request):
+    is_staff_user=request.user.is_staff
+    is_staff_superuser=request.user.is_superuser
+    context={
+        'is_staff_user':is_staff_user,
+        'is_staff_superuser':is_staff_superuser,
+    }
+    return render(request,'seeMyDiplomas.html',context)
+
+@staff_member_required
+def registerStaff(request):
+    
+    is_staff_user=request.user.is_staff
+    is_staff_superuser=request.user.is_superuser
+    if is_staff_superuser:
+        users = User.objects.all()        
+        social_accounts = SocialAccount.objects.filter(user__in=users)
+        social_extra_data = {account.user_id: account.extra_data for account in social_accounts}
+        if request.method == 'POST':
+            # Process form submission to update staff status
+            for user in users:
+                is_staff = request.POST.get(f'is_staff_{user.id}') == 'on'
+                user.is_staff = is_staff
+                user.save()
+
+            return redirect('registerStaff')  
+        context={
+            'is_staff_user':is_staff_user,
+            'is_staff_superuser':is_staff_superuser,
+            'users': users,
+            'social_extra_data': social_extra_data,  # Passing the social account data to the template
+        }
+        return render(request,'registerStaff.html',context)
+    else:
+        return redirect('dashboard')
+    

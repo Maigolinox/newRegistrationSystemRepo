@@ -1,0 +1,90 @@
+{% load custom_filters %}
+<head>
+    <title>Staff Members Register</title>
+</head>
+<div class="container mt-5">
+    <h1>Set Staff Members</h1>
+    <form method="post">
+        {% csrf_token %}
+        <table id="usersTable" class="table">
+            <thead>
+                <tr>
+                    <th>Username</th>
+                    <th>Email</th>
+                    <th>First Name</th>
+                    <th>Last Name</th>
+                    <th>Staff Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for user in users %}
+                    <tr>
+                        <td>{{ user.username }}</td>
+                        <td>{{ social_extra_data|get_item:user.id|get_item:'email'|default:"No email available" }}</td>
+
+                            
+                        </td>
+                        <td>{{ user.first_name }}</td>
+                        <td>{{ user.last_name }}</td>
+                        <td>
+                            <input type="checkbox" name="is_staff_{{ user.id }}" {% if user.is_staff %}checked{% endif %}>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <button type="submit" class="btn btn-primary">Update Staff Status</button>
+    </form>
+</div>
+
+<!-- Include DataTables and SweetAlert2 scripts -->
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.1/css/jquery.dataTables.min.css">
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.1/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+    $(document).ready(function() {
+        // Initialize DataTable
+        var table = $('#usersTable').DataTable();  // Capital "D" in DataTable()
+
+        // Handle form submission
+        $('form').on('submit', function(e) {
+            e.preventDefault();  // Prevent the default form submission
+
+            // Confirm the action with SweetAlert2
+            Swal.fire({
+                title: 'Are you sure?',
+                text: "You are about to update the staff status of selected users.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Yes, update it!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Iterate over all rows (visible and invisible)
+                    table.rows().every(function(rowIdx, tableLoop, rowLoop) {
+                        var row = this.node(); // Get the row element
+                        var checkbox = $(row).find('input[type="checkbox"]'); // Find the checkbox in the row
+
+                        // If the checkbox exists in the row
+                        if (checkbox.length > 0) {
+                            // Create a hidden input to ensure the value is submitted
+                            var hiddenInput = $('<input>').attr({
+                                type: 'hidden',
+                                name: checkbox.attr('name'),  // Set the same name as the checkbox
+                                value: checkbox.is(':checked') ? 'on' : 'off'  // Set the value based on whether it is checked
+                            });
+                            // Append the hidden input to the form
+                            $('form').append(hiddenInput);
+                        }
+                    });
+
+                    // Submit the form after processing all rows
+                    $('form').off('submit').submit();  // Ensure the form is submitted after SweetAlert confirmation
+                }
+            });
+        });
+    });
+</script>

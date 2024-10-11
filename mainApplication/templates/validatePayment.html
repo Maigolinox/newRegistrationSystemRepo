@@ -1,4 +1,5 @@
-{% load static %}
+{% load static %}{% load custom_filters %}
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -18,6 +19,7 @@
                 <thead>
                     <tr>
                         <th>Username</th>
+                        <th>Email</th> <!-- New column for Email from extra_data -->
                         <th>First Name</th>
                         <th>Last Name</th>
                         <th>User Type</th>
@@ -29,6 +31,12 @@
                     {% for user_profile in user_profiles %}
                         <tr>
                             <td>{{ user_profile.user.username }}</td>
+                            
+                            <td>
+                                {% with email=social_extra_data|get_item:user_profile.user.id %}
+                                    {{ email.email|default:"No email available" }}
+                                {% endwith %}
+                            </td>
                             <td>{{ user_profile.user.first_name }}</td>
                             <td>{{ user_profile.user.last_name }}</td>
                             <td>{{ user_profile.user_type }}</td>
@@ -47,11 +55,10 @@
                         </tr>
                     {% empty %}
                         <tr>
-                            <td colspan="6">No user profiles found.</td>
+                            <td colspan="7">No user profiles found.</td>
                         </tr>
                     {% endfor %}
                 </tbody>
-                
             </table>
             <button type="submit" class="btn btn-primary">Update Payment Status</button>
         </form>
@@ -61,7 +68,28 @@
     <script src="https://cdn.datatables.net/1.13.1/js/jquery.dataTables.min.js"></script>
     <script>
         $(document).ready(function() {
-            $('#userProfilesTable').DataTable();
+            var table = $('#userProfilesTable').DataTable();
+    
+            // Antes de enviar el formulario
+            $('form').on('submit', function(e) {
+                // Iterar sobre todas las filas de la tabla (visibles y no visibles)
+                table.rows().every(function(rowIdx, tableLoop, rowLoop) {
+                    var row = this.node(); // Obtener la fila correspondiente
+                    var checkbox = $(row).find('input[type="checkbox"]'); // Encontrar el checkbox
+    
+                    // Si el checkbox existe en la fila
+                    if (checkbox.length > 0) {
+                        // Crear un input hidden para asegurar que se envíe el valor
+                        var hiddenInput = $('<input>').attr({
+                            type: 'hidden',
+                            name: checkbox.attr('name'), // Asigna el mismo nombre del checkbox
+                            value: checkbox.is(':checked') ? 'on' : 'off' // Define el valor según si está marcado o no
+                        });
+                        // Agregar el input hidden al formulario
+                        $(e.target).append(hiddenInput);
+                    }
+                });
+            });
         });
     </script>
 </body>

@@ -39,6 +39,7 @@
             </thead>
             <tbody>
                 {% for profile in profiles %}
+                {% if profile.user_type == "student" %}
                 <tr>
                     <td>{{ profile.user.first_name }}</td>
                     <td>{{ profile.user.last_name }}</td>
@@ -50,6 +51,7 @@
                         <input type="checkbox" name="becado_{{ profile.id }}" {% if profile.permitirRegistro %}checked{% endif %}>
                     </td>
                 </tr>
+                {% endif %}
                 {% endfor %}
             </tbody>
         </table>
@@ -66,12 +68,12 @@
     <script>
         $(document).ready(function() {
             // Inicializa DataTable
-            $('#profilesTable').DataTable();
-
+            var table = $('#profilesTable').DataTable();
+    
             // Captura el evento de envío del formulario
             $('#profileForm').on('submit', function(e) {
                 e.preventDefault(); // Previene el envío inmediato del formulario
-
+    
                 // Muestra la alerta de confirmación
                 Swal.fire({
                     title: '¿Estás seguro?',
@@ -84,8 +86,26 @@
                     cancelButtonText: 'Cancelar'
                 }).then((result) => {
                     if (result.isConfirmed) {
-                        // Si el usuario confirma, envía el formulario
-                        this.submit();
+                        // Si el usuario confirma, antes de enviar, recoge los checkboxes de todas las filas
+                        table.rows().every(function(rowIdx, tableLoop, rowLoop) {
+                            var row = this.node(); // Obtener la fila correspondiente
+                            var checkbox = $(row).find('input[type="checkbox"]'); // Encontrar el checkbox
+    
+                            // Si el checkbox existe en la fila
+                            if (checkbox.length > 0) {
+                                // Crear un input hidden para asegurar que se envíe el valor
+                                var hiddenInput = $('<input>').attr({
+                                    type: 'hidden',
+                                    name: checkbox.attr('name'), // Usar el mismo nombre del checkbox
+                                    value: checkbox.is(':checked') ? 'on' : 'off' // Valor según si está marcado o no
+                                });
+                                // Agregar el input hidden al formulario
+                                $('#profileForm').append(hiddenInput);
+                            }
+                        });
+    
+                        // Envía el formulario después de agregar los hidden inputs
+                        e.target.submit();
                     }
                 });
             });

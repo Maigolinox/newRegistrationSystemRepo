@@ -212,6 +212,12 @@
       <span>See my schedule</span>
     </a>
   </li>
+  <li class="nav-item"></li>
+        <a class="nav-link collapsed" href="{% url 'seeMyDiplomas' %}">
+          <i class="bx bxs-certification"></i>
+          <span>My Diplomas</span>
+        </a>
+      </li>
       <li class="nav-item"></li>
         <a class="nav-link collapsed" href="{% url 'account_logout' %}">
           <i class="bi bi-door-closed-fill"></i>
@@ -226,17 +232,17 @@
         </a>
       </li>
       <li class="nav-item"></li>
-            <a class="nav-link collapsed" href="{% url 'scholarshipAssignations' %}">
-              <i class="bi bi-mortarboard"></i>
-              <span>Scholarship assignations</span>
-            </a>
-          </li>
+        <a class="nav-link collapsed" href="{% url 'scholarshipAssignations' %}">
+          <i class="bi bi-mortarboard"></i>
+          <span>Scholarship assignations</span>
+        </a>
+      </li>
       <li class="nav-item"></li>
-            <a class="nav-link collapsed" href="{% url 'consultWelcomeKit' %}">
-              <i class="bi bi-box2-heart"></i>
-              <span>Welcome Kit Control</span>
-            </a>
-          </li>
+        <a class="nav-link collapsed" href="{% url 'consultWelcomeKit' %}">
+          <i class="bi bi-box2-heart"></i>
+          <span>Welcome Kit Control</span>
+        </a>
+      </li>
       <li class="nav-item"></li>
         <a class="nav-link collapsed" href="{% url 'validatePaymentAdmin' %}">
           <i class="bi bi-wallet2"></i>
@@ -252,6 +258,14 @@
           <span>Super Admin Console</span>
         </a>
       </li>
+
+      <li class="nav-item"></li>
+        <a class="nav-link collapsed" href="{% url 'registerStaff' %}">
+          <i class="bi bi-file-earmark-person-fill"></i>
+          <span>Register Staff members</span>
+        </a>
+      </li>
+
       <li class="nav-item"></li>
         <a class="nav-link collapsed" href="{% url 'registerPlace' %}">
           <i class="bi bi-building"></i>

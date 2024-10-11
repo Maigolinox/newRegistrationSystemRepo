@@ -81,105 +81,117 @@
     <!-- ======= Sidebar ======= -->
     <aside id="sidebar" class="sidebar">
 
-        <ul class="sidebar-nav" id="sidebar-nav">
-    
-          <li class="nav-item">
-            <a class="nav-link collapsed" href="{% url 'complete_profile'%}">
-              <i class="bi bi-person"></i>
-              <span>Profile Information</span>
-            </a>
-          </li>
-          <li class="nav-item"></li>
-            <a class="nav-link " href="{% url 'dashboard' %}">
-              <i class="bi bi-grid"></i>
-              <span>Dashboard</span>
-            </a>
-          </li>
-          <li class="nav-item"></li>
-          <a class="nav-link collapsed" href="{% url 'payment' %}">
-              <i class="bi bi-cash-coin"></i>
-              <span>Payment</span>
-            </a>
-          </li>
-          <li class="nav-item"></li>
-        <a class="nav-link collapsed" href="{% url 'schedule' %}">
-          <i class="bi bi-calendar"></i>
-          <span>Schedule (Program)</span>
-        </a>
+      <ul class="sidebar-nav" id="sidebar-nav">
+  
+        <li class="nav-item">
+          <a class="nav-link collapsed" href="{% url 'complete_profile'%}">
+            <i class="bi bi-person"></i>
+            <span>Profile Information</span>
+          </a>
+        </li>
         <li class="nav-item"></li>
-        <a class="nav-link collapsed" href="{% url 'seeMySchedule' %}">
-          <i class="bi bi-file-earmark-break"></i>
-          <span>See my schedule</span>
-        </a>
-      </li>
-          <li class="nav-item"></li>
-            <a class="nav-link collapsed" href="{% url 'account_logout' %}">
-              <i class="bi bi-door-closed-fill"></i>
-              <span>Log Out</span>
-            </a>
-          </li>
-          {% if is_staff_user %}
-          <li class="nav-item">Staff options</li>
-            <a class="nav-link collapsed" href="{% url 'assistanceList' %}">
-              <i class="bi bi-check2-square"></i>
-              <span>Assistance List (Events)</span>
-            </a>
-          </li>
-          <li class="nav-item"></li>
-            <a class="nav-link collapsed" href="{% url 'scholarshipAssignations' %}">
-              <i class="bi bi-mortarboard"></i>
-              <span>Scholarship assignations</span>
-            </a>
-          </li>
-          <li class="nav-item"></li>
-            <a class="nav-link collapsed" href="{% url 'consultWelcomeKit' %}">
-              <i class="bi bi-box2-heart"></i>
-              <span>Welcome Kit Control</span>
-            </a>
-          </li>
-          <li class="nav-item"></li>
-            <a class="nav-link collapsed" href="{% url 'validatePaymentAdmin' %}">
-              <i class="bi bi-wallet2"></i>
-              <span>Validate Payments</span>
-            </a>
-          </li>
-          
-          {% endif %}
-          {% if is_staff_superuser %}
-          <li class="nav-item">Super Admin options</li>
-            <a class="nav-link collapsed" href="{{request.scheme}}://{{ request.get_host }}/admin">
-              <i class="bi bi-terminal"></i>
-              <span>Super Admin Console</span>
-            </a>
-          </li>
-          <li class="nav-item"></li>
-            <a class="nav-link collapsed" href="{% url 'registerPlace' %}">
-              <i class="bi bi-building"></i>
-              <span>Register Places</span>
-            </a>
-          </li>
-          <li class="nav-item"></li>
-            <a class="nav-link collapsed" href="{% url 'registerEvent' %}">
-              <i class="bi bi-briefcase"></i>
-              <span>Register Events</span>
-            </a>
-          </li>
-          <li class="nav-item"></li>
-            <a class="nav-link collapsed" href="{% url 'listEvents' %}">
-              <i class="bi bi-card-list"></i>
-              <span>List Events</span>
-            </a>
-          </li>
-          <li class="nav-item"></li>
-            <a class="nav-link collapsed" href="{% url 'manageCongressDates' %}">
-              <i class="bi bi-calendar-check"></i>
-              <span>Manage Congress Dates</span>
-            </a>
-          </li>
-          {% endif %}
-        </ul>
-    
-      </aside><!-- End Sidebar-->
+          <a class="nav-link " href="{% url 'dashboard' %}">
+            <i class="bi bi-grid"></i>
+            <span>Dashboard</span>
+          </a>
+        </li>
+        <li class="nav-item"></li>
+        <a class="nav-link collapsed" href="{% url 'payment' %}">
+            <i class="bi bi-cash-coin"></i>
+            <span>Payment</span>
+          </a>
+        </li>
+        <li class="nav-item"></li>
+      <a class="nav-link collapsed" href="{% url 'schedule' %}">
+        <i class="bi bi-calendar"></i>
+        <span>Schedule (Program)</span>
+      </a>
+      <li class="nav-item"></li>
+      <a class="nav-link collapsed" href="{% url 'seeMySchedule' %}">
+        <i class="bi bi-file-earmark-break"></i>
+        <span>See my schedule</span>
+      </a>
+    </li>
+    <li class="nav-item"></li>
+          <a class="nav-link collapsed" href="{% url 'seeMyDiplomas' %}">
+            <i class="bx bxs-certification"></i>
+            <span>My Diplomas</span>
+          </a>
+        </li>
+        <li class="nav-item"></li>
+          <a class="nav-link collapsed" href="{% url 'account_logout' %}">
+            <i class="bi bi-door-closed-fill"></i>
+            <span>Log Out</span>
+          </a>
+        </li>
+        {% if is_staff_user %}
+        <li class="nav-item">Staff options</li>
+          <a class="nav-link collapsed" href="{% url 'assistanceList' %}">
+            <i class="bi bi-check2-square"></i>
+            <span>Assistance List (Events)</span>
+          </a>
+        </li>
+        <li class="nav-item"></li>
+          <a class="nav-link collapsed" href="{% url 'scholarshipAssignations' %}">
+            <i class="bi bi-mortarboard"></i>
+            <span>Scholarship assignations</span>
+          </a>
+        </li>
+        <li class="nav-item"></li>
+          <a class="nav-link collapsed" href="{% url 'consultWelcomeKit' %}">
+            <i class="bi bi-box2-heart"></i>
+            <span>Welcome Kit Control</span>
+          </a>
+        </li>
+        <li class="nav-item"></li>
+          <a class="nav-link collapsed" href="{% url 'validatePaymentAdmin' %}">
+            <i class="bi bi-wallet2"></i>
+            <span>Validate Payments</span>
+          </a>
+        </li>
+        
+        {% endif %}
+        {% if is_staff_superuser %}
+        <li class="nav-item">Super Admin options</li>
+          <a class="nav-link collapsed" href="{{request.scheme}}://{{ request.get_host }}/admin">
+            <i class="bi bi-terminal"></i>
+            <span>Super Admin Console</span>
+          </a>
+        </li>
+        <li class="nav-item"></li>
+          <a class="nav-link collapsed" href="{% url 'registerStaff' %}">
+            <i class="bi bi-file-earmark-person-fill"></i>
+            <span>Register Staff members</span>
+          </a>
+        </li>
+        <li class="nav-item"></li>
+          <a class="nav-link collapsed" href="{% url 'registerPlace' %}">
+            <i class="bi bi-building"></i>
+            <span>Register Places</span>
+          </a>
+        </li>
+        <li class="nav-item"></li>
+          <a class="nav-link collapsed" href="{% url 'registerEvent' %}">
+            <i class="bi bi-briefcase"></i>
+            <span>Register Events</span>
+          </a>
+        </li>
+        <li class="nav-item"></li>
+          <a class="nav-link collapsed" href="{% url 'listEvents' %}">
+            <i class="bi bi-card-list"></i>
+            <span>List Events</span>
+          </a>
+        </li>
+        <li class="nav-item"></li>
+          <a class="nav-link collapsed" href="{% url 'manageCongressDates' %}">
+            <i class="bi bi-calendar-check"></i>
+            <span>Manage Congress Dates</span>
+          </a>
+        </li>
+        {% endif %}
+      </ul>
+  
+    </aside><!-- End Sidebar-->
 
   <main id="main" class="main">
 
