@@ -1,5 +1,7 @@
 import base64
 from datetime import timedelta, datetime
+import os
+from django.conf import settings
 from django.db import IntegrityError
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
@@ -16,10 +18,25 @@ from django.db.models import Q
 from allauth.socialaccount.models import SocialAccount
 from django.contrib.auth.models import User
 
-
 import pycountry
 from io import BytesIO
 from collections import defaultdict
+
+
+# PARA DIPLOMAS
+from PIL import Image, ImageDraw, ImageFont
+from reportlab.lib.pagesizes import landscape, A4
+from reportlab.pdfgen import canvas
+from PyPDF2 import PdfWriter, PdfReader
+import os
+import smtplib
+import requests
+from io import BytesIO
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+from email.mime.application import MIMEApplication
+# PARA DIPLOMAS
+
 
 
 
@@ -633,14 +650,6 @@ def validatePayment(request):
     return render(request, 'validatePayment.html', context)
 
 
-def seeMyDiplomas(request):
-    is_staff_user=request.user.is_staff
-    is_staff_superuser=request.user.is_superuser
-    context={
-        'is_staff_user':is_staff_user,
-        'is_staff_superuser':is_staff_superuser,
-    }
-    return render(request,'seeMyDiplomas.html',context)
 
 @staff_member_required
 def registerStaff(request):
@@ -669,3 +678,159 @@ def registerStaff(request):
     else:
         return redirect('dashboard')
     
+
+@login_required
+def seeMyDiplomas(request):
+    is_staff_user=request.user.is_staff
+    is_staff_superuser=request.user.is_superuser
+    registrations = Registration.objects.filter(user=request.user.id).select_related('event')
+
+    
+
+    context={
+        'is_staff_user':is_staff_user,
+        'is_staff_superuser':is_staff_superuser,
+        'registrations': registrations,
+    }
+    return render(request,'seeMyDiplomas.html',context)
+
+@login_required
+def generateMyDiplomas(request,event_id):
+    eventInformation = Event.objects.get(id=event_id)
+    lastAllEvent=eventInformation.allEvent
+    cargaInscripcion=Registration.objects.get(event_id=event_id,user_id=request.user.id)
+    if lastAllEvent:
+        asisted=cargaInscripcion.assisted
+        counterAssistance=cargaInscripcion.counter
+        if counterAssistance<3:
+            allowDiploma=False
+    else:
+        asisted=cargaInscripcion.assisted
+        
+        if asisted:
+            allowDiploma=True
+        
+        
+
+
+    eventFilePath=eventInformation.fileDiplomas
+    userInformation=UserProfile.objects.get(user_id=request.user.id)
+    name=userInformation.FullName
+    if name is None or name.strip() == "":
+        name = "Participant"
+    
+    email=SocialAccount.objects.get(user_id=request.user.id).extra_data.get('email')
+    # print(email)
+    # email=userInformation.user.email
+    
+    subject = "International Conference on Software Process Improvement CIMPS 2024"
+    body = """ ================= THANK YOU<br> Attached to this email you will find your corresponding diploma for you atendance to CIMPS 2024<br> =================<br><br>Warm regards,JMM<br>CIMPS Chair <br>2024<br>"""
+
+    def create_diploma(template_path, name, output_image_path):
+        # Abrir la plantilla de imagen
+        image = Image.open(template_path)
+        if image.mode == 'RGBA':
+            image = image.convert('RGB')
+        draw = ImageDraw.Draw(image)
+
+        font_url = "https://github.com/Outfitio/Outfit-Fonts/raw/refs/heads/main/fonts/ttf/Outfit-Regular.ttf"
+        # Configurar la fuente
+        try:
+            response = requests.get(font_url)
+            font = ImageFont.truetype(BytesIO(response.content), 180)
+            
+        except:
+            print("No se pudo cargar la fuente")
+            font = ImageFont.load_default()
+            text_bbox = draw.textbbox((0, 0), name, font=font)
+            default_text_width = text_bbox[2] - text_bbox[0]
+            default_text_height = text_bbox[3] - text_bbox[1]
+        
+
+        # Obtener tamaño del texto usando la fuente
+        text_bbox = draw.textbbox((0, 0), name, font=font)
+        text_width = text_bbox[2] - text_bbox[0]
+        text_height = text_bbox[3] - text_bbox[1]
+        width, height = image.size
+        
+
+        # Posicionar el texto en el centro de la imagen
+        x = (width - text_width) / 2
+        y = (height - text_height) / 2  # Centrar el texto verticalmente también
+        if font == ImageFont.load_default():
+            # If we're using the default font, we need to scale the image up before drawing
+            # and then scale it back down to get a larger text
+            large_image = image.resize((int(width * scale_factor), int(height * scale_factor)), Image.LANCZOS)
+            large_draw = ImageDraw.Draw(large_image)
+            large_x = (large_image.width - text_width * scale_factor) / 2
+            large_y = (large_image.height - text_height * scale_factor) / 2
+            large_draw.text((large_x, large_y), name, font=font, fill="black")
+            image = large_image.resize((width, height), Image.LANCZOS)
+        else:
+            draw.text((x, y), name, font=font, fill="black")
+
+        # Añadir el nombre al diploma
+        # draw.text((x, y), name, font=font, fill="black")
+
+        # Guardar la imagen con el nombre del diploma
+        image.save(output_image_path,'JPEG')
+    def create_protected_pdf(image_path, pdf_path, owner_password):
+        # Crear un PDF a partir de la imagen
+        c = canvas.Canvas(pdf_path, pagesize=landscape(A4))
+        c.drawImage(image_path, 0, 0, width=landscape(A4)[0], height=landscape(A4)[1])
+        c.save()
+        
+        # Proteger el PDF con contraseña
+        reader = PdfReader(pdf_path)
+        writer = PdfWriter()
+        
+        for page in reader.pages:
+            writer.add_page(page)
+        
+        # Permitir abrir el archivo sin contraseña, pero protegerlo contra edición
+        writer.encrypt(user_pwd="", owner_pwd=owner_password, use_128bit=True)
+        
+        with open(pdf_path, "wb") as f:
+            writer.write(f)
+
+    def send_email(receiver_email, subject, body, pdf_path):
+        sender = "conferencecimps@cimat.mx"
+        password = "HIPOCRATES@2022"
+
+        message = MIMEMultipart()
+        message["From"] = sender
+        message["To"] = receiver_email
+        message["Subject"] = subject
+
+        message.attach(MIMEText(body, "html"))
+
+        with open(pdf_path, "rb") as f:
+            attach = MIMEApplication(f.read(),_subtype="pdf")
+            attach.add_header('Content-Disposition','attachment',filename=os.path.basename(pdf_path))
+            message.attach(attach)
+
+        with smtplib.SMTP_SSL('smtp.gmail.com', 465) as server:
+            server.login(sender, password)
+            server.send_message(message)
+
+    # eventFilePath
+    output_folder = "./static/diplomas"
+    if not eventInformation.is_ready_for_certificate() or allowDiploma is False:
+        messages.error(request, "The event is not ready for this certificate, check the date and hours of the event. Also make sure that your assistance is registered through the QR scanner with a staff member. If you do not register your assistance in time, you will not be able to receive the certificate.")
+        return redirect('seeMyDiplomas')
+    elif eventInformation.is_ready_for_certificate() and allowDiploma is True:
+        os.makedirs(output_folder, exist_ok=True)
+        image_path = os.path.join(output_folder,  f"{name}.jpg")
+        create_diploma(eventFilePath, name, image_path)
+        pdf_path=os.path.join(output_folder,  f"{name}.pdf")
+        owner_password="Cimps2024.Terron123#@!"
+        create_protected_pdf(image_path,pdf_path,owner_password)
+
+        send_email(email,subject,body,pdf_path)
+        cargaInscripcion.receivedDiploma=True
+        cargaInscripcion.save()
+        messages.success(request, "The diploma is already in your inbox! Check your email, in case of issues contact: victor.terron@cimat.mx")  # Agrega un mensaje de éxito
+    else:
+        messages.error(request, "Error! Check your contact: victor.terron@cimat.mx describing your issue")
+    
+    return redirect('seeMyDiplomas')

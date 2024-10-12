@@ -1,3 +1,4 @@
+from datetime import datetime, timedelta
 from django.db import models
 from django.contrib.auth.models import User
 # Create your models here.
@@ -34,6 +35,7 @@ class UserProfile(models.Model):
     FullName=models.CharField(max_length=255, blank=True, null=True, verbose_name="Full Name (The name you write will be the one under which your certificates will be issued)")  # Nombre completo
     manualPayment=models.BooleanField(default=False)
     amount=models.CharField(default=" ",max_length=255, null=True, blank=True)
+
 
 
     # paper_id = models.CharField(max_length=100, blank=True, null=True)  # ID del artículo
@@ -80,6 +82,15 @@ class Event(models.Model):
     links=models.CharField(default=" ",max_length=255,null=True, blank=True,verbose_name="Links of online meeting: ")
     requisites=models.CharField(default=" ",max_length=255,null=True, blank=True,verbose_name="Requisites: ")
     allEvent=models.BooleanField(default=False,verbose_name="This event last all the congress? ")
+    fileDiplomas = models.FileField(upload_to='diplomasTemplates/',null=True,blank=True)  # Directory where the file will be uploaded
+    def is_ready_for_certificate(self):
+        # Combina la fecha y hora de finalización
+        event_end_datetime = datetime.combine(self.date, self.end_time)
+        # Calcula la hora que debe pasar después del evento
+        ready_time = event_end_datetime + timedelta(hours=1)
+        # Verifica si la hora actual es mayor o igual que la hora lista para la constancia
+        return datetime.now() >= ready_time
+
 
 
     def __str__(self):
@@ -93,6 +104,7 @@ class Registration(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     assisted=models.BooleanField(default=False)
     counter=models.IntegerField(default=0)
+    receivedDiploma=models.BooleanField(default=False)
 
     class Meta:
         unique_together = ('user', 'event')  # Ensure a user can register for an event only once

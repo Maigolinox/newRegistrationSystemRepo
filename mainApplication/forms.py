@@ -40,7 +40,7 @@ class PlaceForm(forms.ModelForm):
 class EventForm(forms.ModelForm):
     class Meta:
         model = Event
-        fields = ['title', 'description', 'date', 'start_time', 'end_time', 'place', 'event_type', 'ponent_name', 'affiliation', 'moderator', 'banner','links','requisites','allEvent']
+        fields = ['title', 'description', 'date', 'start_time', 'end_time', 'place', 'event_type', 'ponent_name', 'affiliation', 'moderator', 'banner','links','requisites','allEvent','fileDiplomas']
         widgets = {
             'title': forms.TextInput(attrs={'class': 'form-control'}),
             'description': forms.Textarea(attrs={'class': 'form-control'}),
@@ -55,8 +55,8 @@ class EventForm(forms.ModelForm):
             'requisites': forms.Textarea(attrs={'class': 'form-control'}),
             'links': forms.TextInput(attrs={'class': 'form-control'}),
             'banner': forms.ClearableFileInput(attrs={'class': 'form-control'}),
-            'allEvent': forms.CheckboxInput(attrs={'class': 'form-check-input'})  # Aquí usas el widget correcto
-
+            'allEvent': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'fileDiplomas': forms.ClearableFileInput(attrs={'class':'form-control'}),
         }
 
     banner = forms.ImageField(required=False)

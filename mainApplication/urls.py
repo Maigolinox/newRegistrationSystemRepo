@@ -16,6 +16,7 @@ urlpatterns = [
     path('registerintoEvent/', views.registerintoEvent, name='registerintoEvent'),
     path('seeSchedule/', views.seeMySchedule, name='seeMySchedule'),
     path('seeDiplomas/', views.seeMyDiplomas, name='seeMyDiplomas'),
+    path('sentDiploma/<int:event_id>', views.generateMyDiplomas, name='sentDiploma'),
     path('assist/<int:user_id>/<int:registration_id>/', views.assistanceControl, name='assistanceControl'),#admin/staff
     path('welcomeKit/<int:user_id>/', views.welcomeKit, name='welcomeKit'),#admin/staff control de kits de bienvenida
     path('registerPlace/', views.register_place, name='registerPlace'),#admin/staff
