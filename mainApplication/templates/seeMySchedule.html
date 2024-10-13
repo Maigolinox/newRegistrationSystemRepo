@@ -347,7 +347,7 @@
       <!-- Loop through the registered events -->
       {% for registration in registrations %}
       <tr>
-        <td>{{ registration.event.title }}</td>
+        <td>{{ registration.event.title }} <br> {% if registration.event_link %} Virtual Access Links: <a href="{{ registration.event_link }}">{{ registration.event_link }}</a>. {% endif %}</td>
         <td>{{ registration.event.place.name }}</td> <!-- Assuming 'place' has a 'name' field -->
         <td>{{ registration.event.date }}</td>
         <td>{{ registration.event.start_time }}</td>

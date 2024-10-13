@@ -507,7 +507,7 @@ def seeMySchedule(request):
     userID = request.user.id
     try:
         userProfile = UserProfile.objects.get(user_id=userID)
-    except:
+    except UserProfile.DoesNotExist:
         return redirect('complete_profile')
     userProfile = UserProfile.objects.get(user_id=userID)
     paymentCompleted = userProfile.payment_completed
@@ -520,6 +520,7 @@ def seeMySchedule(request):
         qr_text = f"{base_url}assist/{userID}/{registration.pk}"  # Update URL as needed
         qr_image = qrcode.make(qr_text)
 
+
         # Save the QR code to a BytesIO object
         buffered = BytesIO()
         qr_image.save(buffered, format="PNG")
@@ -527,6 +528,7 @@ def seeMySchedule(request):
 
         # Add the QR code image to the registration object for rendering
         registration.qr_code = qr_code_image
+        registration.event_link = registration.event.links
 
 
     context={
