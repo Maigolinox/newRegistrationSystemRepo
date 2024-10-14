@@ -298,11 +298,11 @@
   <main id="main" class="main">
     {% if not paymentCompleted %}
     <div id="no-completed-payment" class="alert alert-danger" role="alert">
-        <pre><h3>VERY IMPORTANT: </h3> Once you complete the payment, the congress program (Schedule Section) allows you to register for an event and the registered events will be displayed below.</pre>
+        <pre><h3>VERY IMPORTANT: </h3> Once you complete the payment, the congress program (Schedule Section) allows you to register for an event and the registered events will be displayed below. </pre>
     </div>
     {% else %}
     <div id="completed-payment" class="alert alert-success" role="alert">
-        <pre><h3>VERY IMPORTANT: </h3> It is important to show the QR code at the entrance of each place assigned for the registered event.</pre>
+        <pre><h3>VERY IMPORTANT: </h3> It is important to show the QR code at the entrance of each place assigned for the registered event. <br> Some events appear duplicated because it is divided by the lunch block, just consider that to generate your certificate is mandatory to assist and register your assistance in the two blocks.</pre>
     </div>
     {% endif %}
 
@@ -344,16 +344,23 @@
       </tr>
     </thead>
     <tbody>
-      <!-- Loop through the consolidated events -->
-      {% for event in consolidated_list %}
+      <!-- Loop through the registered events -->
+      {% for registration in registrations %}
       <tr>
-        <td>{{ event.title }} <br> {% if event.event_link %} Virtual Access Links: <a href="{{ event.event_link }}">{{ event.event_link }}</a>. {% endif %}</td>
-        <td>{{ event.place.name }}</td>
-        <td>{{ event.date }}</td>
-        <td>{{ event.start_time }}</td>
-        <td>{{ event.end_time }}</td>
+        <td>{{ registration.event.title }} <br> 
+          {% if registration.event_link and registration.event_link != "SOLO PRESENCIAL" %}
+              Virtual Access Links: <a target="_blank" href="{{ registration.event_link }}">{{ registration.event_link }}</a>.
+              {% else %}
+              Virtual Access Links: SOLO PRESENCIAL.</a>.
+
+          {% endif %}
+          </td>
+        <td>{{ registration.event.place.name }}</td> <!-- Assuming 'place' has a 'name' field -->
+        <td>{{ registration.event.date }}</td>
+        <td>{{ registration.event.start_time }}</td>
+        <td>{{ registration.event.end_time }}</td>
         <td>
-            <img src="data:image/png;base64,{{ event.qr_code }}" alt="QR Code" class="img-fluid" style="width: 100px; height: auto;">
+            <img src="data:image/png;base64,{{ registration.qr_code }}" alt="QR Code" class="img-fluid" style="width: 100px; height: auto;">
         </td>
       </tr>
       {% endfor %}

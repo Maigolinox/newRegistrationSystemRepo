@@ -69,7 +69,7 @@ class Event(models.Model):
         ('other', 'Other'),
     ]
     title = models.CharField(max_length=255)
-    description = models.TextField(blank=True)
+    description = models.TextField(blank=True,max_length=5000)
     date = models.DateField()
     start_time = models.TimeField()
     end_time = models.TimeField()
@@ -80,7 +80,7 @@ class Event(models.Model):
     moderator = models.CharField(max_length=255, blank=True)
     banner = models.ImageField(upload_to='event_banners/', blank=True, null=True)
     links=models.CharField(default=" ",max_length=255,null=True, blank=True,verbose_name="Links of online meeting: ")
-    requisites=models.CharField(default=" ",max_length=255,null=True, blank=True,verbose_name="Requisites: ")
+    requisites=models.CharField(default=" ",max_length=1000,null=True, blank=True,verbose_name="Requisites: ")
     allEvent=models.BooleanField(default=False,verbose_name="This event last all the congress? ")
     fileDiplomas = models.FileField(upload_to='diplomasTemplates/',null=True,blank=True)  # Directory where the file will be uploaded
     def is_ready_for_certificate(self):
