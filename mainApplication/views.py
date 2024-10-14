@@ -516,19 +516,46 @@ def seeMySchedule(request):
     registrations = Registration.objects.filter(user=userID).select_related('event')
     base_url = f"{request.scheme}://{request.get_host()}/"
     # Generate QR codes for each registration
+    consolidated_events = defaultdict(lambda: {"start_time": None, "end_time": None, "event_link": None, "qr_code": None, "place": None})
+
     for registration in registrations:
-        qr_text = f"{base_url}assist/{userID}/{registration.pk}"  # Update URL as needed
+        event_title = registration.event.title
+
+        # Obtener el texto del QR
+        qr_text = f"{base_url}assist/{userID}/{registration.pk}"
         qr_image = qrcode.make(qr_text)
 
-
-        # Save the QR code to a BytesIO object
+        # Guardar la imagen del QR en un objeto BytesIO
         buffered = BytesIO()
         qr_image.save(buffered, format="PNG")
         qr_code_image = base64.b64encode(buffered.getvalue()).decode('utf-8')
 
-        # Add the QR code image to the registration object for rendering
-        registration.qr_code = qr_code_image
-        registration.event_link = registration.event.links
+        # Consolidar el evento
+        if consolidated_events[event_title]["start_time"] is None or registration.event.start_time < consolidated_events[event_title]["start_time"]:
+            consolidated_events[event_title]["start_time"] = registration.event.start_time
+            consolidated_events[event_title]["event_link"] = registration.event.links  # Asumir que se desea mantener el primer link
+            consolidated_events[event_title]["date"] = registration.event.date  # Guardar la fecha
+
+        if consolidated_events[event_title]["end_time"] is None or registration.event.end_time > consolidated_events[event_title]["end_time"]:
+            consolidated_events[event_title]["end_time"] = registration.event.end_time
+
+        # Guardar otros detalles
+        consolidated_events[event_title]["qr_code"] = qr_code_image
+        consolidated_events[event_title]["place"] = registration.event.place
+
+    # Preparar los datos para la plantilla
+    consolidated_list = [
+        {
+            "title": title,
+            "date": details["date"],
+            "start_time": details["start_time"],
+            "end_time": details["end_time"],
+            "event_link": details["event_link"],
+            "qr_code": details["qr_code"],
+            "place": details["place"]
+        }
+        for title, details in consolidated_events.items()
+    ]
 
 
     context={
@@ -536,6 +563,7 @@ def seeMySchedule(request):
         'registrations': registrations,
         'is_staff_user': is_staff_user,
         'is_staff_superuser':is_staff_superuser,
+        'consolidated_list':consolidated_list,
     }
     
     return render(request,'seeMySchedule.html',context)

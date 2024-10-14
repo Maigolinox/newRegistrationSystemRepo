@@ -344,16 +344,16 @@
       </tr>
     </thead>
     <tbody>
-      <!-- Loop through the registered events -->
-      {% for registration in registrations %}
+      <!-- Loop through the consolidated events -->
+      {% for event in consolidated_list %}
       <tr>
-        <td>{{ registration.event.title }} <br> {% if registration.event_link %} Virtual Access Links: <a href="{{ registration.event_link }}">{{ registration.event_link }}</a>. {% endif %}</td>
-        <td>{{ registration.event.place.name }}</td> <!-- Assuming 'place' has a 'name' field -->
-        <td>{{ registration.event.date }}</td>
-        <td>{{ registration.event.start_time }}</td>
-        <td>{{ registration.event.end_time }}</td>
+        <td>{{ event.title }} <br> {% if event.event_link %} Virtual Access Links: <a href="{{ event.event_link }}">{{ event.event_link }}</a>. {% endif %}</td>
+        <td>{{ event.place.name }}</td>
+        <td>{{ event.date }}</td>
+        <td>{{ event.start_time }}</td>
+        <td>{{ event.end_time }}</td>
         <td>
-            <img src="data:image/png;base64,{{ registration.qr_code }}" alt="QR Code" class="img-fluid" style="width: 100px; height: auto;">
+            <img src="data:image/png;base64,{{ event.qr_code }}" alt="QR Code" class="img-fluid" style="width: 100px; height: auto;">
         </td>
       </tr>
       {% endfor %}
