@@ -516,46 +516,22 @@ def seeMySchedule(request):
     registrations = Registration.objects.filter(user=userID).select_related('event')
     base_url = f"{request.scheme}://{request.get_host()}/"
     # Generate QR codes for each registration
-    consolidated_events = defaultdict(lambda: {"start_time": None, "end_time": None, "event_link": None, "qr_code": None, "place": None})
-
+    registrations = Registration.objects.filter(user=userID).select_related('event')
+    base_url = f"{request.scheme}://{request.get_host()}/"
+    # Generate QR codes for each registration
     for registration in registrations:
-        event_title = registration.event.title
-
-        # Obtener el texto del QR
-        qr_text = f"{base_url}assist/{userID}/{registration.pk}"
+        qr_text = f"{base_url}assist/{userID}/{registration.pk}"  # Update URL as needed
         qr_image = qrcode.make(qr_text)
 
-        # Guardar la imagen del QR en un objeto BytesIO
+
+        # Save the QR code to a BytesIO object
         buffered = BytesIO()
         qr_image.save(buffered, format="PNG")
         qr_code_image = base64.b64encode(buffered.getvalue()).decode('utf-8')
 
-        # Consolidar el evento
-        if consolidated_events[event_title]["start_time"] is None or registration.event.start_time < consolidated_events[event_title]["start_time"]:
-            consolidated_events[event_title]["start_time"] = registration.event.start_time
-            consolidated_events[event_title]["event_link"] = registration.event.links  # Asumir que se desea mantener el primer link
-            consolidated_events[event_title]["date"] = registration.event.date  # Guardar la fecha
-
-        if consolidated_events[event_title]["end_time"] is None or registration.event.end_time > consolidated_events[event_title]["end_time"]:
-            consolidated_events[event_title]["end_time"] = registration.event.end_time
-
-        # Guardar otros detalles
-        consolidated_events[event_title]["qr_code"] = qr_code_image
-        consolidated_events[event_title]["place"] = registration.event.place
-
-    # Preparar los datos para la plantilla
-    consolidated_list = [
-        {
-            "title": title,
-            "date": details["date"],
-            "start_time": details["start_time"],
-            "end_time": details["end_time"],
-            "event_link": details["event_link"],
-            "qr_code": details["qr_code"],
-            "place": details["place"]
-        }
-        for title, details in consolidated_events.items()
-    ]
+        # Add the QR code image to the registration object for rendering
+        registration.qr_code = qr_code_image
+        registration.event_link = registration.event.links
 
 
     context={
@@ -563,7 +539,7 @@ def seeMySchedule(request):
         'registrations': registrations,
         'is_staff_user': is_staff_user,
         'is_staff_superuser':is_staff_superuser,
-        'consolidated_list':consolidated_list,
+        # 'consolidated_list':consolidated_list,
     }
     
     return render(request,'seeMySchedule.html',context)
@@ -711,18 +687,50 @@ def registerStaff(request):
 
 @login_required
 def seeMyDiplomas(request):
-    is_staff_user=request.user.is_staff
-    is_staff_superuser=request.user.is_superuser
+    is_staff_user = request.user.is_staff
+    is_staff_superuser = request.user.is_superuser
     registrations = Registration.objects.filter(user=request.user.id).select_related('event')
 
-    
+    # Diccionario para consolidar eventos por título
+    consolidated_events = defaultdict(lambda: {
+        "date": None,
+        "start_time": None,
+        "end_time": None,
+        "registration": None  # Para almacenar el registro que tenga el botón (el del evento más tardío)
+    })
 
-    context={
-        'is_staff_user':is_staff_user,
-        'is_staff_superuser':is_staff_superuser,
-        'registrations': registrations,
+    for registration in registrations:
+        event_title = registration.event.title
+
+        # Consolidar la hora de inicio más temprana y la hora de término más tardía
+        if (consolidated_events[event_title]["start_time"] is None or 
+            registration.event.start_time < consolidated_events[event_title]["start_time"]):
+            consolidated_events[event_title]["start_time"] = registration.event.start_time
+            consolidated_events[event_title]["date"] = registration.event.date  # Asumir que la fecha es la misma para todos los bloques
+
+        if (consolidated_events[event_title]["end_time"] is None or 
+            registration.event.end_time > consolidated_events[event_title]["end_time"]):
+            consolidated_events[event_title]["end_time"] = registration.event.end_time
+            consolidated_events[event_title]["registration"] = registration  # Guardar el registro del evento más tardío
+
+    # Preparar la lista de eventos consolidados para pasarla al template
+    consolidated_list = [
+        {
+            "title": title,
+            "date": details["date"],
+            "start_time": details["start_time"],
+            "end_time": details["end_time"],
+            "registration": details["registration"]
+        }
+        for title, details in consolidated_events.items()
+    ]
+
+    context = {
+        'is_staff_user': is_staff_user,
+        'is_staff_superuser': is_staff_superuser,
+        'registrations': consolidated_list,
     }
-    return render(request,'seeMyDiplomas.html',context)
+    return render(request, 'seeMyDiplomas.html', context)
 
 @login_required
 def generateMyDiplomas(request,event_id):

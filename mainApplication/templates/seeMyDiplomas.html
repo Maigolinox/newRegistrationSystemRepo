@@ -320,7 +320,7 @@
 
   <main id="main" class="main">
     <div id="completed-payment" class="alert alert-danger" role="alert">
-        <pre><h3>VERY IMPORTANT: </h3> It is important to show the QR code at the entrance of each place assigned for the registered event for register your assistance. <br> In case that you do not register your assistance, you will not be able to receive your diploma, no exceptions. <br> </pre>
+        <pre><h3>VERY IMPORTANT: </h3> It is important to show the QR code at the entrance of each place assigned for the registered event for register your assistance. <br> In case that you do not register your assistance, you will not be able to receive your diploma, no exceptions. <br> <strong>The diplomas will be generated after an hour of the event.</strong></pre>
     </div>
 
 
@@ -350,38 +350,36 @@
                 <div class="card-body">
                   <h5 class="card-title">Your diplomas will be displayed here <span> - Don't forget to show the QR to register your assistance</span></h5>
                   {% if registrations %}
-                  <table class="table">
-                    <thead>
-                      <tr>
-                        <th scope="col">Event Name</th>
-                        <!-- <th scope="col">Place</th> -->
-                        <th scope="col">Date</th>
-                        <th scope="col">Start Time</th>
-                        <th scope="col">End Time</th>
-                        <th scope="col">Diploma</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <!-- Loop through the registered events -->
-                       {% for registration in registrations %}
-                       <tr>
-                        <td>{{ registration.event.title }}</td>
-                        <td>{{ registration.event.date }}</td>
-                        <td>{{ registration.event.start_time }}</td>
-                        <td>{{ registration.event.end_time }}</td>
-                        <td>
-                          <a href="{% url 'sentDiploma' registration.event.id %}" class="btn btn-primary"> <i class="bi bi-envelope"></i> Send it to my email
-                          </a>
-                          
-                          <!-- <img src="data:image/png;base64,{{ registration.qr_code }}" alt="QR Code" class="img-fluid" style="width: 100px; height: auto;"> -->
-                        </td>
-                      </tr>
-                      {% endfor %}
-                    </tbody>
-                  </table>
-                  {% else %}
-                  <p>Your assistance has not been registered yet for any event.</p>
-                  {% endif %}
+  <table class="table">
+    <thead>
+      <tr>
+        <th scope="col">Event Name</th>
+        <th scope="col">Date</th>
+        <th scope="col">Start Time</th>
+        <th scope="col">End Time</th>
+        <th scope="col">Diploma</th>
+      </tr>
+    </thead>
+    <tbody>
+      <!-- Loop through the consolidated events -->
+      {% for event in registrations %}
+      <tr>
+        <td>{{ event.title }}</td>
+        <td>{{ event.date }}</td>
+        <td>{{ event.start_time }}</td>
+        <td>{{ event.end_time }}</td>
+        <td>
+          <a href="{% url 'sentDiploma' event.registration.event.id %}" class="btn btn-primary">
+            <i class="bi bi-envelope"></i> Send it to my email
+          </a>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+{% else %}
+  <p>Your assistance has not been registered yet for any event.</p>
+{% endif %}
                 </div>
               </div>
             </div>
