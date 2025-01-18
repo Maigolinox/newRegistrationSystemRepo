@@ -1,4 +1,4 @@
-{% load static %}
+{%extends "base.html"%}{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -8,8 +8,9 @@
     <link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.min.css">
   <link href="{% static 'images/favicon.ico'%}" rel="icon">
 
-    <title>All Registrations</title>
+    {%block title%}All Registrations{%endblock%}
 </head>
+{%block content%}
 <body>
     <div class="container mt-5">
         <h1>All Registrations</h1>
@@ -52,5 +53,7 @@
         });
     </script>
 </body>
+<script src="{% static 'assets/js/main.js' %}"></script>
+{%endblock%}
 </html>
 

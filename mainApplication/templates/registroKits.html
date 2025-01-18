@@ -1,9 +1,11 @@
+{%extends "base.html"%}{% load static %}
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Welcome Kit Control - CIMPS {% now "Y" %}</title>
+    {%block title%}Welcome Kit Control - CIMPS {% now "Y" %}{%endblock%}
 
     <!-- Incluye el CSS de DataTables -->
     <link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.min.css">
@@ -11,11 +13,12 @@
     <!-- Incluye el CSS de SweetAlert -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/sweetalert/1.1.3/sweetalert.min.css">
 </head>
+{%block content%}
 <body>
     <h1>Manual Registration of Welcome Kit </h1>
     <form method="POST" id="userForm">
         {% csrf_token %}
-        <table id="userTable" class="display">
+        <table id="userTable" class="display table table-striped table-bordered" style="margin-top: 20px;">
             <thead>
                 <tr>
                     <th>Username</th>
@@ -77,4 +80,6 @@
         });
     </script>
 </body>
+<script src="{% static 'assets/js/main.js' %}"></script>
+{%endblock%}
 </html>

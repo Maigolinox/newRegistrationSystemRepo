@@ -1,9 +1,10 @@
+{%extends "base.html"%}{%load static%}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Schoolarship Assignations CIMPS {% now "Y"%}</title>
+    {%block title%}Schoolarship Assignations CIMPS {% now "Y"%}{%endblock%}
     <!-- Agrega DataTables CSS -->
     <link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.min.css">
     <!-- Agrega SweetAlert CSS -->
@@ -21,11 +22,12 @@
         }
     </style>
 </head>
+{%block content%}
 <body>
     <h1>Schoolarship Assignations CIMPS {% now "Y"%}</h1>
     <form method="POST" id="profileForm">
         {% csrf_token %}
-        <table id="profilesTable">
+        <table id="profilesTable" class="table table-striped table-bordered" style="margin-top: 20px;">
             <thead>
                 <tr>
                     <th>First Name</th>
@@ -112,5 +114,7 @@
         });
     </script>
 </body>
+<script src="{% static 'assets/js/main.js' %}"></script>
+{%endblock%}
 </html>
 

@@ -1,9 +1,11 @@
+{%extends "base.html"%}{%load static%}
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Register Place</title>
+    {%block title%}Register Place{%endblock%}
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
 </head>
+{%block content%}
 <body>
     <div class="container">
         <h1>Register Place</h1>
@@ -15,5 +17,7 @@
         <a href="{% url 'schedule' %}">Back to Schedule</a>
     </div>
 </body>
+<script src="{% static 'assets/js/main.js' %}"></script>
+{%endblock%}
 </html>
 

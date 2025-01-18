@@ -48,6 +48,7 @@
 
 
 </head>
+{% block content %}
 
 <style>
   /* Ocultar el input de archivo */
@@ -118,8 +119,7 @@ input[type="file"].custom-file-input {
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
 
 
-    <main id="main" class="main">
-    {% block content %}
+    <!-- <main id="main" class="main"> -->
 
     <div class="pagetitle">
       <h1>{% if not submission.sent_for_review %}Edit {% endif %}Submission</h1>
@@ -365,7 +365,7 @@ label {
               <div class="card-body">
                 <div class="row">
                     <h1 class="bold-extra extra-bold-roboto" style="margin-top: 20px;">{% if not submission.sent_for_review %}Edit {% endif %}Submission ID: {{ submission.submission_id}}</h1>
-                    <p class="roboto">Fill the information of your submission</p>
+                    <p class="roboto">Fill the information of your submission </p>
                 </div>
                 <div class="row form-title" >
                     <h3 class="card-title extra-bold-roboto" style="font-size: x-large;">General Information</h3>
@@ -785,16 +785,7 @@ function updateAuthorNumbers() {
       </div>
     </section>
     
-  </main><!-- End #main -->
-
-  <!-- ======= Footer ======= -->
-  <!-- <footer id="footer" class="footer">
-    <div class="copyright">
-      &copy; Copyright <strong><span>Victor Terrón</span></strong>. All Rights Reserved
-    </div>
-    <div class="credits">
-    </div>
-  </footer>End Footer -->
+  <!-- </main> -->
 
   <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
 

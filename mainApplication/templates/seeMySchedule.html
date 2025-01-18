@@ -1,4 +1,4 @@
-{% load static %}{% load socialaccount %}{% load countries %}
+{%extends "base.html"%}{% load static %}{% load socialaccount %}{% load countries %}
 
 <!DOCTYPE html>
 <html lang="en">
@@ -7,7 +7,7 @@
   <meta charset="utf-8">
   <meta content="width=device-width, initial-scale=1.0" name="viewport">
 
-  <title>See my schedule - CIMPS</title>
+  {% block title %}See my schedule - CIMPS{%endblock%}
   <meta content="" name="description">
   <meta content="" name="keywords">
 
@@ -40,262 +40,8 @@
 
 
 </head>
-
+{%block content%}
 <body>
-
-  <!-- ======= Header ======= -->
-  <header id="header" class="header fixed-top d-flex align-items-center">
-
-    <div class="d-flex align-items-center justify-content-between">
-      <a href="{{request.scheme}}://{{ request.get_host }}/dashboard/" class="logo d-flex align-items-center">
-        <img src="{% static 'images/black_logo.png' %}" alt="">
-        <span class="d-none d-lg-block">CIMPS {% now 'Y' %}</span>
-      </a>
-      <i class="bi bi-list toggle-sidebar-btn"></i>
-    </div><!-- End Logo -->
-
-    
-
-    <nav class="header-nav ms-auto">
-      <ul class="d-flex align-items-center">
-
-        
-
-          <ul class="dropdown-menu dropdown-menu-end dropdown-menu-arrow notifications">
-            <li class="dropdown-header">
-              You have 4 new notifications
-              <a href="#"><span class="badge rounded-pill bg-primary p-2 ms-2">View all</span></a>
-            </li>
-            <li>
-              <hr class="dropdown-divider">
-            </li>
-
-            <li class="notification-item">
-              <i class="bi bi-exclamation-circle text-warning"></i>
-              <div>
-                <h4>Lorem Ipsum</h4>
-                <p>Quae dolorem earum veritatis oditseno</p>
-                <p>30 min. ago</p>
-              </div>
-            </li>
-
-            <li>
-              <hr class="dropdown-divider">
-            </li>
-
-            <li class="notification-item">
-              <i class="bi bi-x-circle text-danger"></i>
-              <div>
-                <h4>Atque rerum nesciunt</h4>
-                <p>Quae dolorem earum veritatis oditseno</p>
-                <p>1 hr. ago</p>
-              </div>
-            </li>
-
-            <li>
-              <hr class="dropdown-divider">
-            </li>
-
-            <li class="notification-item">
-              <i class="bi bi-check-circle text-success"></i>
-              <div>
-                <h4>Sit rerum fuga</h4>
-                <p>Quae dolorem earum veritatis oditseno</p>
-                <p>2 hrs. ago</p>
-              </div>
-            </li>
-
-            <li>
-              <hr class="dropdown-divider">
-            </li>
-
-            <li class="notification-item">
-              <i class="bi bi-info-circle text-primary"></i>
-              <div>
-                <h4>Dicta reprehenderit</h4>
-                <p>Quae dolorem earum veritatis oditseno</p>
-                <p>4 hrs. ago</p>
-              </div>
-            </li>
-
-            <li>
-              <hr class="dropdown-divider">
-            </li>
-            <li class="dropdown-footer">
-              <a href="#">Show all notifications</a>
-            </li>
-
-          </ul><!-- End Notification Dropdown Items -->
-
-        </li><!-- End Notification Nav -->
-
-        <li class="nav-item dropdown">
-
-          
-
-          <ul class="dropdown-menu dropdown-menu-end dropdown-menu-arrow messages">
-            <li class="dropdown-header">
-              You have 3 new messages
-              <a href="#"><span class="badge rounded-pill bg-primary p-2 ms-2">View all</span></a>
-            </li>
-            <li>
-              <hr class="dropdown-divider">
-            </li>
-
-            
-            <li>
-              <hr class="dropdown-divider">
-            </li>
-
-            
-            <li>
-              <hr class="dropdown-divider">
-            </li>
-
-            
-            <li>
-              <hr class="dropdown-divider">
-            </li>
-
-            
-
-          </ul><!-- End Messages Dropdown Items -->
-
-        </li><!-- End Messages Nav -->
-
-        <li class="nav-item dropdown pe-3">
-
-          <a class="nav-link nav-profile d-flex align-items-center pe-0" href="#" data-bs-toggle="dropdown">
-            <img src="{{ user.socialaccount_set.all.0.get_avatar_url }}" alt="Profile" class="rounded-circle">
-            <span class="d-none d-md-block  ps-2">Hi, {{ user.socialaccount_set.all.0.extra_data.name }}</span>
-          </a><!-- End Profile Iamge Icon -->
-
-          
-        </li><!-- End Profile Nav -->
-
-      </ul>
-    </nav><!-- End Icons Navigation -->
-
-  </header><!-- End Header -->
-
-  <!-- ======= Sidebar ======= -->
-  <aside id="sidebar" class="sidebar">
-
-    <ul class="sidebar-nav" id="sidebar-nav">
-
-      <li class="nav-item">
-        <a class="nav-link collapsed" href="{% url 'complete_profile'%}">
-          <i class="bi bi-person"></i>
-          <span>Profile Information</span>
-        </a>
-      </li>
-      <li class="nav-item"></li>
-        <a class="nav-link collapsed" href="{% url 'dashboard' %}">
-          <i class="bi bi-grid"></i>
-          <span>Dashboard</span>
-        </a>
-      </li>
-      <li class="nav-item"></li>
-      <a class="nav-link collapsed" href="{% url 'payment' %}">
-          <i class="bi bi-cash-coin"></i>
-          <span>Payment</span>
-        </a>
-      </li>
-      <li class="nav-item"></li>
-    <a class="nav-link collapsed" href="{% url 'schedule' %}">
-      <i class="bi bi-calendar"></i>
-      <span>Schedule (Program)</span>
-    </a>
-    <li class="nav-item"></li>
-    <a class="nav-link " href="{% url 'seeMySchedule' %}">
-      <i class="bi bi-file-earmark-break"></i>
-      <span>See my schedule</span>
-    </a>
-  </li>
-  <li class="nav-item"></li>
-        <a class="nav-link collapsed" href="{% url 'seeMyDiplomas' %}">
-          <i class="bx bxs-certification"></i>
-          <span>My Diplomas</span>
-        </a>
-      </li>
-      <li class="nav-item"></li>
-        <a class="nav-link collapsed" href="{% url 'account_logout' %}">
-          <i class="bi bi-door-closed-fill"></i>
-          <span>Log Out</span>
-        </a>
-      </li>
-      {% if is_staff_user %}
-      <li class="nav-item">Staff options</li>
-        <a class="nav-link collapsed" href="{% url 'assistanceList' %}">
-          <i class="bi bi-check2-square"></i>
-          <span>Assistance List (Events)</span>
-        </a>
-      </li>
-      <li class="nav-item"></li>
-        <a class="nav-link collapsed" href="{% url 'scholarshipAssignations' %}">
-          <i class="bi bi-mortarboard"></i>
-          <span>Scholarship assignations</span>
-        </a>
-      </li>
-      <li class="nav-item"></li>
-        <a class="nav-link collapsed" href="{% url 'consultWelcomeKit' %}">
-          <i class="bi bi-box2-heart"></i>
-          <span>Welcome Kit Control</span>
-        </a>
-      </li>
-      <li class="nav-item"></li>
-        <a class="nav-link collapsed" href="{% url 'validatePaymentAdmin' %}">
-          <i class="bi bi-wallet2"></i>
-          <span>Validate Payments</span>
-        </a>
-      </li>
-      
-      {% endif %}
-      {% if is_staff_superuser %}
-      <li class="nav-item">Super Admin options</li>
-        <a class="nav-link collapsed" href="{{request.scheme}}://{{ request.get_host }}/admin">
-          <i class="bi bi-terminal"></i>
-          <span>Super Admin Console</span>
-        </a>
-      </li>
-
-      <li class="nav-item"></li>
-        <a class="nav-link collapsed" href="{% url 'registerStaff' %}">
-          <i class="bi bi-file-earmark-person-fill"></i>
-          <span>Register Staff members</span>
-        </a>
-      </li>
-
-      <li class="nav-item"></li>
-        <a class="nav-link collapsed" href="{% url 'registerPlace' %}">
-          <i class="bi bi-building"></i>
-          <span>Register Places</span>
-        </a>
-      </li>
-      <li class="nav-item"></li>
-        <a class="nav-link collapsed" href="{% url 'registerEvent' %}">
-          <i class="bi bi-briefcase"></i>
-          <span>Register Events</span>
-        </a>
-      </li>
-      <li class="nav-item"></li>
-        <a class="nav-link collapsed" href="{% url 'listEvents' %}">
-          <i class="bi bi-card-list"></i>
-          <span>List Events</span>
-        </a>
-      </li>
-      <li class="nav-item"></li>
-        <a class="nav-link collapsed" href="{% url 'manageCongressDates' %}">
-          <i class="bi bi-calendar-check"></i>
-          <span>Manage Congress Dates</span>
-        </a>
-      </li>
-      {% endif %}
-    </ul>
-
-  </aside><!-- End Sidebar-->
-
-  <main id="main" class="main">
     {% if not paymentCompleted %}
     <div id="no-completed-payment" class="alert alert-danger" role="alert">
         <pre><h3>VERY IMPORTANT: </h3> Once you complete the payment, the congress program (Schedule Section) allows you to register for an event and the registered events will be displayed below. </pre>
@@ -382,15 +128,6 @@
 
   </main><!-- End #main -->
 
-  <!-- ======= Footer ======= -->
-  <footer id="footer" class="footer">
-    <div class="copyright">
-      &copy; Copyright <strong><span>CIMAT</span></strong>. All Rights Reserved
-    </div>
-    <div class="credits">
-      Developed by MSwE. Victor Miguel Terrón Macias  
-    </div>
-  </footer>
 
   <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
 
@@ -403,6 +140,6 @@
   <script src="{% static 'assets/js/main.js' %}"></script>
 
 </body>
-
+{%endblock%}
 </html>
 

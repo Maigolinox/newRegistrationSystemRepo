@@ -51,7 +51,54 @@ from django.http import HttpResponseNotFound,HttpResponseRedirect
 #PARA GENERAR SUBMISSION
 from django.forms import formset_factory
 
+#PROCESADOR DE CONTEXTO
+def get_user_context_data(request):
+    user_id = request.user.id
+    try:
+        user_profile = UserProfile.objects.get(user_id=user_id)
+        payment_completed = user_profile.payment_completed
+        allow_registration = user_profile.permitirRegistro
+        user_type = user_profile.user_type
+        if user_type == "author":
+            is_author = True
+            is_student = False
+            is_public = False
+        if user_type == "student":
+            is_student = True
+            is_author = False
+            is_public = False
+        if user_type == "public":
+            is_public = True
+            is_author = False
+            is_student = False
+
+    except ObjectDoesNotExist:
+        user_profile = None
+        payment_completed = False
+        allow_registration = False
+        user_type = "Uncompleted profile"
+    
+    return {
+        "userProfile": user_profile,
+        "paymentCompleted": payment_completed,
+        "allowRegistration": allow_registration,
+        "userType": user_type,
+        "is_staff_user": request.user.is_staff,
+        "is_staff_superuser": request.user.is_superuser,
+        "is_author": is_author,
+        "is_student": is_student,
+        "is_public": is_public,
+        "is_reviewer": getattr(request.user, 'isReviewer', False),
+    }
+
+
+
+
 # Create your views here.
+
+
+
+
 
 def index(request):
     if request.user.is_authenticated:

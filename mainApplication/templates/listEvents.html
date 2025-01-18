@@ -1,16 +1,18 @@
+{%extends "base.html"%}{%load static%}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Event List</title>
+    {%block title%}Event List{%endblock%}
     <!-- DataTables CSS -->
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.5/css/jquery.dataTables.min.css">
 </head>
+{%block content%}
 <body>
     <h2>Event List</h2>
 
-    <table id="eventTable" class="display">
+    <table id="eventTable" class="display table table-striped table-bordered" style="margin-top: 20px;">
         <thead>
             <tr>
                 <th>Event Name</th>
@@ -38,7 +40,13 @@
                 </tr>
             {% empty %}
                 <tr>
-                    <td colspan="7">No events found.</td>
+                    <td>No events found.</td>
+                    <td>No events found.</td>
+                    <td>No events found.</td>
+                    <td>No events found.</td>
+                    <td>No events found.</td>
+                    <td>No events found.</td>
+                    <td>No events found.</td>
                 </tr>
             {% endfor %}
         </tbody>
@@ -53,5 +61,7 @@
             $('#eventTable').DataTable(); // Initialize DataTable
         });
     </script>
+    <script src="{% static 'assets/js/main.js' %}"></script>
 </body>
+{%endblock%}
 </html>
