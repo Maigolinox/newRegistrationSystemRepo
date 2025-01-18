@@ -1,0 +1,143 @@
+server {
+    listen 80;
+    listen [::]:80;
+    server_name cimps.org www.cimps.org register.cimps.org;
+
+    # Redirigir todo el tráfico HTTP a HTTPS
+    return 301 https://$server_name$request_uri;
+}
+
+server {
+    listen 443 ssl http2;
+    listen [::]:443 ssl http2;
+    server_name cimps.org www.cimps.org;
+
+    # Root directory
+    root /var/www/html/cimps.org;
+    index index.php index.html index.htm;
+
+    # Certificados SSL
+    ssl_certificate /etc/letsencrypt/live/cimps.org/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/cimps.org/privkey.pem;
+    include /etc/letsencrypt/options-ssl-nginx.conf;
+    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
+
+    # Configuración para Cloudflare
+    set_real_ip_from 103.21.244.0/22;
+    set_real_ip_from 103.22.200.0/22;
+    set_real_ip_from 103.31.4.0/22;
+    set_real_ip_from 104.16.0.0/13;
+    set_real_ip_from 104.24.0.0/14;
+    set_real_ip_from 108.162.192.0/18;
+    set_real_ip_from 131.0.72.0/22;
+    set_real_ip_from 141.101.64.0/18;
+    set_real_ip_from 162.158.0.0/15;
+    set_real_ip_from 172.64.0.0/13;
+    set_real_ip_from 173.245.48.0/20;
+    set_real_ip_from 188.114.96.0/20;
+    set_real_ip_from 190.93.240.0/20;
+    set_real_ip_from 197.234.240.0/22;
+    set_real_ip_from 198.41.128.0/17;
+    set_real_ip_from 2400:cb00::/32;
+    set_real_ip_from 2606:4700::/32;
+    set_real_ip_from 2803:f800::/32;
+    set_real_ip_from 2405:b500::/32;
+    set_real_ip_from 2405:8100::/32;
+    set_real_ip_from 2c0f:f248::/32;
+    set_real_ip_from 2a06:98c0::/29;
+    real_ip_header CF-Connecting-IP;
+
+    # WordPress configuration
+    location / {
+        try_files $uri $uri/ /index.php?$args;
+    }
+
+    # Configuración de PHP
+    location ~ \.php$ {
+        include snippets/fastcgi-php.conf;
+        fastcgi_pass unix:/var/run/php/php8.1-fpm.sock;
+        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+        fastcgi_param HTTPS on;
+        include fastcgi_params;
+        # Headers específicos para Cloudflare
+        fastcgi_param HTTP_CF_CONNECTING_IP $http_cf_connecting_ip;
+        fastcgi_param HTTP_CF_IPCOUNTRY $http_cf_ipcountry;
+        fastcgi_param HTTP_CF_RAY $http_cf_ray;
+        fastcgi_param HTTP_CF_VISITOR $http_cf_visitor;
+    }
+
+    # Seguridad
+    location ~ /\.ht {
+        deny all;
+    }
+
+    location = /favicon.ico {
+        log_not_found off;
+        access_log off;
+    }
+
+    location = /robots.txt {
+        allow all;
+        log_not_found off;
+        access_log off;
+    }
+
+    location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg)$ {
+        expires max;
+        log_not_found off;
+        access_log off;
+        add_header Access-Control-Allow-Origin "*";
+    }
+
+    # Headers básicos de seguridad (deja que Cloudflare maneje el resto)
+    add_header X-Frame-Options "SAMEORIGIN" always;
+    add_header X-Content-Type-Options "nosniff" always;
+}
+
+server {
+    listen 443 ssl http2;
+    listen [::]:443 ssl http2;
+    server_name register.cimps.org;
+
+    # Certificados SSL para register.cimps.org
+    ssl_certificate /etc/letsencrypt/live/register.cimps.org/fullchain.pem; 
+    ssl_certificate_key /etc/letsencrypt/live/register.cimps.org/privkey.pem; 
+
+    # Configuración para la aplicación Django
+    location / {
+        proxy_pass http://127.0.0.1:8000;  # Cambia esto si tu aplicación corre en otro puerto
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $http_cf_connecting_ip;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_redirect off;
+        proxy_buffering off;
+    }
+
+    # Seguridad
+    location ~ /\.ht {
+        deny all;
+    }
+
+    location = /favicon.ico {
+        log_not_found off;
+        access_log off;
+    }
+
+    location = /robots.txt {
+        allow all;
+        log_not_found off;
+        access_log off;
+    }
+
+    location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg)$ {
+        expires max;
+        log_not_found off;
+        access_log off;
+        add_header Access-Control-Allow-Origin "*";
+    }
+
+    # Headers básicos de seguridad (deja que Cloudflare maneje el resto)
+    add_header X-Frame-Options "SAMEORIGIN" always;
+    add_header X-Content-Type-Options "nosniff" always;
+}
