@@ -1,0 +1,863 @@
+{% load static %}{% load socialaccount %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta content="width=device-width, initial-scale=1.0" name="viewport">
+
+  <title>Make New Submission - CIMPS</title>
+  <meta content="" name="description">
+  <meta content="" name="keywords">
+
+  <!-- Favicons -->
+  <link href="{% static 'images/favicon.ico'%}" rel="icon">
+  <link href="{% static 'assets/img/apple-touch-icon.png'%}" rel="apple-touch-icon">
+
+  <!-- Google Fonts -->
+  <link href="https://fonts.gstatic.com" rel="preconnect">
+  <link href="https://fonts.googleapis.com/css?family=Open+Sans:300,300i,400,400i,600,600i,700,700i|Nunito:300,300i,400,400i,600,600i,700,700i|Poppins:300,300i,400,400i,500,500i,600,600i,700,700i|Montserrat:300,400,500,600,700,800|Roboto:300,400,500,700,800" rel="stylesheet">
+
+  <!-- Vendor CSS Files -->
+  <link href="{% static 'assets/vendor/bootstrap/css/bootstrap.min.css'%}" rel="stylesheet">
+  <link href="{% static 'assets/vendor/bootstrap-icons/bootstrap-icons.css'%}" rel="stylesheet">
+  <link href="{% static 'assets/vendor/boxicons/css/boxicons.min.css'%}" rel="stylesheet">
+  <link href="{% static 'assets/vendor/quill/quill.snow.css'%}" rel="stylesheet">
+  <link href="{% static 'assets/vendor/quill/quill.bubble.css'%}" rel="stylesheet">
+  <link href="{% static 'assets/vendor/remixicon/remixicon.css'%}" rel="stylesheet">
+  <link href="{% static 'assets/vendor/simple-datatables/style.css'%}" rel="stylesheet">
+  
+
+  <link href="{% static 'assets/css/style.css'%}" rel="stylesheet">
+<!-- Bootstrap CSS -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+
+
+</head>
+
+<style>
+  /* Ocultar el input de archivo */
+input[type="file"].custom-file-input {
+    opacity: 0;
+    position: absolute;
+    left: -9999px; /* Mover fuera de la pantalla */
+}
+
+/* Estilizar el label como botón */
+.custom-file-upload {
+  margin-top: 20px;
+    margin-bottom: 20px;
+    display: flex; /* Cambiado de 'block' a 'flex' */
+    width: 100%;
+    height: 10vh;
+    padding: 0; /* Ajustado el padding */
+    cursor: pointer;
+    background-color: #332f2f; /* Ajusta el color según tus necesidades */
+    color: #fff;
+    border-radius: 5px;
+    font-size: 40px;
+    text-align: center; /* Centra el texto en múltiples líneas */
+    justify-content: center; /* Centra horizontalmente */
+    align-items: center; /* Centra verticalmente */
+    box-sizing: border-box; /* Incluye padding y border en el tamaño total */
+}
+
+.custom-file-upload:hover {
+    background-color: #218838;
+}
+
+/* Estilo para el nombre de los archivos */
+#file-name {
+    margin-left: 10px;
+    font-style: italic;
+}
+</style>
+
+<body>
+  {% if messages %}
+  <script>
+    $(document).ready(function() {
+      {% for message in messages %}
+        // Aquí verificamos si el mensaje tiene una propiedad "level" para determinar su tipo
+        {% if message.tags == "success" %}
+          Swal.fire({
+            title: 'Success!',
+            text: "{{ message }}",
+            icon: 'success',
+            confirmButtonText: 'Ok'
+          });
+        {% elif message.tags == "error" %}
+          Swal.fire({
+            title: 'Error!',
+            text: "{{ message }}",
+            icon: 'error',
+            confirmButtonText: 'Ok'
+          });
+        {% endif %}
+      {% endfor %}
+    });
+  </script>
+{% endif %}
+
+  <!-- ======= Header ======= -->
+  <header id="header" class="header fixed-top d-flex align-items-center">
+
+    <div class="d-flex align-items-center justify-content-between">
+      <a href="{{request.scheme}}://{{ request.get_host }}/dashboard/" style="text-decoration: none;" class="logo d-flex align-items-center">
+        <img src="{% static 'images/black_logo.png' %}" alt="">
+        <span class="d-none d-lg-block">CIMPS {% now 'Y' %}</span>
+      </a>
+      <i class="bi bi-list toggle-sidebar-btn"></i>
+    </div><!-- End Logo -->
+
+    
+
+    <nav class="header-nav ms-auto">
+      <ul class="d-flex align-items-center">
+
+        
+
+          
+
+
+        
+
+        <li class="nav-item dropdown pe-3">
+
+          <a class="nav-link nav-profile d-flex align-items-center pe-0" href="#" data-bs-toggle="dropdown">
+            <img src="{{ user.socialaccount_set.all.0.get_avatar_url }}" alt="Profile" class="rounded-circle">
+            <span class="d-none d-md-block  ps-2">Hi, {{ user.socialaccount_set.all.0.extra_data.name }}</span>
+          </a><!-- End Profile Iamge Icon -->
+
+          
+        </li><!-- End Profile Nav -->
+
+      </ul>
+    </nav><!-- End Icons Navigation -->
+
+  </header><!-- End Header -->
+
+    <!-- ======= Sidebar ======= -->
+    <aside id="sidebar" class="sidebar">
+
+      <ul class="sidebar-nav" id="sidebar-nav">
+  
+        <li class="nav-item">
+          <a class="nav-link collapsed" href="{% url 'complete_profile'%}">
+            <i class="bi bi-person"></i>
+            <span>Profile Information</span>
+          </a>
+        </li>
+        <li class="nav-item"></li>
+          <a class="nav-link " href="{% url 'dashboard' %}">
+            <i class="bi bi-grid"></i>
+            <span>Dashboard</span>
+          </a>
+        </li>
+        <li class="nav-item"></li>
+        <a class="nav-link collapsed" href="{% url 'payment' %}">
+            <i class="bi bi-cash-coin"></i>
+            <span>Payment</span>
+          </a>
+        </li>
+        <li class="nav-item"></li>
+      <a class="nav-link collapsed" href="{% url 'schedule' %}">
+        <i class="bi bi-calendar"></i>
+        <span>Schedule (Program)</span>
+      </a>
+      <li class="nav-item"></li>
+      <a class="nav-link collapsed" href="{% url 'seeMySchedule' %}">
+        <i class="bi bi-file-earmark-break"></i>
+        <span>See my schedule</span>
+      </a>
+    </li>
+    <li class="nav-item"></li>
+          <a class="nav-link collapsed" href="{% url 'seeMyDiplomas' %}">
+            <i class="bx bxs-certification"></i>
+            <span>My Diplomas</span>
+          </a>
+        </li>
+        <li class="nav-item"></li>
+          <a class="nav-link collapsed" href="{% url 'account_logout' %}">
+            <i class="bi bi-door-closed-fill"></i>
+            <span>Log Out</span>
+          </a>
+        </li>
+        {% if userType.get_user_type_display == "Author" %}
+        <li class="nav-item">Author Menu</li>
+          <a class="nav-link collapsed" href="{{request.scheme}}://{{ request.get_host }}/admin">
+            <i class="bi bi-journal-text"></i>
+            <span>Submit an Article</span>
+          </a>
+        </li>
+        <li class="nav-item"></li>
+          <a class="nav-link collapsed" href="{{request.scheme}}://{{ request.get_host }}/admin">
+            <i class="bi bi-calendar-check"></i>
+            <span>My Submissions</span>
+          </a>
+        </li>
+        
+        {% endif %}
+        {% if is_staff_user %}
+        <li class="nav-item">Staff options</li>
+          <a class="nav-link collapsed" href="{% url 'assistanceList' %}">
+            <i class="bi bi-check2-square"></i>
+            <span>Assistance List (Events)</span>
+          </a>
+        </li>
+        <li class="nav-item"></li>
+          <a class="nav-link collapsed" href="{% url 'scholarshipAssignations' %}">
+            <i class="bi bi-mortarboard"></i>
+            <span>Scholarship assignations</span>
+          </a>
+        </li>
+        <li class="nav-item"></li>
+          <a class="nav-link collapsed" href="{% url 'consultWelcomeKit' %}">
+            <i class="bi bi-box2-heart"></i>
+            <span>Welcome Kit Control</span>
+          </a>
+        </li>
+        <li class="nav-item"></li>
+          <a class="nav-link collapsed" href="{% url 'validatePaymentAdmin' %}">
+            <i class="bi bi-wallet2"></i>
+            <span>Validate Payments</span>
+          </a>
+        </li>
+        
+        {% endif %}
+        
+        {% if is_staff_superuser %}
+        <li class="nav-item">Super Admin options</li>
+          <a class="nav-link collapsed" href="{{request.scheme}}://{{ request.get_host }}/admin">
+            <i class="bi bi-terminal"></i>
+            <span>Super Admin Console</span>
+          </a>
+        </li>
+        <li class="nav-item"></li>
+          <a class="nav-link collapsed" href="{% url 'upload_banner' %}">
+            <i class="bi bi-image"></i>
+            <span>Configure gallery</span>
+          </a>
+        </li>
+        <li class="nav-item"></li>
+          <a class="nav-link collapsed" href="{% url 'registerStaff' %}">
+            <i class="bi bi-file-earmark-person-fill"></i>
+            <span>Register Staff members</span>
+          </a>
+        </li>
+        <li class="nav-item"></li>
+          <a class="nav-link collapsed" href="{% url 'registerPlace' %}">
+            <i class="bi bi-building"></i>
+            <span>Register Places</span>
+          </a>
+        </li>
+        <li class="nav-item"></li>
+          <a class="nav-link collapsed" href="{% url 'registerEvent' %}">
+            <i class="bi bi-briefcase"></i>
+            <span>Register Events</span>
+          </a>
+        </li>
+        <li class="nav-item"></li>
+          <a class="nav-link collapsed" href="{% url 'listEvents' %}">
+            <i class="bi bi-card-list"></i>
+            <span>List Events</span>
+          </a>
+        </li>
+        <li class="nav-item"></li>
+          <a class="nav-link collapsed" href="{% url 'manageCongressDates' %}">
+            <i class="bi bi-calendar-check"></i>
+            <span>Manage Congress Dates</span>
+          </a>
+        </li>
+        {% endif %}
+        
+      </ul>
+  
+    </aside><!-- End Sidebar-->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+
+
+  <main id="main" class="main">
+
+    <div class="pagetitle">
+      <h1>New Submissions</h1>
+      <nav>
+        <ol class="breadcrumb">
+          <li class="breadcrumb-item"><a href="#" style="text-decoration: none;">Home</a></li>
+          <li class="breadcrumb-item active"><a href="#" style="text-decoration: none;">New Submission</a></li>
+        </ol>
+      </nav>
+    </div><!-- End Page Title -->
+    
+    <style>
+        .form-title {
+            margin-bottom: 1rem;
+            background-color: darkgray;
+        }
+        .extra-bold-montserrat {
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 800; /* Extra Bold */
+        }
+        .extra-bold-roboto {
+            font-family: 'Roboto', sans-serif;
+            font-weight: 800; /* Extra Bold */
+        }
+        .roboto {
+            font-family: 'Roboto', sans-serif;
+        }
+        textarea {
+            resize: none;
+            width: 100%;
+            box-sizing: border-box;
+            overflow-y:hidden ;
+            min-height: 36px;
+            max-height: 250px;
+        }
+        /* Estilos generales del formulario */
+form {
+    max-width: 100%;
+    margin: 0 auto;
+}
+
+.form-control {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #ced4da;
+    border-radius: 0.375rem;
+    margin-bottom: 1rem;
+}
+
+/* Estilos para las secciones de título */
+.form-title {
+    margin: 2rem 0 1rem 0;
+}
+
+.card-title.extra-bold-roboto {
+    font-weight: 700;
+    color: #333;
+    border-bottom: 2px solid #eee;
+    padding-bottom: 0.5rem;
+}
+
+/* Estilos para el selector de tipo de publicación */
+.publication-type-radio {
+    display: flex;
+    gap: 2rem;
+    margin: 1rem 0;
+}
+
+.publication-type-radio div {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: #f8f9fa;
+    padding: 0.5rem 1rem;
+    border-radius: 0.375rem;
+    cursor: pointer;
+}
+
+/* Estilos para los topic areas */
+
+
+.topic-areas-checkbox {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); /* Ajusta el minmax según sea necesario */
+    gap: 1rem;
+    padding: 1rem;
+    background: #f8f9fa;
+    border-radius: 0.375rem;
+    margin: 1rem auto; /* Centra el grid dentro de su contenedor */
+    
+    justify-content: center; /* Centra las celdas del grid horizontalmente */
+    justify-items: center; /* Centra horizontalmente los elementos dentro de cada celda */
+}
+
+.topic-areas-checkbox label {
+    display: flex;
+    flex-direction: column; /* Coloca el checkbox encima del texto */
+    align-items: center; /* Centra el contenido del label */
+}
+
+
+/* Estilos para el formset de autores */
+.formset-author {
+    background: #f8f9fa;
+    padding: 1.5rem;
+    border-radius: 0.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.author-number {
+    color: #333;
+    margin-bottom: 1.5rem;
+    font-weight: 600;
+}
+
+/* Estilos para los botones */
+.btn {
+    padding: 0.5rem 1rem;
+    border-radius: 0.375rem;
+    font-weight: 500;
+}
+
+.btn-secondary {
+    background-color: #6c757d;
+    color: white;
+    border: none;
+    margin-bottom: 1.5rem;
+}
+
+.btn-success {
+    background-color: #28a745;
+    color: white;
+    border: none;
+}
+
+/* Estilos para textareas autoexpandibles */
+textarea.auto-expand {
+    min-height: 38px;
+    overflow: hidden;
+    resize: none;
+}
+
+/* Estilos para las etiquetas */
+label {
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+    display: block;
+}
+
+/* Estilos responsivos para campos en línea */
+@media (min-width: 768px) {
+    .formset-author .row {
+        display: flex;
+        gap: 1rem;
+    }
+    
+    .formset-author .row > div {
+        flex: 1;
+    }
+}
+/* static/css/styles.css */
+.publication-type-radio {
+    display: flex;
+    gap: 20px;
+}
+
+.publication-type-radio div {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.publisher-logo {
+    width: 50px;  /* Ajusta según el tamaño deseado */
+    height: auto;
+    vertical-align: middle;
+}
+
+.publication-type-radio label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+}
+
+    </style>
+
+    <!-- STYLE PARA FORMULARIO DE AUTOR -->
+     <style>
+        .form-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.form-row .form-control {
+    flex: 1; /* Permite que los campos se expandan igualmente */
+    min-width: 150px; /* Ajusta el ancho mínimo según sea necesario */
+}
+
+.form-row .form-control.short {
+    flex: 0 0 auto; /* No se expande, ocupa solo el espacio necesario */
+    width: auto; /* Ajusta el ancho automáticamente */
+}
+
+.form-row .form-control.medium {
+    flex: 1; /* Se expande para ocupar el espacio disponible */
+    min-width: 200px; /* Ajusta el ancho mínimo según sea necesario */
+}
+     </style>
+
+<style>
+  .file-preview {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      width: 100px;
+      text-align: center;
+  }
+  .file-preview i {
+      font-size: 50px;
+      width: 50px;
+      height: 50px;
+  }
+  .file-name {
+    font-size: 14px;
+    word-break: break-word;
+    margin-top: 10px; /* Espacio entre el icono y el nombre */
+        width: 100%; /* Para asegurarse de que no se desborde */
+        text-overflow: ellipsis; /* Añadir puntos suspensivos si el nombre es demasiado largo */
+        overflow: hidden; /* Ocultar el texto que se desborda */
+        white-space: nowrap; /* Evitar saltos de línea en el nombre del archivo */
+  }
+</style>
+
+    <section class="section dashboard">
+      <div class="row">
+        <div class="col-lg-12">
+          <div class="row">
+            <div class="card">
+              <div class="card-body">
+                <div class="row">
+                    <h1 class="bold-extra extra-bold-roboto">New Submission</h1>
+                    <p class="roboto">Fill the information of your submission</p>
+                </div>
+                <div class="row form-title" >
+                    <h3 class="card-title extra-bold-roboto" style="font-size: x-large;">General Information</h3>
+                </div>
+                
+                
+                <div class="">
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        
+                        <!-- <h4>Article Details</h4> -->
+                         <div class="container-check">
+
+                             {{ submission_form.as_p }}
+                         </div>
+                
+                        <!-- AUTOR FORMULARIOS -->
+                        <p><span></span></p>
+                        <div class="row form-title">
+                            <h3 class="card-title extra-bold-roboto" style="font-size: x-large;">Authors</h3>
+                        </div>
+                        <p><span></span></p>
+                        <div id="author-formset">
+                            {{ author_formset.management_form }}
+                            {% for form in author_formset %}
+                            <div class="formset-author position-relative">
+                                <h4 class="author-number">Author {{ forloop.counter }}</h4>
+                                <div class="form-row" style="display: flex; align-items: center; justify-content: center; font-size: larger;">
+                                    {{ form.honorific.label_tag }}{{ form.honorific }}
+                                    {{ form.first_name.label_tag }}{{ form.first_name }}
+                                    {{ form.last_name.label_tag }}{{ form.last_name }}
+                                </div>
+                                <div class="form-row" style="display: flex; align-items: center; justify-content: center; font-size: larger;">
+                                    {{ form.position_title.label_tag }}{{ form.position_title }}
+                                    {{ form.organization.label_tag }}{{ form.organization }}
+                                    {{ form.department.label_tag }}{{ form.department }}
+                                </div>
+                                <div class="form-row" style="display: flex; align-items: center; justify-content: center; font-size: larger;">
+                                    {{ form.address.label_tag }}{{ form.address }}
+                                </div>
+                                <div class="form-row" style="display: flex; align-items: center; justify-content: center; font-size: larger;">
+                                    {{ form.city.label_tag }}{{ form.city }}
+                                    {{ form.state_province.label_tag }}{{ form.state_province }}
+                                    {{ form.postcode_zip.label_tag }}{{ form.postcode_zip }}
+                                </div>
+                                <div class="form-row" style="display: flex; align-items: center; justify-content: center; font-size: larger;">
+                                    {{ form.email.label_tag }}{{ form.email }}
+                                </div>
+                                
+                            </div>
+                            {% endfor %}
+                        </div>
+                        <button type="button" id="add-author" class="btn btn-secondary btn-sm">Add Another Author</button>
+                    </div>
+                        
+                        <p><span></span></p>
+                        <div class="row form-title" >
+                            <h3 class="card-title extra-bold-roboto" style="font-size: x-large;">File Upload</h3>
+                        </div>
+                        <p><span></span></p>
+                        
+
+                        <div class="container-check">
+                          {% if existing_files %}
+                          <div class="existing-files">
+                            <h3>Existing Files:</h3>
+                            <ul>
+                              {% for file in existing_files %}
+                              <li>
+                                {{ file.file.name }}
+                                
+                              </li>
+                              {% endfor %}
+                            </ul>
+                          </div>
+                          {% endif %}
+                          <!-- Renderizar el formulario con el widget personalizado -->
+                          <label for="id_files" class="custom-file-upload">
+                            <i class="bi bi-cloud-upload-fill"> <span> </span></i> <pre> </pre>Upload Files
+                        </label>
+                        {{ file_form.files }}
+                      </div>
+
+                        <div id="file-preview-container" class="d-flex flex-wrap mt-3"></div>
+
+                        <div class="form-actions" style="margin-top: 50px; display: block; text-align: center;">
+                            <button type="submit" name="save_draft" class="btn btn-primary" style="width: 40%;"><i class="bi bi-save"></i>
+                              Save Draft</button>
+                            <button type="submit" name="submit" class="btn btn-success" style="width: 40%;"><i class="bi bi-send"></i>
+                              Submit</button>
+                        </div>
+                    </form>
+                </div>
+                  
+                <script>
+                  let selectedFiles = new DataTransfer();
+                  
+                  document.addEventListener('DOMContentLoaded', function() {
+                      const fileInput = document.getElementById('id_files');
+                      
+                      fileInput.addEventListener('change', function(event) {
+                          // Agregar los nuevos archivos a los ya seleccionados
+                          Array.from(event.target.files).forEach(file => {
+                              // Verificar si el archivo ya existe para evitar duplicados
+                              const exists = Array.from(selectedFiles.files)
+                                  .some(existingFile => existingFile.name === file.name);
+                              
+                              if (!exists) {
+                                  selectedFiles.items.add(file);
+                              }
+                          });
+                          
+                          // Actualizar el input con todos los archivos acumulados
+                          this.files = selectedFiles.files;
+                          
+                          // Actualizar la vista previa de los archivos
+                          updateFilePreview();
+                      });
+                  });
+                  
+                  function updateFilePreview() {
+                      const container = document.getElementById('file-preview-container');
+                      container.innerHTML = ''; // Limpiar previsualizaciones anteriores
+                  
+                      Array.from(selectedFiles.files).forEach((file, index) => {
+                          const filePreview = document.createElement('div');
+                          filePreview.classList.add('file-preview', 'text-center', 'm-3', 'position-relative');
+                  
+                          // Crear el botón de eliminar
+                          const deleteButton = document.createElement('button');
+                          deleteButton.innerHTML = '&times;'; // × symbol
+                          deleteButton.className = 'delete-file-btn btn btn-danger btn-sm position-absolute';
+                          deleteButton.style.top = '0';
+                          deleteButton.style.right = '0';
+                          deleteButton.onclick = () => removeFile(index);
+                  
+                          let icon;
+                          if (file.type.startsWith('image/')) {
+                              icon = document.createElement('i');
+                              icon.className = 'bi bi-image text-success';
+                          } else if (file.type === 'application/pdf') {
+                              icon = document.createElement('i');
+                              icon.className = 'bi bi-file-pdf text-danger';
+                          } else if (
+                              file.type === 'application/msword' || 
+                              file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+                          ) {
+                              icon = document.createElement('i');
+                              icon.className = 'bi bi-file-word text-primary';
+                          } else if (file.type === 'application/zip' || file.name.endsWith('.zip')) {
+                              icon = document.createElement('i');
+                              icon.className = 'bi bi-file-zip text-warning';
+                          } else {
+                              icon = document.createElement('i');
+                              icon.className = 'bi bi-file-earmark text-secondary';
+                          }
+                  
+                          icon.style.fontSize = '50px';
+                  
+                          const fileName = document.createElement('span');
+                          fileName.textContent = file.name;
+                          fileName.classList.add('file-name', 'd-block', 'mt-2');
+                  
+                          filePreview.appendChild(deleteButton);
+                          filePreview.appendChild(icon);
+                          filePreview.appendChild(fileName);
+                          container.appendChild(filePreview);
+                      });
+                  }
+                  
+                  function removeFile(index) {
+                      const newFiles = new DataTransfer();
+                      
+                      Array.from(selectedFiles.files)
+                          .filter((file, i) => i !== index)
+                          .forEach(file => newFiles.items.add(file));
+                      
+                      selectedFiles = newFiles;
+                      document.getElementById('id_files').files = selectedFiles.files;
+                      updateFilePreview();
+                  }
+                  </script>
+                  
+                  <style>
+                  .file-preview {
+                      display: inline-block;
+                      margin: 10px;
+                      padding: 15px;
+                      border: 1px solid #ddd;
+                      border-radius: 4px;
+                      min-width: 120px;
+                  }
+                  
+                  .delete-file-btn {
+                      border-radius: 50%;
+                      width: 25px;
+                      height: 25px;
+                      padding: 0;
+                      line-height: 1;
+                      font-size: 18px;
+                  }
+                  
+                  .file-name {
+                      font-size: 0.9em;
+                      word-break: break-word;
+                      max-width: 150px;
+                  }
+                  </style>
+                <script>
+                    document.addEventListener('DOMContentLoaded', function() {
+                      document.querySelectorAll('textarea.auto-expand').forEach(function(textarea) {
+                        textarea.addEventListener('input', function() {
+                          this.style.height = 'auto';
+                          this.style.height = (this.scrollHeight) + 'px';
+                        });
+                        // Ajustar altura inicial
+                        textarea.style.height = 'auto';
+                        textarea.style.height = (textarea.scrollHeight) + 'px';
+                      });
+                    });
+                </script>
+                
+                <script>
+                  document.getElementById('add-author').addEventListener('click', function () {
+                    const formsetContainer = document.querySelector('form');
+                    const totalForms = document.getElementById('id_authors-TOTAL_FORMS');
+                    const currentCount = parseInt(totalForms.value);
+                
+                    // Clone the first author form as a template
+                    const newForm = document.querySelectorAll('.formset-author')[0].cloneNode(true);
+                
+                    // Update the formset index for all input, select, and textarea fields
+                    newForm.querySelectorAll('input, select, textarea').forEach((field) => {
+                      const name = field.name.replace(`-${currentCount - 1}-`, `-${currentCount}-`);
+                      const id = field.id.replace(`-${currentCount - 1}-`, `-${currentCount}-`);
+                      field.name = name;
+                      field.id = id;
+                      field.value = ''; // Clear the value for the new field
+                    });
+                
+                    // Update the author number for the new form
+                    const authorNumberElement = newForm.querySelector('.author-number');
+                    if (authorNumberElement) {
+                      authorNumberElement.textContent = `Author ${currentCount + 1}`;
+                    }
+                
+                    // Add delete button for the new form
+                    if (!newForm.querySelector('.position-absolute')) {
+                      const deleteButton = document.createElement('div');
+                      deleteButton.className = 'position-absolute';
+                      deleteButton.style = 'top: 10px; right: 10px;';
+                      deleteButton.innerHTML = `
+                        <i class="bi bi-trash text-danger" style="cursor: pointer; font-size: 20px;" 
+                           onclick="removeAuthorForm(this)"></i>
+                      `;
+                      newForm.appendChild(deleteButton);
+                    }
+                
+                    // Append the new form to the container
+                    formsetContainer.insertBefore(newForm, this);
+                
+                    // Increment the total forms count
+                    totalForms.value = currentCount + 1;
+                
+                    // Actualizar todos los números de autor
+                    updateAuthorNumbers();
+                  });
+                
+                  // Función para eliminar un formulario de autor
+                  function removeAuthorForm(button) {
+                    const authorForm = button.closest('.formset-author'); // Encuentra el contenedor del autor
+                    authorForm.remove(); // Elimina el formulario del DOM
+                
+                    // Actualiza el número total de formularios
+                    const totalForms = document.getElementById('id_authors-TOTAL_FORMS');
+                    totalForms.value = parseInt(totalForms.value) - 1;
+                
+                    // Recalcular los números de autor después de la eliminación
+                    updateAuthorNumbers();
+                  }
+                
+                  // Función para actualizar todos los números de autor
+                  function updateAuthorNumbers() {
+                    document.querySelectorAll('.formset-author').forEach((authorForm, index) => {
+                      const authorNumberElement = authorForm.querySelector('.author-number');
+                      if (authorNumberElement) {
+                        authorNumberElement.textContent = `Author ${index + 1}`;
+                      }
+                    });
+                  }
+                </script>
+                
+                
+              </div>            
+            </div>          
+        </div>
+      </div>
+    </section>
+    
+  </main><!-- End #main -->
+
+  <!-- ======= Footer ======= -->
+  <footer id="footer" class="footer">
+    <div class="copyright">
+      &copy; Copyright <strong><span>Victor Terrón</span></strong>. All Rights Reserved
+    </div>
+    <div class="credits">
+    </div>
+  </footer><!-- End Footer -->
+
+  <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
+
+  <!-- Vendor JS Files -->
+  <!-- Vendor JS Files -->
+  <script src="{% static 'assets/vendor/apexcharts/apexcharts.min.js' %}"></script>
+  <script src="{% static 'assets/vendor/bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+  <script src="{% static 'assets/vendor/chart.js/chart.umd.js' %}"></script>
+  <script src="{% static 'assets/vendor/echarts/echarts.min.js' %}"></script>
+  <script src="{% static 'assets/vendor/quill/quill.js' %}"></script>
+  <script src="{% static 'assets/vendor/simple-datatables/simple-datatables.js' %}"></script>
+  <script src="{% static 'assets/vendor/tinymce/tinymce.min.js' %}"></script>
+  <script src="{% static 'assets/vendor/php-email-form/validate.js' %}"></script>
+
+  <!-- Template Main JS File -->
+  <script src="{% static 'assets/js/main.js' %}"></script>
+
+</body>
+
+</html>

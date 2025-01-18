@@ -6,6 +6,7 @@ from django.contrib.auth import views as auth_views
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 
 urlpatterns = [
+    # path('', views.index, name='root'),  # Esto manejará /registrationSystem/
     path('',views.index,name='index'),
     path('dashboard/',views.dashboard,name="dashboard"),
     path('completeProfile/',views.complete_profile,name="complete_profile"),
@@ -34,6 +35,19 @@ urlpatterns = [
     path('kitReceivedSuccessfully/', views.kitReceivedSuccessfully,name="kitReceivedSuccessfully"),#admin/staff
     path('consultWelcomeKit/', views.listarRecibioKit, name='consultWelcomeKit'),#admin/staff
     path('scholarshipAssignations/', views.scholarshipAssignations, name='scholarshipAssignations'),#admin/staff
+    path('upload-banner/', views.upload_banner, name='upload_banner'),#para subir archivos
+    path('delete-banner/<str:filename>/', views.delete_file, name='delete_file'),#para borrar archivos del banner
+    path('topicsArea/', views.topics, name='topicsArea'),#para borrar archivos del banner
+    # path('topicsAreaUpdate/<int:pk>/', TopicAreaUpdateView.as_view(), name='topic_area_update'),  # Editar TopicArea
+    path('topicsAreaDelete/<int:pk>/', views.deleteTopics, name='topicsAreaDelete'),  # Eliminar TopicArea
+    path('topicsAreaEdit/<int:pk>/', views.editTopic, name='topicsAreaEdit'),  # Editar TopicArea
+    path('makeSubmission/', views.submitArticle, name='makeSubmission'),  # Hacer una nueva Submission
+    path('mySubmissions/', views.seeMySubmissions, name='seeMySubmissions'),  # Hacer una nueva Submission
+    path('editSubmission/<int:submissionID>/', views.editSubmission, name='editSubmission'),#Editar una Submission
+    path('delete-file/<int:file_id>/', views.delete_file, name='delete_file'),
+    path('withdraw/<str:submission_id>/', views.withdraw_submission, name='withdrawSubmission'),
+
+
 
 ]
 urlpatterns += staticfiles_urlpatterns() 

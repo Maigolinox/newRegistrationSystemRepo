@@ -22,9 +22,12 @@ LOGIN_REDIRECT_URL='/dashboard/'
 MEDIA_URL='/mainApplication/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'mainApplication', 'media')
 
+# SECURE_SSL_REDIRECT = True
+# SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
 ALLOWED_HOSTS=['52.40.72.178','cimps.org','127.0.0.1','localhost']
 
-CSRF_TRUSTED_ORIGINS = ['https://cimps.org']
+CSRF_TRUSTED_ORIGINS = ['https://cimps.org','https://register.cimps.org']
 
 
 
@@ -171,7 +174,8 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
-STATIC_URL = 'static/'
+STATIC_URL = 'mainAppplication/static/'
+
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
@@ -195,3 +199,11 @@ else:
     EMAIL_USE_SSL = False
     EMAIL_HOST_USER = 'conferencecimps@cimat.mx'
     EMAIL_HOST_PASSWORD = 'HIPOCRATES@2022'
+
+
+############MODELO PERSONALIZADO DE USUARIO################
+AUTH_USER_MODEL = 'mainApplication.CustomUser'
+ACCOUNT_USER_MODEL_USERNAME_FIELD = 'username'
+ACCOUNT_EMAIL_REQUIRED = True
+ACCOUNT_USERNAME_REQUIRED = False
+ACCOUNT_AUTHENTICATION_METHOD = 'email'

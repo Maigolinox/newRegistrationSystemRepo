@@ -7,8 +7,8 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib.admin.views.decorators import staff_member_required
 import qrcode
-from .forms import UserProfileForm,PaymentProofForm,EventForm, PlaceForm,CongressDateForm
-from .models import UserProfile,PaymentProof,Place,CongressDate,Event,Registration
+from .forms import UserProfileForm,PaymentProofForm,EventForm, PlaceForm,CongressDateForm,TopicAreaForm,SubmissionForm,SubmissionFileForm,AuthorForm
+from .models import UserProfile,PaymentProof,Place,CongressDate,Event,Registration,adminPermissions,TopicArea,Submission
 from django.views.decorators.http import require_POST
 from django.http import JsonResponse
 from django.contrib import messages
@@ -17,6 +17,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import Q
 from allauth.socialaccount.models import SocialAccount
 from django.contrib.auth.models import User
+from .models import CustomUser,SubmissionFile
 
 import pycountry
 from io import BytesIO
@@ -37,13 +38,48 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.application import MIMEApplication
 # PARA DIPLOMAS
 
+#PARA SUBIR ARCHIVOS A LO BANNERS
+from django.core.files.storage import FileSystemStorage
 
+#PARA REVISAR SI ES SUPER USUARIO
+from .decorators import superuser_required
 
+from django.http import HttpResponseNotFound,HttpResponseRedirect
+
+#DECORADOR PARA VERIFICAR QUE SEA AUTOR ############## FALTANTE
+
+#PARA GENERAR SUBMISSION
+from django.forms import formset_factory
 
 # Create your views here.
 
 def index(request):
-    return render(request,'index.html')
+    if request.user.is_authenticated:
+        return redirect('dashboard')
+    else:
+        location = request.GET.get('location', 'Peru')  # Default location
+        background_image = fetch_image(location)  # Get a single image URL
+        context = {
+            'background_image': background_image,  # List of image URLs
+            'location': location,
+        }
+        return render(request,'index.html',context)
+
+def fetch_image(location):
+    # Example using Pexels API
+    API_KEY = 'VqPVd9RKCmdfe89nsEszb6aa8fUZRzgDiOXeAyp7PySwVI6CPXvcq4ca'  # Replace with your API key
+    url = f"https://api.pexels.com/v1/search?query={location}&per_page=10"
+    headers = {"Authorization": API_KEY}
+    response = requests.get(url, headers=headers)
+    
+    if response.status_code == 200:
+        data = response.json()
+        if data['photos']:
+            import random
+            photo = random.choice(data['photos'])
+            return photo['src']['original']
+    return '/static/images/bg_anual_s.jpg'  # Fallback to your static image
+
 
 @login_required
 def dashboard(request):
@@ -77,10 +113,53 @@ def dashboard(request):
     # paymentCompleted = userProfile.payment_completed
     is_staff_user = request.user.is_staff  # This will be True or False
     is_staff_superuser = request.user.is_superuser  # This will be True or False
+    is_reviewer=request.user.isReviewer
     try:
         userType=userProfile.user_type
     except:
         userType="Uncompleted profile"
+    
+    banners_path = os.path.join(settings.BASE_DIR, 'mainApplication', 'static', 'images', 'banners')
+    images = []
+
+    if os.path.exists(banners_path):
+        images = [f'images/banners/{img}' for img in os.listdir(banners_path) if img.endswith(('jpg', 'jpeg', 'png', 'gif'))]
+
+    permissionValues=adminPermissions.objects.all()
+    try:
+        submissions = Submission.objects.filter(user_id=request.user.id,is_withdrawn=False)
+        for submission in submissions:
+            try:
+                if submission.title and submission.keywords and submission.abstract:
+                    submission.step1_status = "completed"
+                else:
+                    submission.step1_status = "uncompleted"
+            except:                
+                submission.step1_status = "uncompleted"
+
+            if submission.step1_status == "completed":
+                submission.step2_status = "completed" if submission.sent_for_review else "uncompleted"
+            else:
+                submission.step2_status = "pending"
+            # Step 3: Check if reviewers are assigned
+            if submission.step2_status == "completed":
+                submission.step3_status = "completed" if submission.reviewers.exists() else "inprogress"
+            else:
+                submission.step3_status = "pending"
+            # Step 4: Check if under review
+            if submission.step3_status == "completed":
+                submission.step4_status = "completed" if submission.is_under_review() else "inprogress"
+            else:
+                submission.step4_status = "pending"
+
+            # Step 5: Check if decision issued
+            if submission.step4_status == "completed":
+                submission.step5_status = "completed" if submission.decision_issued() else "uncompleted"
+            else:
+                submission.step5_status = "pending"
+    except:
+        submissions = None
+
     context = {
         'qr':qr_code,
         'allowRegistration':allowRegistration,
@@ -88,6 +167,10 @@ def dashboard(request):
         'userType':userProfile,
         'is_staff_user': is_staff_user,
         'is_staff_superuser':is_staff_superuser,
+        'is_reviewer':is_reviewer,
+        'images': images,
+        'permissionValues':permissionValues,
+        'submissions':submissions,
     }
     return render(request,'dashboard.html',context)
 
@@ -403,6 +486,11 @@ def registerintoEvent(request):
 
         if conflicting_registrations.exists():
             return JsonResponse({'success': False, 'error': 'You cannot register for events with overlapping times'})
+        
+        for event in events:
+            current_registrations = Registration.objects.filter(event=event).count()
+            if current_registrations >= event.place.capacity:
+                return JsonResponse({'success': False, 'error': f'No space available for the event: {event.title}'})
 
         # Registrar al usuario para cada evento encontrado
         for event in events:
@@ -663,7 +751,7 @@ def registerStaff(request):
     is_staff_user=request.user.is_staff
     is_staff_superuser=request.user.is_superuser
     if is_staff_superuser:
-        users = User.objects.all()        
+        users = CustomUser.objects.all()        
         social_accounts = SocialAccount.objects.filter(user__in=users)
         social_extra_data = {account.user_id: account.extra_data for account in social_accounts}
         if request.method == 'POST':
@@ -737,6 +825,8 @@ def generateMyDiplomas(request,event_id):
     eventInformation = Event.objects.get(id=event_id)
     lastAllEvent=eventInformation.allEvent
     cargaInscripcion=Registration.objects.get(event_id=event_id,user_id=request.user.id)
+    allowDiploma=False
+
     if lastAllEvent:
         asisted=cargaInscripcion.assisted
         counterAssistance=cargaInscripcion.counter
@@ -761,8 +851,8 @@ def generateMyDiplomas(request,event_id):
     # print(email)
     # email=userInformation.user.email
     
-    subject = "International Conference on Software Process Improvement CIMPS 2024"
-    body = """ ================= THANK YOU<br> Attached to this email you will find your corresponding diploma for you atendance to CIMPS 2024<br> =================<br><br>Warm regards,JMM<br>CIMPS Chair <br>2024<br>"""
+    subject = "International Conference on Software Process Improvement CIMPS"
+    body = """ ================= THANK YOU<br> Attached to this email you will find your corresponding diploma for you atendance to CIMPS <br> =================<br><br>Warm regards,JMM<br>CIMPS Chair <br>"""
 
     def create_diploma(template_path, name, output_image_path):
         # Abrir la plantilla de imagen
@@ -852,16 +942,25 @@ def generateMyDiplomas(request,event_id):
             server.send_message(message)
 
     # eventFilePath
+    if cargaInscripcion.assisted is False:
+        messages.error(request, "You have not assisted in this event. Please register your assistance through the QR scanner with a staff member if required.")
+        allowDiploma = False
+
+
+    if not eventInformation.is_ready_for_certificate() or  cargaInscripcion.receivedDiploma is True:
+        allowDiploma = False
+        messages.error(request, "You have already received your certificate. You can't receive it again.")
     output_folder = "./static/diplomas"
     if not eventInformation.is_ready_for_certificate() or allowDiploma is False:
-        messages.error(request, "The event is not ready for this certificate, check the date and hours of the event. Also make sure that your assistance is registered through the QR scanner with a staff member. If you do not register your assistance in time, you will not be able to receive the certificate.")
+
+        messages.error(request, "The event is not ready for this certificate, check the date and hours of the event. Also make sure that your assistance is registered through the QR scanner with a staff member. If you do not register your assistance in time, you will not be able to receive the certificate. Is possible that you already received this certificate.")
         return redirect('seeMyDiplomas')
     elif eventInformation.is_ready_for_certificate() and allowDiploma is True:
         os.makedirs(output_folder, exist_ok=True)
         image_path = os.path.join(output_folder,  f"{name}.jpg")
         create_diploma(eventFilePath, name, image_path)
         pdf_path=os.path.join(output_folder,  f"{name}.pdf")
-        owner_password="Cimps2024.Terron123#@!"
+        owner_password="Cimps2025.Terron456#@!"
         create_protected_pdf(image_path,pdf_path,owner_password)
 
         send_email(email,subject,body,pdf_path)
@@ -872,3 +971,269 @@ def generateMyDiplomas(request,event_id):
         messages.error(request, "Error! Check your contact: victor.terron@cimat.mx describing your issue")
     
     return redirect('seeMyDiplomas')
+
+
+
+#PARA SUBIR IMAGENES AL BANNER
+@login_required(login_url='google_login')
+@superuser_required
+def upload_banner(request):
+    banners_path = os.path.join(settings.BASE_DIR, 'mainApplication', 'static', 'images', 'banners')
+    os.makedirs(banners_path, exist_ok=True)  # Crear el directorio si no existe
+    files = os.listdir(banners_path)
+    file_list = [{'name': file, 'url': os.path.join('images', 'banners', file)} for file in files]
+
+    if request.method == 'POST' and request.FILES['banner']:
+        banner_file = request.FILES['banner']
+        
+        # Ruta destino (definida directamente)
+        banners_path = os.path.join(settings.BASE_DIR, 'mainApplication', 'static', 'images', 'banners')
+        os.makedirs(banners_path, exist_ok=True)  # Crear el directorio si no existe
+
+        # Guardar archivo
+        fs = FileSystemStorage(location=banners_path)
+        filename = fs.save(banner_file.name, banner_file)
+        file_url = os.path.join('static', 'images', 'banners', filename)
+        
+        # return JsonResponse({'message': 'Archivo subido exitosamente', 'file_url': file_url})
+    context={
+        'registrations':file_list
+    }
+
+    return render(request, 'upload_banner.html',context)
+
+@login_required(login_url='google_login')
+@superuser_required
+def delete_file(request, filename):
+    # Construir la ruta completa del archivo
+    banners_path = os.path.join(settings.BASE_DIR, 'mainApplication', 'static', 'images', 'banners')
+    file_path = os.path.join(banners_path, filename)
+
+    # Verificar si el archivo existe
+    if os.path.exists(file_path):
+        os.remove(file_path)  # Eliminar el archivo
+    else:
+        return HttpResponseNotFound("El archivo no existe.")  # Manejar error si no se encuentra el archivo
+
+    # Redirigir a la página de subir banners
+    return redirect('upload_banner')
+
+#FOR EDITING HTE TOPICS THAT ADDRESSES THE CONFERENCE
+@superuser_required
+def topics(request):
+    topics = TopicArea.objects.all()
+    if request.method == 'POST':
+        form = TopicAreaForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect('topicsArea')
+    else:
+        form = TopicAreaForm()
+    context = {
+        'topics': topics,
+        'form': form
+    }
+    return render(request, 'topicArea.html', context)
+
+@superuser_required
+def deleteTopics(request,pk):
+    topic = TopicArea.objects.get(id=pk)
+    topic.delete()
+    return redirect('topicsArea')
+
+@superuser_required
+def editTopic(request,pk):
+    # topic = TopicArea.objects.get(id=pk)
+    topic = get_object_or_404(TopicArea, id=pk)
+
+    if request.method == 'POST':
+        form = TopicAreaForm(request.POST, instance=topic)
+        if form.is_valid():
+            form.save()
+            return redirect('topicsArea')
+    else:
+        form = TopicAreaForm(instance=topic)
+    context = {
+        'form': form
+    }
+    return render(request, 'editTopic.html', context)
+
+
+@login_required
+def submitArticle(request,submission_id=None):
+    AuthorFormSet = formset_factory(AuthorForm, extra=1)  # Allows adding multiple authors
+
+    submission = None#si editamos una submission existente
+    if submission_id:
+        submission = get_object_or_404(Submission, id=submission_id, user=request.user)
+
+
+    if request.method == 'POST':
+        submission_form = SubmissionForm(request.POST)
+        author_formset = AuthorFormSet(request.POST, prefix='authors')
+        file_form = SubmissionFileForm(request.POST, request.FILES)
+
+        # Determine if the user clicked "Save Draft" or "Submit"
+        is_submit = "submit" in request.POST
+        is_save_draft = "save_draft" in request.POST
+
+        if submission_form.is_valid() and author_formset.is_valid() and file_form.is_valid():
+            # Save the submission
+            submission = submission_form.save(commit=False)
+            submission.user = request.user
+            submission.sent_for_review = is_submit  # Only mark as submitted if "Submit" was clicked
+            submission.save()
+            submission_form.save_m2m()  # Save M2M fields like topic_areas
+
+            # Save authors
+            for author_form in author_formset:
+                if author_form.cleaned_data:  # Avoid saving empty forms
+                    author = author_form.save(commit=False)
+                    author.submission = submission
+                    author.save()
+
+            # Save multiple files
+            files = request.FILES.getlist('files')  # Matches the 'files' field in the form
+            for file in files:
+                SubmissionFile.objects.create(submission=submission, file=file)
+
+            # Show success messages
+            if is_submit:
+                messages.success(request, 'Article submitted successfully.')
+            elif is_save_draft:
+                messages.success(request, 'Draft saved successfully.')
+
+            messages.success(request, 'Article submitted successfully.')
+            return redirect('seeMySubmissions')  # Replace with your desired redirect
+    else:
+        submission_form = SubmissionForm(instance=submission)
+        author_formset = AuthorFormSet(prefix='authors')
+        file_form = SubmissionFileForm(submission=submission)
+
+    existing_files = []
+    if submission:
+        existing_files = submission.files.all()
+
+    return render(request, 'makeSubmission.html', {
+        'submission_form': submission_form,
+        'author_formset': author_formset,
+        'file_form': file_form,
+        'existing_files': existing_files,
+        'submission': submission,
+    })
+
+
+@login_required
+def seeMySubmissions(request):
+    submissions = Submission.objects.filter(user_id=request.user.id,is_withdrawn=False)
+    
+    context={
+        'submissions': submissions,
+    }
+    return render(request, 'mySubmissions.html',context)
+
+
+@login_required
+def editSubmission(request, submissionID):
+    # Cambiamos extra=0 a extra=1 para permitir un nuevo formulario en blanco
+    AuthorFormSet = formset_factory(AuthorForm, extra=0, can_delete=True)
+    submission = get_object_or_404(Submission, submission_id=submissionID, user=request.user)
+    
+    if request.user.id is not submission.user_id:
+        return redirect('seeMySubmissions')
+    
+    if request.method == 'POST':
+        is_submit = "submit" in request.POST
+        
+
+        submission_form = SubmissionForm(request.POST, instance=submission)
+        author_formset = AuthorFormSet(request.POST, prefix='authors')
+        file_form = SubmissionFileForm(request.POST, request.FILES)
+
+
+        if submission_form.is_valid() and author_formset.is_valid() and file_form.is_valid():
+            
+            
+                
+            # Save the submission
+            submission = submission_form.save(commit=False)
+            if is_submit:  # If the submit button was pressed
+                submission.sent_for_review = True  # Mark as sent for review
+            submission.save()
+            submission_form.save_m2m()
+
+            # Handle authors - modificamos esta parte para manejar eliminaciones
+            submission.authors.all().delete()
+            for author_form in author_formset:
+                if author_form.cleaned_data and not author_form.cleaned_data.get('DELETE', False):
+                    author = author_form.save(commit=False)
+                    author.submission = submission
+                    author.save()
+
+            # Handle files
+            if request.FILES.getlist('files'):
+                for file in request.FILES.getlist('files'):
+                    SubmissionFile.objects.create(submission=submission, file=file)
+
+            messages.success(request, 'Submission updated successfully.')
+            return HttpResponseRedirect(request.path)
+        
+
+    else:
+        submission_form = SubmissionForm(instance=submission)
+        author_formset = AuthorFormSet(
+            prefix='authors',
+            initial=[{
+                'honorific': author.honorific,
+                'first_name': author.first_name,
+                'last_name': author.last_name,
+                'position_title': author.position_title,
+                'organization': author.organization,
+                'department': author.department,
+                'address': author.address,
+                'city': author.city,
+                'state_province': author.state_province,
+                'postcode_zip': author.postcode_zip,
+                'email': author.email,
+            } for author in submission.authors.all()]
+        )
+        file_form = SubmissionFileForm()
+
+    existing_files = submission.files.all()
+
+    return render(request, 'editSubmission.html', {
+        'submission_form': submission_form,
+        'author_formset': author_formset,
+        'file_form': file_form,
+        'existing_files': existing_files,
+        'submission': submission,
+    })
+
+
+@require_POST
+def delete_file(request, file_id):
+    try:
+        file = SubmissionFile.objects.get(id=file_id)
+        file.delete()
+        return JsonResponse({'success': True})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)})
+    
+@login_required
+def withdraw_submission(request, submission_id):
+    submission = get_object_or_404(Submission, submission_id=submission_id)
+
+    # Verifica si el usuario es el propietario del artículo
+    if submission.user != request.user:
+        messages.error(request, "You don't have permission to withdraw this article.")
+        return redirect('seeMySubmissions')  # Cambia 'some_view_name' por la vista que corresponde.
+
+    # Cambia el estado o agrega una lógica para indicar que está retirado.
+    submission.sent_for_review = False
+    submission.under_review = False
+    submission.decision_issued = False
+    submission.is_withdrawn = True
+    submission.save()
+
+    messages.success(request, "The article has been successfully withdrawn.")
+    return redirect('seeMySubmissions')  # Cambia 'some_view_name' por la vista correspondiente.

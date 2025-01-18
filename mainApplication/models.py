@@ -1,3 +1,5 @@
+import random
+import string
 from datetime import datetime, timedelta
 from django.db import models
 from django.contrib.auth.models import User
@@ -5,6 +7,21 @@ from django.contrib.auth.models import User
 from django.conf import settings
 from django.forms import ValidationError
 from django_countries.fields import CountryField
+from django.contrib.auth.models import AbstractUser
+from django.db import models
+
+
+
+
+class CustomUser(AbstractUser):
+    isReviewer = models.BooleanField(default=False)
+    
+    def __str__(self):
+        return self.email
+
+
+
+#####################
 
 class UserProfile(models.Model):
     GENDER_CHOICES = (
@@ -20,7 +37,7 @@ class UserProfile(models.Model):
         # ('other', 'Other'),
     )
 
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     gender = models.CharField(max_length=10, choices=GENDER_CHOICES)
     state = models.CharField(max_length=100)
     country = CountryField()
@@ -99,7 +116,7 @@ class Event(models.Model):
     
     
 class Registration(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     event = models.ForeignKey(Event, on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
     assisted=models.BooleanField(default=False)
@@ -118,3 +135,112 @@ class CongressDate(models.Model):
 
     class Meta:
         ordering = ['date']
+
+class adminPermissions(models.Model):#for welcome kit
+    kitBienvenida = models.BooleanField(default=False)#si hay o no
+    kitBienvenidaAll = models.BooleanField(default=False)#si hay ¿se dara a todos?
+    kitBienvenidaOnlyPayment = models.BooleanField(default=False)#sino se da a todos ¿solo a pagados?
+    kitBienvenidaSchoolarships = models.BooleanField(default=False)#sino se da a todos ¿se da a becados?
+
+
+class TopicArea(models.Model):
+    """
+    Represents a topic area that can be configured by a superuser.
+    """
+    name = models.CharField(max_length=100, unique=True)
+    description = models.TextField(blank=True, null=True)
+
+    def __str__(self):
+        return self.name
+
+def generate_random_submission_id():
+    while True:
+        submission_id = ''.join(random.choices(string.digits, k=6))  # Genera un número aleatorio de 6 dígitos
+        if not submission_id.startswith('0'):  # Verifica que no empiece con '0'
+            return submission_id
+
+
+class Submission(models.Model):
+    """
+    Represents a submission made by a user.
+    """
+    PUBLICATION_TYPES = [
+        ('IEEE', 'IEEE'),
+        ('Springer', 'Springer'),
+        ('Other', 'Other'),
+    ]
+    submission_id = models.CharField(max_length=6, unique=True, default=generate_random_submission_id)
+
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='submissions')
+    title = models.CharField(max_length=255)
+    publication_type = models.CharField(max_length=50, choices=PUBLICATION_TYPES)
+    topic_areas = models.ManyToManyField(TopicArea, related_name='submissions')
+    keywords = models.TextField(help_text="Comma-separated keywords.")
+    abstract = models.TextField()
+    comments = models.TextField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    sent_for_review = models.BooleanField(default=False)
+    reviewers = models.ManyToManyField(
+        settings.AUTH_USER_MODEL,
+        related_name='assigned_submissions',
+        blank=True
+    )  # Many-to-many relationship with reviewers
+    is_withdrawn=models.BooleanField(default=False)
+    under_review = models.BooleanField(default=False)  # Status for being under review
+    decision_issued = models.BooleanField(default=False)  # Status for final decision issued
+
+
+    def __str__(self):
+        return self.title
+    
+    def has_reviewers(self):
+        """Check if there are assigned reviewers."""
+        return self.reviewers.exists()
+
+    def is_under_review(self):
+        """Determine if the submission is under review."""
+        return self.under_review
+
+    def decision_issued(self):
+        """Determine if a final decision has been issued."""
+        return self.decision_issued
+
+class Author(models.Model):
+    """
+    Represents an author associated with a submission.
+    """
+    HONORIFICS = [
+        ('Mr.', 'Mr.'),
+        ('Ms.', 'Ms.'),
+        ('Dr.', 'Dr.'),
+        ('Prof.', 'Prof.'),
+    ]
+
+    submission = models.ForeignKey(Submission, on_delete=models.CASCADE, related_name='authors')
+    honorific = models.CharField(max_length=10, choices=HONORIFICS, blank=True, null=True)
+    first_name = models.CharField(max_length=100)
+    last_name = models.CharField(max_length=100)
+    position_title = models.CharField(max_length=150, blank=True, null=True)
+    organization = models.CharField(max_length=200)
+    department = models.CharField(max_length=150, blank=True, null=True)
+    address = models.TextField()
+    city = models.CharField(max_length=100)
+    state_province = models.CharField(max_length=100)
+    postcode_zip = models.CharField(max_length=20)
+    email = models.EmailField()
+
+    def __str__(self):
+        return f"{self.first_name} {self.last_name} ({self.organization})"
+    
+class SubmissionFile(models.Model):
+    """
+    Represents a file uploaded by the user for a submission.
+    """
+    submission = models.ForeignKey(Submission, on_delete=models.CASCADE, related_name='files')
+    file = models.FileField(upload_to='submissions/%Y/%m/%d/')
+    # description = models.TextField(blank=True, null=True)
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"File for {self.submission.title}"

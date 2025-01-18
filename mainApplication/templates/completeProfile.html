@@ -348,6 +348,7 @@
                                 allowClear: true
                             });
                             $('.flag-text').hide();
+                            
                 
                             
                         });
@@ -365,7 +366,7 @@
                             var $country = $(
                                 '<span class="flag-icon flag-icon-'+ country.id.toLowerCase() +' flag-icon-squared"></span>'
                             );
-                            return $country;
+                            return null;
                         }
                     </script>
                   </ul>
@@ -504,6 +505,7 @@
 
   <!-- Template Main JS File -->
   <script src="{% static 'assets/js/main.js' %}"></script>
+  
 
 </body>
 

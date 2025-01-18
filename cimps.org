@@ -1,22 +1,26 @@
+# Configuración para HTTP redirigiendo a HTTPS
 server {
     listen 80;
     listen [::]:80;
     server_name cimps.org www.cimps.org register.cimps.org;
 
-    # Redirigir todo el tráfico HTTP a HTTPS
-    return 301 https://$server_name$request_uri;
+    # Redirige todas las solicitudes HTTP a HTTPS
+    return 301 https://$host$request_uri;
 }
 
+# Bloque para cimps.org (WordPress) - Sin cambios
 server {
     listen 443 ssl http2;
     listen [::]:443 ssl http2;
     server_name cimps.org www.cimps.org;
 
-    # Root directory
+    # Root directory para WordPress
     root /var/www/html/cimps.org;
     index index.php index.html index.htm;
 
-    # Certificados SSL
+    client_max_body_size 50M;
+
+    # Configuración SSL para cimps.org
     ssl_certificate /etc/letsencrypt/live/cimps.org/fullchain.pem;
     ssl_certificate_key /etc/letsencrypt/live/cimps.org/privkey.pem;
     include /etc/letsencrypt/options-ssl-nginx.conf;
@@ -47,65 +51,60 @@ server {
     set_real_ip_from 2a06:98c0::/29;
     real_ip_header CF-Connecting-IP;
 
-    # WordPress configuration
+    # Configuración de WordPress
     location / {
         try_files $uri $uri/ /index.php?$args;
     }
 
-    # Configuración de PHP
+    # Configuración de PHP para WordPress
     location ~ \.php$ {
         include snippets/fastcgi-php.conf;
         fastcgi_pass unix:/var/run/php/php8.1-fpm.sock;
         fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
         fastcgi_param HTTPS on;
         include fastcgi_params;
-        # Headers específicos para Cloudflare
         fastcgi_param HTTP_CF_CONNECTING_IP $http_cf_connecting_ip;
         fastcgi_param HTTP_CF_IPCOUNTRY $http_cf_ipcountry;
         fastcgi_param HTTP_CF_RAY $http_cf_ray;
-        fastcgi_param HTTP_CF_VISITOR $http_cf_visitor;
+        fastcgi_param HTTP_CF_VISITOR $http_cf_ipvisitor;
     }
-
-    # Seguridad
-    location ~ /\.ht {
-        deny all;
-    }
-
-    location = /favicon.ico {
-        log_not_found off;
-        access_log off;
-    }
-
-    location = /robots.txt {
-        allow all;
-        log_not_found off;
-        access_log off;
-    }
-
-    location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg)$ {
-        expires max;
-        log_not_found off;
-        access_log off;
-        add_header Access-Control-Allow-Origin "*";
-    }
-
-    # Headers básicos de seguridad (deja que Cloudflare maneje el resto)
-    add_header X-Frame-Options "SAMEORIGIN" always;
-    add_header X-Content-Type-Options "nosniff" always;
 }
 
+# Bloque para register.cimps.org (Django)
 server {
     listen 443 ssl http2;
     listen [::]:443 ssl http2;
     server_name register.cimps.org;
 
+    client_max_body_size 50M;
+
     # Certificados SSL para register.cimps.org
-    ssl_certificate /etc/letsencrypt/live/register.cimps.org/fullchain.pem; 
-    ssl_certificate_key /etc/letsencrypt/live/register.cimps.org/privkey.pem; 
+    ssl_certificate /etc/letsencrypt/live/register.cimps.org/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/register.cimps.org/privkey.pem;
+    include /etc/letsencrypt/options-ssl-nginx.conf;
+    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
+
+    # Configuración de archivos estáticos de Django - CORREGIDO
+    location /static/ {
+        alias /var/www/html/cimps.org/registrationSystem/mainApplication/static/;
+        expires max;
+        access_log off;
+        add_header Cache-Control "public, no-transform";
+        try_files $uri $uri/ =404;
+    }
+
+    # Configuración para media files (si los tienes)
+    location /media/ {
+        alias /var/www/html/cimps.org/registrationSystem/media/;
+        expires max;
+        access_log off;
+        add_header Cache-Control "public, no-transform";
+        try_files $uri $uri/ =404;
+    }
 
     # Configuración para la aplicación Django
     location / {
-        proxy_pass http://127.0.0.1:8000;  # Cambia esto si tu aplicación corre en otro puerto
+        proxy_pass http://127.0.0.1:8000;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $http_cf_connecting_ip;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
@@ -114,7 +113,7 @@ server {
         proxy_buffering off;
     }
 
-    # Seguridad
+    # Seguridad y headers adicionales
     location ~ /\.ht {
         deny all;
     }
@@ -130,14 +129,9 @@ server {
         access_log off;
     }
 
-    location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg)$ {
-        expires max;
-        log_not_found off;
-        access_log off;
-        add_header Access-Control-Allow-Origin "*";
-    }
-
-    # Headers básicos de seguridad (deja que Cloudflare maneje el resto)
+    # Headers de seguridad
     add_header X-Frame-Options "SAMEORIGIN" always;
     add_header X-Content-Type-Options "nosniff" always;
+    add_header X-XSS-Protection "1; mode=block" always;
+    add_header Referrer-Policy "strict-origin-same-origin" always;
 }
