@@ -8,7 +8,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.admin.views.decorators import staff_member_required
 import qrcode
 from .forms import UserProfileForm,PaymentProofForm,EventForm, PlaceForm,CongressDateForm,TopicAreaForm,SubmissionForm,SubmissionFileForm,AuthorForm
-from .models import UserProfile,PaymentProof,Place,CongressDate,Event,Registration,adminPermissions,TopicArea,Submission
+from .models import UserProfile,PaymentProof,Place,CongressDate,Event,Registration,adminPermissions,TopicArea,Submission,reviewersCodes
 from django.views.decorators.http import require_POST
 from django.http import JsonResponse
 from django.contrib import messages
@@ -23,6 +23,9 @@ import pycountry
 from io import BytesIO
 from collections import defaultdict
 
+##FOR VALIDATING EMAILS
+from django.core.exceptions import ValidationError
+from django.core.validators import validate_email
 
 # PARA DIPLOMAS
 from PIL import Image, ImageDraw, ImageFont
@@ -42,7 +45,7 @@ from email.mime.application import MIMEApplication
 from django.core.files.storage import FileSystemStorage
 
 #PARA REVISAR SI ES SUPER USUARIO
-from .decorators import superuser_required
+from .decorators import superuser_required,completedProfileRequired
 
 from django.http import HttpResponseNotFound,HttpResponseRedirect
 
@@ -51,9 +54,14 @@ from django.http import HttpResponseNotFound,HttpResponseRedirect
 #PARA GENERAR SUBMISSION
 from django.forms import formset_factory
 
+#invitations to reviewers
+import hashlib
+
+
 #PROCESADOR DE CONTEXTO
 def get_user_context_data(request):
     user_id = request.user.id
+    
     try:
         user_profile = UserProfile.objects.get(user_id=user_id)
         payment_completed = user_profile.payment_completed
@@ -73,10 +81,16 @@ def get_user_context_data(request):
             is_student = False
 
     except ObjectDoesNotExist:
+        redirect('complete_profile')
         user_profile = None
         payment_completed = False
         allow_registration = False
         user_type = "Uncompleted profile"
+        is_author = False
+        is_student = False
+        is_public = False
+        is_reviewer = False
+        
     
     return {
         "userProfile": user_profile,
@@ -128,20 +142,11 @@ def fetch_image(location):
     return '/static/images/bg_anual_s.jpg'  # Fallback to your static image
 
 
-@login_required
+@login_required(login_url='google_login')
+@completedProfileRequired
 def dashboard(request):
     userID = request.user.id
     allowRegistration=False
-    try:
-        userProfile = UserProfile.objects.get(user_id=userID)
-        paymentCompleted = userProfile.payment_completed
-        allowRegistration = userProfile.permitirRegistro
-        
-        userType = userProfile.user_type
-    except ObjectDoesNotExist:
-        userProfile = None
-        paymentCompleted = False  # Assuming no payment if no profile exists
-        userType = "Uncompleted profile"
 
     base_url = f"{request.scheme}://{request.get_host()}/"
     # Generate QR codes for each registration
@@ -156,8 +161,8 @@ def dashboard(request):
         # Add the QR code image to the registration object for rendering
     qr_code = qr_code_image
 
-    # userProfile = UserProfile.objects.get(user_id=userID)
-    # paymentCompleted = userProfile.payment_completed
+    userProfile = UserProfile.objects.get(user_id=userID)
+    paymentCompleted = userProfile.payment_completed
     is_staff_user = request.user.is_staff  # This will be True or False
     is_staff_superuser = request.user.is_superuser  # This will be True or False
     is_reviewer=request.user.isReviewer
@@ -193,9 +198,9 @@ def dashboard(request):
                 submission.step3_status = "completed" if submission.reviewers.exists() else "inprogress"
             else:
                 submission.step3_status = "pending"
-            # Step 4: Check if under review
+            # Step 4: Check if under reviewchito 
             if submission.step3_status == "completed":
-                submission.step4_status = "completed" if submission.is_under_review() else "inprogress"
+                submission.step4_status = "completed" if submission.under_review else "inprogress"
             else:
                 submission.step4_status = "pending"
 
@@ -221,7 +226,7 @@ def dashboard(request):
     }
     return render(request,'dashboard.html',context)
 
-@login_required
+@login_required(login_url='google_login')
 def complete_profile(request):
     is_staff_user = request.user.is_staff  # This will be True or False
     is_staff_superuser = request.user.is_superuser  # This will be True or False
@@ -245,7 +250,8 @@ def complete_profile(request):
     return render(request, 'completeProfile.html', {'form': form,'is_staff_user':is_staff_user,'is_staff_superuser':is_staff_superuser})
 
 
-@login_required
+@login_required(login_url='google_login')
+@completedProfileRequired
 def payment(request):
     userID = request.user.id
     try:
@@ -253,7 +259,7 @@ def payment(request):
         paymentObservations = userProfile.payment_completed
         paymentCompleted = userProfile.payment_completed
     except:
-        return redirect('complete_profile')
+        pass
     # userProfile = UserProfile.objects.get(user_id=userID)
     uploadFiles = PaymentProof.objects.filter(user_profile=userProfile)  # Obtén todos los archivos subidos
     is_staff_user = request.user.is_staff  # This will be True or False
@@ -296,11 +302,8 @@ def payment(request):
     }
     return render(request, 'payments.html', context=context)
 
-from itertools import groupby
-from operator import attrgetter
-
-
 @staff_member_required
+@completedProfileRequired
 def scholarshipAssignations(request):
     profiles = UserProfile.objects.select_related('user').all()
 
@@ -316,13 +319,11 @@ def scholarshipAssignations(request):
     }
     return render(request, 'scholarshipAssignations.html', context)
 
-@login_required
+@login_required(login_url='google_login')
+@completedProfileRequired
 def schedule(request):
     userID = request.user.id
-    try:
-        userProfile = UserProfile.objects.get(user_id=userID)
-    except:
-        return redirect('complete_profile')
+    
 
     userProfile = UserProfile.objects.get(user_id=userID)
     paymentCompleted = userProfile.payment_completed
@@ -638,12 +639,9 @@ def delete_congress_date(request, date_id):
 
 
 @login_required
+@completedProfileRequired
 def seeMySchedule(request):
     userID = request.user.id
-    try:
-        userProfile = UserProfile.objects.get(user_id=userID)
-    except UserProfile.DoesNotExist:
-        return redirect('complete_profile')
     userProfile = UserProfile.objects.get(user_id=userID)
     paymentCompleted = userProfile.payment_completed
     is_staff_user = request.user.is_staff  # This will be True or False
@@ -821,6 +819,7 @@ def registerStaff(request):
     
 
 @login_required
+@completedProfileRequired
 def seeMyDiplomas(request):
     is_staff_user = request.user.is_staff
     is_staff_superuser = request.user.is_superuser
@@ -867,7 +866,7 @@ def seeMyDiplomas(request):
     }
     return render(request, 'seeMyDiplomas.html', context)
 
-@login_required
+@login_required(login_url='accounts/google/')
 def generateMyDiplomas(request,event_id):
     eventInformation = Event.objects.get(id=event_id)
     lastAllEvent=eventInformation.allEvent
@@ -1106,7 +1105,8 @@ def editTopic(request,pk):
     return render(request, 'editTopic.html', context)
 
 
-@login_required
+@login_required(login_url='google_login')
+@completedProfileRequired
 def submitArticle(request,submission_id=None):
     AuthorFormSet = formset_factory(AuthorForm, extra=1)  # Allows adding multiple authors
 
@@ -1170,7 +1170,8 @@ def submitArticle(request,submission_id=None):
     })
 
 
-@login_required
+@login_required(login_url='google_login')
+@completedProfileRequired
 def seeMySubmissions(request):
     submissions = Submission.objects.filter(user_id=request.user.id,is_withdrawn=False)
     
@@ -1181,6 +1182,7 @@ def seeMySubmissions(request):
 
 
 @login_required
+@completedProfileRequired
 def editSubmission(request, submissionID):
     # Cambiamos extra=0 a extra=1 para permitir un nuevo formulario en blanco
     AuthorFormSet = formset_factory(AuthorForm, extra=0, can_delete=True)
@@ -1284,3 +1286,233 @@ def withdraw_submission(request, submission_id):
 
     messages.success(request, "The article has been successfully withdrawn.")
     return redirect('seeMySubmissions')  # Cambia 'some_view_name' por la vista correspondiente.
+
+def validate_email_list(email_list):
+    """Helper function to validate a list of email addresses"""
+    valid_emails = []
+    invalid_emails = []
+
+    for email in email_list:
+        email = email.strip()  # Remove extra spaces
+        try:
+            # Use Django's built-in email validator
+            validate_email(email)
+            valid_emails.append(email)
+        except ValidationError:
+            invalid_emails.append(email)
+
+    return valid_emails, invalid_emails
+
+@superuser_required
+@completedProfileRequired
+def inviteReviewers(request):
+    """
+    Handles both rendering the invitation form and sending email invitations to reviewers.
+    """
+    if request.method == 'POST':
+        # Extract data from the form
+        subject = request.POST.get('subject')
+        body_template = request.POST.get('message') + " <br> Please click here: <a href='{url}'>Become a Reviewer</a> <br> If this email is not a Gmail account, is mandatory to create one to access the platform. Then to become a reviewer in your profile section add the following code: {hashedEmail}."
+        bcc = request.POST.get('bcc')  # Comma-separated email addresses
+        base_url = f"{request.scheme}://{request.get_host()}/becomeReviewer"
+
+        # Process recipient list
+        bcc_list = [email.strip() for email in bcc.split(',')]
+        valid_bcc, invalid_bcc = validate_email_list(bcc_list)
+
+        if invalid_bcc:
+            messages.error(request, f"The following emails are invalid: {', '.join(invalid_bcc)}")
+            return redirect('inviteReviewers')  # Redirect back with an error
+
+        # Email sending logic
+        sender = "conferencecimps@cimat.mx"
+        password = "HIPOCRATES@2022"
+
+        try:
+            with smtplib.SMTP_SSL('smtp.gmail.com', 465) as server:
+                server.login(sender, password)
+                for recipient in bcc_list:
+                    # Generate SHA-256 hash for the email
+                    hashed_email = hashlib.sha256(recipient.encode()).hexdigest()
+                    personalized_url = f"{base_url}/{hashed_email}"
+
+                    # Format the email body
+                    body = body_template.format(url=personalized_url,hashedEmail=hashed_email)
+
+                    # Create the email message
+                    message = MIMEMultipart()
+                    message["From"] = sender
+                    message["To"] = recipient
+                    message["Subject"] = subject
+                    message.attach(MIMEText(body, "html"))
+
+                    # Send the email
+                    server.send_message(message)
+                    try:
+                        reviewersCodes.objects.create(code=hashed_email,email=recipient)
+                    except:
+                        pass
+
+            messages.success(request, 'Emails sent successfully!')
+        except Exception as e:
+            messages.error(request, f'Error sending emails: {str(e)}')
+
+        # Redirect back to the form page
+        return redirect('inviteReviewers')  # Update this to match your URL name
+
+    context={
+        'reviewers':reviewersCodes.objects.all()
+    }
+    return render(request, 'inviteReviewers.html',context)
+
+@login_required(login_url='google_login')
+@completedProfileRequired
+def becomeReviewer(request, code_hash):
+    # Find the code associated with the hashed email
+    code_obj = get_object_or_404(reviewersCodes, code=code_hash)
+
+    # Check if the user is already associated with the code (if not already accepted)
+    if not code_obj.user:
+        # Populate the user field with the currently logged-in user
+        code_obj.user = request.user
+        code_obj.used = True  # Mark as used (accepted)
+        code_obj.save()
+
+        # Optionally, set the user as a reviewer if that's required
+        request.user.isReviewer = True
+        request.user.save()
+
+        messages.success(request, 'You have successfully become a reviewer.')
+
+
+        # Redirect or display a success message
+        return redirect('dashboard')  # Redirect to some page after accepting the invitation
+    else:
+        messages.error(request, 'The invitation has already been accepted.')
+
+        # Handle the case where the invitation has already been accepted (optional)
+        return redirect('dashboard')  # Or display an error message
+    
+@superuser_required
+def assignReviews(request):
+    reviewers = CustomUser.objects.filter(isReviewer=True)
+    submissions = Submission.objects.filter(
+        sent_for_review=True,
+        is_withdrawn=False
+    ).prefetch_related('reviewers')
+
+    if request.method == 'POST':
+        # Dictionary to store reviewer assignments
+        reviewer_assignments = defaultdict(list)
+        
+        # Process the form data
+        for submission in submissions:
+            # Get list of selected reviewers for this submission
+            new_reviewer_ids = request.POST.getlist(f'reviewers_{submission.id}')
+            
+            # Get current reviewers for comparison
+            current_reviewer_ids = set(str(rid) for rid in submission.reviewers.values_list('id', flat=True))
+            new_reviewer_ids_set = set(new_reviewer_ids)
+            
+            # Determine which reviewers to add and remove
+            reviewers_to_add = new_reviewer_ids_set - current_reviewer_ids
+            reviewers_to_remove = current_reviewer_ids - new_reviewer_ids_set
+            
+            # Remove unselected reviewers
+            for reviewer_id in reviewers_to_remove:
+                submission.reviewers.remove(reviewer_id)
+            
+            # Add new reviewers and prepare notifications
+            for reviewer_id in reviewers_to_add:
+                reviewer = CustomUser.objects.get(id=reviewer_id)
+                submission.reviewers.add(reviewer)
+                reviewer_assignments[reviewer_id].append(submission)
+            
+            # Update submission status if it has any reviewers
+            submission.assigned_reviewers = bool(new_reviewer_ids)
+            submission.save()
+        
+        # Send email notifications only to newly assigned reviewers
+        if reviewer_assignments:
+            sender = "conferencecimps@cimat.mx"
+            password = "HIPOCRATES@2022"
+            
+            try:
+                with smtplib.SMTP_SSL('smtp.gmail.com', 465) as server:
+                    server.login(sender, password)
+                    
+                    # Send emails to reviewers
+                    for reviewer_id, assigned_submissions in reviewer_assignments.items():
+                        reviewer = CustomUser.objects.get(id=reviewer_id)
+                        
+                        # Create submission list for email
+                        submissions_list = "<br>".join([
+                            f"- {submission.title} (ID: {submission.submission_id})"
+                            for submission in assigned_submissions
+                        ])
+                        
+                        # Create email content
+                        subject = "New Review Assignments"
+                        body = f"""
+                        Dear {reviewer.get_full_name() or reviewer.username},
+                        <br><br>
+                        The chair has assigned you the following articles to assess:
+                        <br><br>
+                        {submissions_list}
+                        <br><br>
+                        Please visit your dashboard to review these submissions.
+                        <br><br>
+                        Best regards,<br>
+                        Conference Management System
+                        """
+                        
+                        # Create the email message
+                        message = MIMEMultipart()
+                        message["From"] = sender
+                        message["To"] = reviewer.email
+                        message["Subject"] = subject
+                        message.attach(MIMEText(body, "html"))
+                        
+                        # Send the email
+                        server.send_message(message)
+                
+                messages.success(request, 'Review assignments have been updated successfully.')
+                
+            except Exception as e:
+                messages.error(request, f'Error sending emails: {str(e)}')
+        else:
+            messages.success(request, 'Review assignments have been updated successfully.')
+        
+        return redirect('assignReviews')
+
+    context={
+        'reviewers': reviewers,
+        'submissions': submissions,
+    }
+    return render(request, 'assignReviews.html',context)
+
+@superuser_required
+def revertToDraftStatus(request,submission_id):
+    submissions = Submission.objects.filter(
+        submission_id=submission_id,
+    ).prefetch_related('reviewers')
+
+    for submission in submissions:
+        submission.reviewers.clear()  # This will remove all entries from submission_reviewers
+
+        submission.sent_for_review = False
+        submission.under_review = False
+        submission.decision_issued = False
+        submission.save()
+
+    messages.success(request, 'All submissions have been reverted to draft status.')
+    return redirect('assignReviews')
+
+@superuser_required
+def listSubmissions(request):
+    submissions = Submission.objects.all().prefetch_related('reviewers')
+
+    context={
+        'submissions': submissions,
+    }
+    return render(request, 'listSubmissions.html',context)

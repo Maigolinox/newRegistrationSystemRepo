@@ -329,9 +329,9 @@ label {
                                 <td>
                                     <!-- Add action buttons -->
                                     {% if not submission.sent_for_review %}
-                                    <a href="{% url 'editSubmission' submission.submission_id %}" class="btn btn-sm btn-primary">Edit</a>
+                                    <a href="{% url 'editSubmission' submission.submission_id %}" class="btn btn-sm btn-primary" style="margin:5px">Edit</a>
                                     {% else %}
-                                    <a href="{% url 'editSubmission' submission.submission_id %}" class="btn btn-sm btn-primary">View</a>
+                                    <a href="{% url 'editSubmission' submission.submission_id %}" class="btn btn-sm btn-primary" style="margin:5px">View</a>
                                     {% endif %}
                                     <a href="#" class="btn btn-sm btn-danger" onclick="confirmWithdraw('{{ submission.submission_id }}')">Withdraw</a>
 

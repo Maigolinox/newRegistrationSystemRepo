@@ -172,6 +172,15 @@
         </li>
         
         {% endif %}
+        {% if is_reviewer %}
+        <li class="nav-item">Reviewer Menu</li>
+        <a class="nav-link collapsed" href="{{request.scheme}}://{{ request.get_host }}/admin">
+        <i class="bi bi-terminal"></i>
+            <span>See Assigned Reviews</span>
+          </a>
+        </li>
+        <li class="nav-item"></li>
+        {%endif%}
         {% if is_staff_user %}
         <li class="nav-item">Staff options</li>
         <a class="nav-link {% if not request.resolver_match.url_name == 'assistanceList' %}collapsed{% endif %}" href="{% url 'assistanceList' %}">
@@ -199,12 +208,34 @@
         </li>
         
         {% endif %}
-        
+
+
+        <!-- SUPERADMIN OPTIONS -->
+
+
         {% if is_staff_superuser %}
         <li class="nav-item">Super Admin options</li>
         <a class="nav-link collapsed" href="{{request.scheme}}://{{ request.get_host }}/admin">
         <i class="bi bi-terminal"></i>
             <span>Super Admin Console</span>
+          </a>
+        </li>
+        <li class="nav-item"></li>
+        <a class="nav-link {% if not request.resolver_match.url_name == 'inviteReviewers' %}collapsed{% endif %}" href="{% url 'inviteReviewers' %}">
+            <i class="bi bi-person-plus"></i>
+            <span>Invite Reviewers</span>
+          </a>
+        </li>
+        <li class="nav-item"></li>
+        <a class="nav-link {% if not request.resolver_match.url_name == 'assignReviews' %}collapsed{% endif %}" href="{% url 'assignReviews' %}">
+            <i class="bi bi-clipboard-check"></i>
+            <span>Assign Reviews</span>
+          </a>
+        </li>
+        <li class="nav-item"></li>
+        <a class="nav-link {% if not request.resolver_match.url_name == 'listSubmissions' %}collapsed{% endif %}" href="{% url 'listSubmissions' %}">
+            <i class="bi bi-journal-text"></i>
+            <span>List Submissions</span>
           </a>
         </li>
         <li class="nav-item"></li>

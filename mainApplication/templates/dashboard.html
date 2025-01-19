@@ -44,30 +44,7 @@
 </head>
 {%block content%}
 <body>
-  {% if messages %}
-  <script>
-    $(document).ready(function() {
-      {% for message in messages %}
-        // Aquí verificamos si el mensaje tiene una propiedad "level" para determinar su tipo
-        {% if message.tags == "success" %}
-          Swal.fire({
-            title: 'Success!',
-            text: "{{ message }}",
-            icon: 'success',
-            confirmButtonText: 'Ok'
-          });
-        {% elif message.tags == "error" %}
-          Swal.fire({
-            title: 'Error!',
-            text: "{{ message }}",
-            icon: 'error',
-            confirmButtonText: 'Ok'
-          });
-        {% endif %}
-      {% endfor %}
-    });
-  </script>
-{% endif %}
+  
   <div class="pagetitle">
       <h1>Dashboard</h1>
       <nav>

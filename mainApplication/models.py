@@ -187,6 +187,7 @@ class Submission(models.Model):
         blank=True
     )  # Many-to-many relationship with reviewers
     is_withdrawn=models.BooleanField(default=False)
+    assigned_reviewers=models.BooleanField(default=False)
     under_review = models.BooleanField(default=False)  # Status for being under review
     decision_issued = models.BooleanField(default=False)  # Status for final decision issued
 
@@ -244,3 +245,13 @@ class SubmissionFile(models.Model):
 
     def __str__(self):
         return f"File for {self.submission.title}"
+    
+class reviewersCodes(models.Model):
+
+    code = models.CharField(max_length=255, unique=True)  # Ensures uniqueness
+    used = models.BooleanField(default=False)
+    user = models.ForeignKey(CustomUser, on_delete=models.SET_NULL, null=True, blank=True, related_name='reviewer_codes')  # Link to CustomUser
+    email = models.EmailField(blank=True,null=True)  # Email to which the code was sent
+
+    def __str__(self):
+        return f"{self.code} - {'Used' if self.used else 'Unused'}"

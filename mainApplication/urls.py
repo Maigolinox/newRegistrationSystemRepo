@@ -46,6 +46,13 @@ urlpatterns = [
     path('editSubmission/<int:submissionID>/', views.editSubmission, name='editSubmission'),#Editar una Submission
     path('delete-file/<int:file_id>/', views.delete_file, name='delete_file'),
     path('withdraw/<str:submission_id>/', views.withdraw_submission, name='withdrawSubmission'),
+    path('inviteReviewers/', views.inviteReviewers, name='inviteReviewers'),#inviteReviewers
+    path('becomeReviewer/<str:code_hash>', views.becomeReviewer, name='becomeReviewer'),#becomeReviewer
+    path('inviteReviewers/', views.inviteReviewers, name='inviteReviewers'),#inviteReviewers
+    path('assignReviews/', views.assignReviews, name='assignReviews'),#assignReviews
+    path('revertToDraftStatus/<int:submission_id>', views.revertToDraftStatus, name='revertToDraftStatus'),#revertToDraftStatus
+    path('listSubmissions/', views.listSubmissions, name='listSubmissions'),#revertToDraftStatus
+
 
 
 
