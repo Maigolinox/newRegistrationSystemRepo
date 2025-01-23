@@ -7,10 +7,12 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib.admin.views.decorators import staff_member_required
 import qrcode
-from .forms import UserProfileForm,PaymentProofForm,EventForm, PlaceForm,CongressDateForm,TopicAreaForm,SubmissionForm,SubmissionFileForm,AuthorForm
-from .models import UserProfile,PaymentProof,Place,CongressDate,Event,Registration,adminPermissions,TopicArea,Submission,reviewersCodes
+from .forms import UserProfileForm,PaymentProofForm,EventForm, PlaceForm,CongressDateForm,TopicAreaForm,SubmissionForm,SubmissionFileForm,AuthorForm,ReviewForm
+from .models import UserProfile,PaymentProof,Place,CongressDate,Event,Registration,adminPermissions,TopicArea,Submission,reviewersCodes,Review, systemSettings
+from django.db.models import Exists, OuterRef
 from django.views.decorators.http import require_POST
-from django.http import JsonResponse
+from django.http import JsonResponse,FileResponse,HttpResponse
+import mimetypes
 from django.contrib import messages
 from django_countries import countries
 from django.core.exceptions import ObjectDoesNotExist
@@ -18,6 +20,8 @@ from django.db.models import Q
 from allauth.socialaccount.models import SocialAccount
 from django.contrib.auth.models import User
 from .models import CustomUser,SubmissionFile
+from wsgiref.util import FileWrapper
+
 
 import pycountry
 from io import BytesIO
@@ -30,6 +34,12 @@ from django.core.validators import validate_email
 # PARA DIPLOMAS
 from PIL import Image, ImageDraw, ImageFont
 from reportlab.lib.pagesizes import landscape, A4
+from reportlab.lib.units import inch
+from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Image
+from reportlab.lib.styles import ParagraphStyle
+from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY
+
 from reportlab.pdfgen import canvas
 from PyPDF2 import PdfWriter, PdfReader
 import os
@@ -54,13 +64,93 @@ from django.http import HttpResponseNotFound,HttpResponseRedirect
 #PARA GENERAR SUBMISSION
 from django.forms import formset_factory
 
+
+##PARA EMAILS
+from django.core.mail import EmailMessage
+
+
 #invitations to reviewers
 import hashlib
+
+##FUNCION PARA MANDAR LAS RESPUESTAS
+from django.template.loader import render_to_string
+from django.utils.html import strip_tags
+
+def send_email(receiver_email, subject, body, pdf_path=None):
+    sender = "conferencecimps@cimat.mx"
+    password = "HIPOCRATES@2022"
+
+    message = MIMEMultipart()
+    message["From"] = sender
+    message["To"] = receiver_email
+    message["Subject"] = subject
+
+    message.attach(MIMEText(body, "html"))
+
+    if pdf_path:
+        with open(pdf_path, "rb") as f:
+            attach = MIMEApplication(f.read(), _subtype="pdf")
+            attach.add_header('Content-Disposition', 'attachment', filename=os.path.basename(pdf_path))
+            message.attach(attach)
+
+    with smtplib.SMTP_SSL('smtp.gmail.com', 465) as server:
+        server.login(sender, password)
+        server.send_message(message)
+
+
+def send_review_submission_email(review, reviewer_email):
+    """
+    Sends an email notification when a review is submitted.
+    """
+    # Construct the email content manually (no templates)
+    html_message = f"""
+    <body>
+        <h2>Review Submission Confirmation</h2>
+        
+        <p>Your review for the submission "<strong>{review.submission.title}</strong>" has been successfully submitted.</p>
+        
+        <div class="review-details">
+            <h3>Review Details:</h3>
+            <p><strong>Recommendation:</strong> {review.get_recommendation_display()}</p>
+            <p><strong>Score:</strong> <span class="score">{review.calculate_score()}/10</span></p>
+            
+            {'<h4>Comments to Author:</h4><p>' + review.author_comments + '</p>' if review.author_comments else ''}
+            {'<h4>Committee Comments:</h4><p>' + review.committee_comments + '</p>' if review.committee_comments else ''}
+        </div>
+        
+        <p>Thank you for your contribution to the review process.</p>
+        
+        <hr>
+        <small>This is an automated message. Please do not reply to this email.</small>
+    </body>
+    """
+
+    subject = f'Review Submission Confirmation - {review.submission.title}'
+
+    # Use the send_email function to send the email
+    send_email(
+        receiver_email=reviewer_email,  # Send to the reviewer email
+        subject=subject,
+        body=html_message,  # The HTML body of the email
+        pdf_path=None  # Assuming no PDF for this email, set this to None
+    )
 
 
 #PROCESADOR DE CONTEXTO
 def get_user_context_data(request):
     user_id = request.user.id
+    
+    try:
+        systemSettingsConfigurations=systemSettings.objects.filter(id=1).get()
+    except:
+        settings,created=systemSettings.objects.get_or_create(id=1)
+        systemSettingsConfigurations=systemSettings.objects.filter(id=1).get()
+
+    
+    submissionEnabled=systemSettingsConfigurations.allowSubmissions
+    
+    scientificComitteeDiplomasEnabled=systemSettingsConfigurations.allowScientificComitteeDiplomas
+    # print(scientificComitteeDiplomasEnabled)
     
     try:
         user_profile = UserProfile.objects.get(user_id=user_id)
@@ -103,6 +193,8 @@ def get_user_context_data(request):
         "is_student": is_student,
         "is_public": is_public,
         "is_reviewer": getattr(request.user, 'isReviewer', False),
+        "scientificComitteeDiplomasEnabled":scientificComitteeDiplomasEnabled,
+        "submissionEnabled":submissionEnabled,
     }
 
 
@@ -110,7 +202,18 @@ def get_user_context_data(request):
 
 # Create your views here.
 
+@superuser_required
+def systemSettingsView(request):
+    # Obtiene o crea el registro de configuraciones del sistema
+    settings, created = systemSettings.objects.get_or_create(id=1)
 
+    if request.method == 'POST':
+        # Puedes manejar la actualización de los settings aquí
+        settings.allowSubmissions = request.POST.get('allowSubmissions', False) == 'on'
+        settings.allowScientificComitteeDiplomas = request.POST.get('allowScientificComitteeDiplomas', False) == 'on'
+        settings.save()
+
+    return render(request, 'systemSettings.html', {'settings': settings})
 
 
 
@@ -237,17 +340,34 @@ def complete_profile(request):
         # Si no existe, crea uno nuevo
         profile = UserProfile(user=request.user)
 
-    if request.method == 'POST':
-        form = UserProfileForm(request.POST, instance=profile)
-        if form.is_valid():
-            profile = form.save(commit=False)
-            profile.user = request.user
-            profile.save()
-            return redirect('dashboard')
-    else:
-        form = UserProfileForm(instance=profile)
+    # Inicializa el formulario
+    form = UserProfileForm(instance=profile)
 
-    return render(request, 'completeProfile.html', {'form': form,'is_staff_user':is_staff_user,'is_staff_superuser':is_staff_superuser})
+    if request.method == 'POST':
+        # Verifica si es el envío del formulario principal o del código SHA256
+        if 'profile_form' in request.POST:
+            form = UserProfileForm(request.POST, instance=profile)
+            if form.is_valid():
+                profile = form.save(commit=False)
+                profile.user = request.user
+                profile.save()
+                return redirect('dashboard')
+        elif 'code_form' in request.POST:
+            # Obtén el código desde el formulario
+            code_hash = request.POST.get('code', '').strip()
+            if code_hash:
+                return redirect('becomeReviewer', code_hash=code_hash)
+            else:
+                messages.error(request, 'Please enter a valid reviewer code.')
+
+    context = {
+        'form': form,
+        'is_staff_user': is_staff_user,
+        'is_staff_superuser': is_staff_superuser,
+    }
+
+    return render(request, 'completeProfile.html', context)
+
 
 
 @login_required(login_url='google_login')
@@ -914,7 +1034,7 @@ def generateMyDiplomas(request,event_id):
             font = ImageFont.truetype(BytesIO(response.content), 180)
             
         except:
-            print("No se pudo cargar la fuente")
+            # print("No se pudo cargar la fuente")
             font = ImageFont.load_default()
             text_bbox = draw.textbbox((0, 0), name, font=font)
             default_text_width = text_bbox[2] - text_bbox[0]
@@ -1133,16 +1253,77 @@ def submitArticle(request,submission_id=None):
             submission_form.save_m2m()  # Save M2M fields like topic_areas
 
             # Save authors
+            authors=[]
             for author_form in author_formset:
                 if author_form.cleaned_data:  # Avoid saving empty forms
                     author = author_form.save(commit=False)
                     author.submission = submission
                     author.save()
+                    authors.append(author)
 
             # Save multiple files
             files = request.FILES.getlist('files')  # Matches the 'files' field in the form
             for file in files:
                 SubmissionFile.objects.create(submission=submission, file=file)
+
+            if is_submit:
+                subject = 'Your Article Submission'
+                # Gather submission details
+                title = submission.title
+                article_type = submission.publication_type  # Assuming you have this field
+                topic_areas = ', '.join([str(area) for area in submission.topic_areas.all()])
+                keywords = submission.keywords
+                abstract = submission.abstract
+                comments = submission.comments
+
+                # Format the email body
+                body = f"""
+                <p>Your article titled <strong>{title}</strong> has been submitted for review.</p>
+                <p>Below you'll find the information:</p>
+                <ul>
+                    <li><strong>Title:</strong> {title}</li>
+                    <li><strong>Type:</strong> {article_type}</li>
+                    <li><strong>Topic Areas:</strong> {topic_areas}</li>
+                    <li><strong>Keywords:</strong> {keywords}</li>
+                    <li><strong>Abstract:</strong> {abstract}</li>
+                    <li><strong>Comments:</strong> {comments}</li>
+                </ul>
+                <p><strong>Authors:</strong></p>
+                <ul>
+                """
+                for author in authors:
+                    body += f"<li>{author.honorific} {author.first_name} {author.last_name} - {author.email}</li>"  # Adjust fields as necessary
+                body += "</ul>"
+
+                for author in authors:
+                    send_email(author.email, subject, body)
+
+                subject = 'Notification of New Article Submission'
+                # Gather submission details
+                title = submission.title
+                article_type = submission.publication_type  # Assuming you have this field
+                topic_areas = ', '.join([str(area) for area in submission.topic_areas.all()])
+                keywords = submission.keywords
+                abstract = submission.abstract
+                comments = submission.comments
+
+                # Format the email body
+                body = f"""
+                <p>A new article titled <strong>{title}</strong> has been submitted for review.</p>
+                <p>Below you'll find the information:</p>
+                <ul>
+                    <li><strong>Title:</strong> {title}</li>
+                    <li><strong>Type:</strong> {article_type}</li>
+                    <li><strong>Topic Areas:</strong> {topic_areas}</li>
+                    <li><strong>Keywords:</strong> {keywords}</li>
+                    <li><strong>Abstract:</strong> {abstract}</li>
+                    <li><strong>Comments:</strong> {comments}</li>
+                </ul>
+                <p><strong>Authors:</strong></p>
+                <ul>
+                """
+                
+                send_email('jmejia@cimat.mx', subject, body)
 
             # Show success messages
             if is_submit:
@@ -1510,9 +1691,252 @@ def revertToDraftStatus(request,submission_id):
 
 @superuser_required
 def listSubmissions(request):
-    submissions = Submission.objects.all().prefetch_related('reviewers')
+    submissions = Submission.objects.all().prefetch_related(
+        'reviewers',
+        'review_set'
+    )
+    
+    submission_data = []
+    for submission in submissions:
+        status, completion_percentage = submission.get_review_status()
+        review_summary = submission.get_review_summary()
+        
+        submission_data.append({
+            'submission': submission,
+            'status': status,
+            'completion_percentage': completion_percentage,
+            'average_score': submission.calculate_average_score(),
+            'completed_reviews': submission.get_completed_reviews_count(),
+            'total_reviews': submission.get_total_reviews_count(),
+            'review_summary': review_summary,
+            'final_recommendation': submission.get_final_recommendation()
+        })
+    
+    context = {
+        'submission_data': submission_data,
+    }
+    return render(request, 'listSubmissions.html', context)
+
+@login_required(login_url='google_login')
+def seeAssignedReviews(request):
+    user=request.user
+    assigned_reviews = Submission.objects.filter(reviewers=user).select_related('user').prefetch_related('authors')
+    assigned_reviews = Submission.objects.filter(
+        reviewers=request.user
+    ).prefetch_related(
+        'review_set'
+    ).annotate(
+        user_review_completed=Exists(
+            Review.objects.filter(
+                submission=OuterRef('pk'),
+                reviewer=request.user,
+                review_completed=True
+            )
+        )
+    )
 
     context={
-        'submissions': submissions,
+        'assigned_reviews': assigned_reviews,
     }
-    return render(request, 'listSubmissions.html',context)
+    return render(request, 'seeAssignedReviews.html',context)
+
+@login_required(login_url='google_login')
+def assess(request, submission_id):
+    # Get submission and verify reviewer access
+    submission = get_object_or_404(Submission, submission_id=submission_id, reviewers=request.user)
+    
+    # Check if user is the author (they shouldn't review their own submission)
+    if request.user == submission.user:
+        pass
+        # messages.error(request, "You cannot review your own submission.")
+        # return redirect('dashboard')
+    
+    # Try to get existing review
+    try:
+        existing_review = Review.objects.get(submission=submission, reviewer=request.user)
+        is_completed = existing_review.review_completed
+    except Review.DoesNotExist:
+        existing_review = None
+        is_completed = False
+    
+    if request.method == 'POST' and not is_completed:
+        form = ReviewForm(request.POST, instance=existing_review)
+        
+        if form.is_valid():
+            review = form.save(commit=False)
+            review.submission = submission
+            review.reviewer = request.user
+            
+            # Check which button was pressed
+            if 'submit' in request.POST:
+                review.review_completed = True
+                messages.success(request, "Review submitted successfully!")
+            else:  # Save as draft
+                review.review_completed = False
+                messages.success(request, "Review saved as draft.")
+
+            if request.POST.get('email_form'):
+                
+                try:
+                    send_review_submission_email(
+                        review=review,
+                        reviewer_email=request.user.email
+                        )
+                    messages.success(request, "Review submitted successfully! A confirmation email has been sent to your address.")
+                except Exception as e:
+                    messages.warning(request, "Review submitted successfully, but there was an error sending the confirmation email.")
+            else:
+                pass
+            
+            review.save()
+            
+            
+            # Only redirect to assigned reviews if it's a final submission
+            if review.review_completed:
+                return redirect('seeAssignedReviews')
+            # For drafts, stay on the same page
+            return redirect('assess', submission_id=submission_id)
+        else:
+            messages.error(request, "Please correct the errors below.")
+    else:
+        form = ReviewForm(instance=existing_review) if existing_review else ReviewForm()
+
+    context = {
+        'article': submission,
+        'form': form,
+        'is_completed': is_completed,
+        'existing_review': existing_review,
+    }
+    return render(request, 'assess.html', context)
+
+
+@login_required
+def serve_file(request, file_id):
+    file_obj = get_object_or_404(SubmissionFile, id=file_id)
+    
+    # Verificar permisos
+    if request.user != file_obj.submission.user and not request.user.isReviewer:
+        return HttpResponse('Unauthorized', status=403)
+    
+    file_path = file_obj.file.path
+    content_type, _ = mimetypes.guess_type(file_path)
+    
+    if not content_type:
+        content_type = 'application/octet-stream'
+    
+    # Abrir el archivo en modo binario
+    file_handle = open(file_path, 'rb')
+    response = FileResponse(FileWrapper(file_handle))
+    
+    # Configurar los headers adecuados
+    response['Content-Type'] = content_type
+    response['Content-Disposition'] = f'inline; filename="{os.path.basename(file_path)}"'
+    response['X-Frame-Options'] = 'SAMEORIGIN'
+    
+    return response
+
+import json
+
+def generate_decision_letter(request, submission_id):
+    submission = Submission.objects.get(submission_id=submission_id)
+    authors = submission.authors.all()  # Obtener todos los autores relacionados con esta submission
+    recipient_emails = [author.email for author in authors]
+
+    # Generar PDF en un buffer
+    buffer = BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=A4)
+    story = []
+
+    # Estilo para el texto
+    styles = getSampleStyleSheet()
+    justified_style = ParagraphStyle(
+        'Justified', 
+        parent=styles['Normal'], 
+        alignment=1,  # Alineación justificada
+        fontSize=12  # Tamaño de la fuente
+    )
+
+    # Agregar logo centrado
+    logo_image_path = os.path.join(settings.BASE_DIR, 'mainApplication/static/images/logo.png')
+    logo_image = Image(logo_image_path, width=150, height=75)
+    logo_image.hAlign = 'CENTER'  # Alinear el logo al centro
+    story.append(logo_image)
+
+    # Agregar título centrado
+    title_paragraph = Paragraph("Decision Letter", styles['Title'])
+    title_paragraph.hAlign = 'CENTER'  # Alinear el título al centro
+    story.append(title_paragraph)
+
+    # Agregar datos del artículo
+    current_date = datetime.now().strftime('%Y-%m-%d')
+    story.append(Paragraph(f"Title: {submission.title}", styles['Normal']))
+    story.append(Paragraph(f"Date: {current_date}", styles['Normal']))
+
+    # Decisión tomada
+    decision_text = ""
+    
+    # data = json.loads(request.body)
+    # decision = data.get('decision')
+
+    decision="accepted"
+    
+    if decision == 'accepted':
+        decision_text = (
+            "We are pleased to inform you that your submission has been accepted for publication. "
+            "Congratulations on your achievement!<br/><br/>"
+            "Should you have any questions or require further clarification, please do not hesitate to reach out.<br/><br/>"
+        )
+    elif decision == 'rejected':
+        decision_text = (
+            "We regret to inform you that your submission has been rejected after review. "
+            "Thank you for your effort, and we encourage you to submit future work.<br/><br/>"
+            "Should you have any questions or require further clarification, please do not hesitate to reach out.<br/><br/>"
+        )
+    elif decision == 'minor_changes':
+        decision_text = (
+            "Your submission has been accepted with minor changes. "
+            "Please review the feedback provided by the reviewers and make the necessary adjustments before resubmission.<br/><br/>"
+            "Should you have any questions or require further clarification, please do not hesitate to reach out.<br/><br/>"
+        )
+    elif decision == 'major_changes':
+        decision_text = (
+            "Your submission has been accepted with major changes. "
+            "Please review the feedback provided by the reviewers and make the necessary adjustments before resubmission.<br/><br/>"
+            "Should you have any questions or require further clarification, please do not hesitate to reach out.<br/><br/>"
+        )
+
+    # Añadir el texto de decisión utilizando Paragraph
+    decision_paragraph = Paragraph(decision_text, justified_style)
+    story.append(decision_paragraph)
+
+    # Agregar firma
+    signature_image_path = os.path.join(settings.BASE_DIR, 'mainApplication/static/images/sign.png')
+    signature_image = Image(signature_image_path, width=150, height=50)
+    story.append(signature_image)
+    story.append(Paragraph("Ph. Dr. Jezreel Mejía Miranda", styles['Normal']))
+    story.append(Paragraph("Conference Chair", styles['Normal']))
+
+    # Construir el PDF
+    doc.build(story)
+
+    # Obtener el contenido del PDF
+    buffer.seek(0)
+    pdf_data = buffer.getvalue()
+    buffer.close()
+
+    # Enviar correos
+    subject = "Decision Letter"
+    body = f"Dear Author,\n\nPlease find attached the decision letter regarding your submission '{submission.title}'."
+    plain_message = body  # Mensaje plano
+
+    email = EmailMessage(
+        subject,
+        plain_message,
+        settings.DEFAULT_FROM_EMAIL,
+        recipient_emails,
+    )
+
+    email.attach('decision_letter.pdf', pdf_data, 'application/pdf')
+    email.send()
+
+    return HttpResponse("Decision letter sent successfully.")

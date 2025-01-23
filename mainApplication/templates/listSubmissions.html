@@ -68,48 +68,158 @@
                     <h1 class="bold-extra extra-bold-roboto" style="margin-top: 20px;">Existing Submissions</h1>
                 </div>
                 <div class="row">
-                    <table class="table table-bordered table-striped mt-4">
-                        <thead class="table-dark">
-                            <tr>
-                                <th>#</th>
-                                <th>Title</th>
-                                <th>Submitting Author</th>
-                                <th>Withdrawn?</th>
-                                <th>Reviewers</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for submission in submissions %}
-                                <tr >
-                                    <td class="{% if submission.is_withdrawn%}bg-danger{%endif%}">{{ forloop.counter }}</td>
-                                    <td  class="{% if submission.is_withdrawn%}bg-danger{%endif%}">{{ submission.title }}</td>
-                                    <td  class="{% if submission.is_withdrawn%}bg-danger{%endif%}">{{ submission.user.userprofile.FullName }}</td>
-                                    <td  class="{% if submission.is_withdrawn%}bg-danger{%endif%}">{%if submission.is_withdrawn%} Withdrawn{%else%}Vigent: {%endif%} {%if submission.sent_for_review%} Sent for Review{%endif%}</td>
-                                    <td  class="{% if submission.is_withdrawn%}bg-danger{%endif%}">
-                                        {% if submission.reviewers.all %}
-                                            <ul>
-                                                {% for reviewer in submission.reviewers.all %}
-                                                    <li>{{ reviewer.get_full_name }}</li>
-                                                {% endfor %}
-                                            </ul>
-                                        {% else %}
-                                            <span class="text-muted">No reviewers assigned</span>
-                                        {% endif %}
-                                    </td>
-                                    <td  class="{% if submission.is_withdrawn%}bg-danger{%endif%}">
-                                        <a href="{% url 'editSubmission' submission.submission_id %}" class="btn btn-warning btn-sm">View Submission</a>
-                                        
-                                    </td>
-                                </tr>
-                            {% empty %}
-                                <tr>
-                                    <td colspan="5" class="text-center">No submissions found.</td>
-                                </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
+                  <table class="table table-bordered table-striped mt-4">
+                      <thead>
+                          <tr>
+                              <th>ID</th>
+                              <th>Title</th>
+                              <th>Abstract</th>
+                              <th>Status</th>
+                              <th>Progress</th>
+                              <th>Score</th>
+                              <th>Reviews</th>
+                              <th>Recommendation</th>
+                              <th>Actions</th>
+                          </tr>
+                      </thead>
+                      <tbody>
+                          {% for data in submission_data %}
+                          <tr class="{% if data.submission.is_withdrawn %} bg-secondary{% endif%}">
+                              <td class="{% if data.submission.is_withdrawn %} bg-secondary{% endif%}">{{ data.submission.submission_id }}</td>
+                              <td  class="{% if data.submission.is_withdrawn %} bg-secondary{% endif%}">{{ data.submission.title }}</td>
+                              <td  class="{% if data.submission.is_withdrawn %} bg-secondary{% endif%}">{{ data.submission.abstract }}</td>
+                              <td  class="{% if data.submission.is_withdrawn %} bg-secondary{% endif%}">{{ data.status }}</td>
+                              <td  class="{% if data.submission.is_withdrawn %} bg-secondary{% endif%}">
+                                  <div class="progress">
+                                      <div class="progress-bar" role="progressbar" 
+                                           style="width: {{ data.completion_percentage }}%"
+                                           aria-valuenow="{{ data.completion_percentage }}" 
+                                           aria-valuemin="0" aria-valuemax="100">
+                                          {{ data.completion_percentage|floatformat:0 }}%
+                                      </div>
+                                  </div>
+                              </td>
+                              <td  class="{% if data.submission.is_withdrawn %} bg-secondary{% endif%}">
+                                  {% if data.average_score %}
+                                      <span class="badge bg-primary">{{ data.average_score }}/10</span>
+                                  {% else %}
+                                      <span class="badge bg-secondary">Pending</span>
+                                  {% endif %}
+                              </td>
+                              <td  class="{% if data.submission.is_withdrawn %} bg-secondary{% endif%}">{{ data.completed_reviews }}/{{ data.total_reviews }}</td>
+                              <td  class="{% if data.submission.is_withdrawn %} bg-secondary{% endif%}">
+                                  {% if data.final_recommendation %}
+                                      <span class="badge 
+                                          {% if data.final_recommendation == 'Strong Accept' %}bg-success
+                                          {% elif data.final_recommendation == 'Accept' %}bg-info
+                                          {% elif data.final_recommendation == 'Weak Accept' %}bg-primary
+                                          {% elif data.final_recommendation == 'Reject' %}bg-warning
+                                          {% elif data.final_recommendation == 'Strong Reject' %}bg-danger
+                                          {% else %}bg-secondary{% endif %}">
+                                          {{ data.final_recommendation }}
+                                      </span>
+                                  {% else %}
+                                      <span class="badge bg-secondary">Pending</span>
+                                  {% endif %}
+                              </td>
+                              <td>
+                                {% if not data.submission.is_withdrawn %}
+                                <button class="btn btn-info btn-sm" data-bs-toggle="modal" data-bs-target="#reviewsModal{{ data.submission.submission_id }}" >
+                                  View Reviews
+                              </button> <br>
+                              {% if data.final_recommendation %}
+                              <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#decisionModal{{ data.submission.submission_id }}" style="margin-top: 10px;">
+                                Issue Decision
+                              </button>
+                              <br>
+                              {% endif %}
+                                {%else%}
+                                Withdrawn Submission
+                                {% endif%}
+                              </td>
+                          </tr>
+
+                          <div class="modal fade" id="decisionModal{{ data.submission.submission_id }}" tabindex="-1" aria-labelledby="decisionModalLabel{{ data.submission.submission_id }}" aria-hidden="true">
+                            <div class="modal-dialog">
+                              <div class="modal-content">
+                                <div class="modal-header">
+                                  <h5 class="modal-title" id="decisionModalLabel{{ data.submission.submission_id }}">Issue Decision for Submission ID {{ data.submission.submission_id }}</h5>
+                                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body">
+                                  <form id="decisionForm{{ data.submission.submission_id }}">
+                                    {% csrf_token %}
+                                    <div class="mb-3">
+                                      <label for="decisionSelect{{ data.submission.submission_id }}" class="form-label">Decision</label>
+                                      <select class="form-select" id="decisionSelect{{ data.submission.submission_id }}" name="decision">
+                                        <option value="rejected">Rejected</option>
+                                        <option value="minor_changes">Accepted with Minor Changes</option>
+                                        <option value="major_changes">Accepted with Major Changes</option>
+                                        <option value="accepted_">Accepted</option>
+                                      </select>
+                                    </div>
+                                  </form>
+                                </div>
+                                <div class="modal-footer">
+                                  <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                  <button type="button" class="btn btn-success" onclick="generateDecision('{{ data.submission.submission_id }}')">Submit Decision</button>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                          {% endfor %}
+                      </tbody>
+                  </table>
                 </div>
+                <script>
+                  function generateDecision(submissionId) {
+                    const selectElement = document.getElementById(`decisionSelect${submissionId}`);
+                    const selectedDecision = selectElement.value;
+                      const url = `/generate_decision/${submissionId}/`; // Asegúrate de que esta URL coincida con tu configuración en urls.py
+              
+                      // Realiza la solicitud usando Fetch API
+                      fetch(url, {
+                          method: 'GET', // Cambia a 'POST' si necesitas usar otro método HTTP
+                          headers: {
+                              'Content-Type': 'application/json',
+                              'X-CSRFToken': getCookie('csrftoken'), // Asegura que el CSRF token esté incluido si es necesario
+                          }
+                          
+                      })
+                      .then(response => {
+                          if (response.ok) {
+                              return response.text();
+                          } else {
+                              throw new Error('Error al generar la decisión');
+                          }
+                      })
+                      .then(data => {
+                          alert("The decision letter has been sent successfully!");
+                      })
+                      .catch(error => {
+                          console.error('Error:', error);
+                          alert("There was an error generating the decision letter.");
+                      });
+                  }
+              
+                  // Función para obtener el CSRF token de las cookies (si usas protección CSRF en Django)
+                  function getCookie(name) {
+                      let cookieValue = null;
+                      if (document.cookie && document.cookie !== '') {
+                          const cookies = document.cookie.split(';');
+                          for (let i = 0; i < cookies.length; i++) {
+                              const cookie = cookies[i].trim();
+                              // Comprueba si esta cookie comienza con el nombre deseado
+                              if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                                  cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                                  break;
+                              }
+                          }
+                      }
+                      return cookieValue;
+                  }
+              </script>
+              
                 
                 
                 
@@ -121,6 +231,51 @@
     
   </main><!-- End #main -->
   
+    
+        {% for data in submission_data %}
+        <!-- Modal for Reviews -->
+        <div class="modal fade" id="reviewsModal{{ data.submission.submission_id }}" tabindex="-1" aria-labelledby="reviewsModalLabel{{ data.submission.submission_id }}" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="reviewsModalLabel{{ data.submission.submission_id }}">Reviews for {{ data.submission.title }}</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        {% if data.submission.review_set.all %}
+                        <ul class="list-group">
+                            {% for review in data.submission.review_set.all %}
+                            <li class="list-group-item">
+                                <strong>Reviewer:</strong> {{review.reviewer.first_name}} {{review.reviewer.last_name}}. <br> (Username: {{ review.reviewer.username }}. Email: < {{review.reviewer.email}} >) <br>
+                                <strong>Recommendation:</strong> {{ review.get_recommendation_display }}<br>
+                                <strong>Score:</strong> {{ review.calculate_score }}/10<br>
+                                <strong>Categorization:</strong> {{ review.get_categorization_display }}<br>
+                                <strong>New Information:</strong> {{ review.new_information|yesno:"Yes,No" }}<br>
+                                <strong>Valuable Confirmation:</strong> {{ review.valuable_confirmation|yesno:"Yes,No" }}<br>
+                                <strong>Clarity to Understanding:</strong> {{ review.clarity_to_understanding|yesno:"Yes,No" }}<br>
+                                <strong>New Perspective:</strong> {{ review.new_perspective|yesno:"Yes,No" }}<br>
+                                <strong>Not Much:</strong> {{ review.not_much|yesno:"Yes,No" }}<br>
+                                <strong>Other Value:</strong> {{ review.other_value }}<br>
+                                <strong>Reviewer Familiarity:</strong> {{ review.get_reviewer_familiarity_display }}<br>
+                                <strong>Best Submission Candidate:</strong> {{ review.best_submission_candidate|yesno:"Yes,No" }}<br>
+                                <strong>Appropriate Length:</strong> {{ review.appropriate_length|yesno:"Yes,No" }}<br>
+                                <strong>Difference from Previous:</strong> {{ review.get_difference_from_previous_display }}<br>
+                                <strong>Author Comments:</strong> {{ review.author_comments }}<br>
+                                <strong>Committee Comments:</strong> {{ review.committee_comments }}<br>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                        {% else %}
+                        <p>No reviews available for this submission.</p>
+                        {% endif %}
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
   
 
   <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>

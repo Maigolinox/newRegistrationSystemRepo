@@ -1,5 +1,5 @@
 from django import forms
-from .models import UserProfile, PaymentProof, Place, Event,CongressDate
+from .models import UserProfile, PaymentProof, Place, Event,CongressDate,Review
 from django_countries.fields import CountryField
 from django_countries.widgets import CountrySelectWidget
 
@@ -241,3 +241,68 @@ class SubmissionFileForm(forms.Form):
         super().__init__(*args, **kwargs)
         self.submission = submission
     # files = MultipleFileField(widget=MultipleFileInput(), required=False)
+
+
+class ReviewForm(forms.ModelForm):
+    class Meta:
+        model = Review
+        fields = [
+            'recommendation', 'categorization', 'new_information',
+            'valuable_confirmation', 'clarity_to_understanding',
+            'new_perspective', 'not_much', 'other_value',
+            'reviewer_familiarity', 'best_submission_candidate',
+            'appropriate_length', 'difference_from_previous',
+            'author_comments', 'committee_comments', 'email_form'
+        ]
+        widgets = {
+            'recommendation': forms.Select(attrs={'class': 'form-select'}),
+            'categorization': forms.Select(attrs={'class': 'form-select'}),
+            'reviewer_familiarity': forms.Select(attrs={'class': 'form-select'}),
+            'appropriate_length': forms.RadioSelect(choices=[(True, 'Yes'), (False, 'No')]),
+            'best_submission_candidate': forms.RadioSelect(choices=[(True, 'Yes'), (False, 'No')]),
+            'new_information': forms.RadioSelect(choices=[(True, 'Yes'), (False, 'No')]),
+            'valuable_confirmation': forms.RadioSelect(choices=[(True, 'Yes'), (False, 'No')]),
+            'clarity_to_understanding': forms.RadioSelect(choices=[(True, 'Yes'), (False, 'No')]),
+            'new_perspective': forms.RadioSelect(choices=[(True, 'Yes'), (False, 'No')]),
+            'not_much': forms.RadioSelect(choices=[(True, 'Yes'), (False, 'No')]),
+            'difference_from_previous': forms.Select(attrs={'class': 'form-select'}),
+            'author_comments': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            'committee_comments': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            'other_value': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            # 'email_form': forms.RadioSelect(choices=[(True, 'Yes'), (False, 'No')]),
+        }
+        labels = {
+            'recommendation': 'Would you recommend to publish this article?',
+            'categorization': 'How would you categorize this article?',
+            'new_information': 'Does this article provide new information?',
+            'valuable_confirmation': 'Is there valuable confirmation of existing knowledge?',
+            'clarity_to_understanding': 'Does it add clarity to understanding?',
+            'new_perspective': 'Does it offer a new perspective?',
+            'not_much': 'Not much value added?',
+            'other_value': 'Other value added (please specify):',
+            'reviewer_familiarity': 'How familiar are you with this topic?',
+            'best_submission_candidate': 'Is this the best submission candidate?',
+            'appropriate_length': 'Is the length appropriate?',
+            'difference_from_previous': 'How different is it from previous submissions?',
+            'author_comments': 'Comments for the author:',
+            'committee_comments': 'Comments for the committee:',
+            'email_form': 'Send a copy of this review via email?',
+        }
+        help_texts = {
+            'recommendation': 'Select your recommendation for publication based on the article\'s quality and relevance.',
+            'categorization': 'Choose the category that best describes the article\'s content.',
+            'new_information': 'Indicate if the article introduces new findings or insights.',
+            'valuable_confirmation': 'Select if the article confirms existing knowledge in a valuable way.',
+            'clarity_to_understanding': 'Does the article help clarify complex topics or ideas?',
+            'new_perspective': 'Does the article provide a fresh viewpoint or approach?',
+            'not_much': 'Select if the article does not add significant value.',
+            'other_value': 'Provide any additional value the article may offer.',
+            'reviewer_familiarity': 'Rate your familiarity with the subject matter of the article.',
+            'best_submission_candidate': 'Indicate if this article stands out as a top submission.',
+            'appropriate_length': 'Assess if the article\'s length is suitable for its content.',
+            'difference_from_previous': 'Evaluate how this article differs from previous submissions.',
+            'author_comments': 'Provide feedback or suggestions for the author.',
+            'committee_comments': 'Add any comments for the review committee.',
+            'email_form': 'Check this box if you want to receive a copy of this review via email.',
+        }
+

@@ -52,9 +52,11 @@ urlpatterns = [
     path('assignReviews/', views.assignReviews, name='assignReviews'),#assignReviews
     path('revertToDraftStatus/<int:submission_id>', views.revertToDraftStatus, name='revertToDraftStatus'),#revertToDraftStatus
     path('listSubmissions/', views.listSubmissions, name='listSubmissions'),#revertToDraftStatus
-
-
-
-
+    path('seeAssignedReviews/', views.seeAssignedReviews, name='seeAssignedReviews'),#seeAssignReviews
+    path('assess/<int:submission_id>', views.assess, name='assess'),#Assess submission
+    path('serve-file/<int:file_id>/', views.serve_file, name='serve_file'),#serve files
+    path('systemSettings/', views.systemSettingsView, name='systemSettings'),#serve files
+    path('generate_decision/<int:submission_id>/', views.generate_decision_letter, name='generate_decision'),
+    
 ]
 urlpatterns += staticfiles_urlpatterns() 

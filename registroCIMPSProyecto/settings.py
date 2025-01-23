@@ -29,7 +29,7 @@ ALLOWED_HOSTS=['52.40.72.178','cimps.org','127.0.0.1','localhost']
 
 CSRF_TRUSTED_ORIGINS = ['https://cimps.org','https://register.cimps.org']
 
-
+# X_FRAME_OPTIONS = 'ALLOWALL'
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
@@ -208,3 +208,23 @@ ACCOUNT_USER_MODEL_USERNAME_FIELD = 'username'
 ACCOUNT_EMAIL_REQUIRED = True
 ACCOUNT_USERNAME_REQUIRED = False
 ACCOUNT_AUTHENTICATION_METHOD = 'email'
+
+############### PARA EMAILS DE CONFIRMACION DE CUENTA################
+# settings.py
+
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+
+# Gmail SMTP Server Configuration
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 465  # Usualmente el puerto para SSL
+
+# Credenciales de la cuenta de correo de Gmail
+EMAIL_HOST_USER = 'conferencecimps@cimat.mx'  # Reemplaza con tu correo
+EMAIL_HOST_PASSWORD = 'HIPOCRATES@2022'  # Reemplaza con tu contraseña
+
+DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+
+# Configuración para manejar errores y debug
+EMAIL_USE_SSL = True
+EMAIL_USE_TLS = False  # Asegúrate de que TLS está desactivado si estás usando SSL
+

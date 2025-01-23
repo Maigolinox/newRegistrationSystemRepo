@@ -88,20 +88,21 @@
                             
                         </td>
                         <td class="px-6 py-4 border-b">
-                            <ul>
+                            <ol>
                                 {% for reviewer in submission.reviewers.all %}
                                 <li>
-                                    {{ reviewer.get_full_name|default:reviewer.username }}.
+                                    {{ reviewer.get_full_name|default:reviewer.username }}. 
                                 </li>
                                 {% endfor %}
-                            </ul>
+                            </ol>
                         </td>
                         <td class="px-6 py-4 border-b">
                             <select name="reviewers_{{ submission.id }}" multiple class="form-multiselect rounded border p-2 w-full" size="3">
                                 {% for reviewer in reviewers %}
                                 <option value="{{ reviewer.id }}" 
                                     {% if reviewer in submission.reviewers.all %}selected{% endif %}>
-                                    {{ reviewer.get_full_name|default:reviewer.username }}
+                                    {{ reviewer.get_full_name|default:reviewer.username }} <br>
+                                    < {{ reviewer.email }} >.
                                 </option>
                                 {% endfor %}
                             </select>
@@ -127,5 +128,7 @@
     {% endif %}
     </div>
 </div>
+<script src="{% static 'assets/js/main.js' %}"></script>
+
 {% endblock %}
 </html>

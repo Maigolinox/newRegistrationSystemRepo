@@ -1,0 +1,232 @@
+{% extends "base.html"%}{% load static %}{% load socialaccount %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta content="width=device-width, initial-scale=1.0" name="viewport">
+
+  {% block title%} Assess Article {{article.submission_id}} - CIMPS{%endblock%}
+  <meta content="" name="description">
+  <meta content="" name="keywords">
+
+  <!-- Favicons -->
+  <link href="{% static 'images/favicon.ico'%}" rel="icon">
+  <link href="{% static 'assets/img/apple-touch-icon.png'%}" rel="apple-touch-icon">
+
+  <!-- Google Fonts -->
+  <link href="https://fonts.gstatic.com" rel="preconnect">
+  <link href="https://fonts.googleapis.com/css?family=Open+Sans:300,300i,400,400i,600,600i,700,700i|Nunito:300,300i,400,400i,600,600i,700,700i|Poppins:300,300i,400,400i,500,500i,600,600i,700,700i|Montserrat:300,400,500,600,700,800|Roboto:300,400,500,700,800" rel="stylesheet">
+
+  <!-- Vendor CSS Files -->
+  <link href="{% static 'assets/vendor/bootstrap/css/bootstrap.min.css'%}" rel="stylesheet">
+  <link href="{% static 'assets/vendor/bootstrap-icons/bootstrap-icons.css'%}" rel="stylesheet">
+  <link href="{% static 'assets/vendor/boxicons/css/boxicons.min.css'%}" rel="stylesheet">
+  <link href="{% static 'assets/vendor/quill/quill.snow.css'%}" rel="stylesheet">
+  <link href="{% static 'assets/vendor/quill/quill.bubble.css'%}" rel="stylesheet">
+  <link href="{% static 'assets/vendor/remixicon/remixicon.css'%}" rel="stylesheet">
+  <link href="{% static 'assets/vendor/simple-datatables/style.css'%}" rel="stylesheet">
+  
+
+  <link href="{% static 'assets/css/style.css'%}" rel="stylesheet">
+<!-- Bootstrap CSS -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+
+
+</head>
+{% block content %}
+<body>
+
+
+    <div class="pagetitle">
+      <h1>Assessment of Article ID: {{article.submission_id}}</h1>
+      <nav>
+        <ol class="breadcrumb">
+          <li class="breadcrumb-item"><a href="#" style="text-decoration: none;">Home</a></li>
+          <li class="breadcrumb-item active"><a href="#" style="text-decoration: none;">Assessment of Article ID {{article.submission_id}}</a></li>
+        </ol>
+      </nav>
+    </div>
+    
+
+   
+    <section class="section dashboard">
+        <div class="row">
+          <div class="col-lg-12">
+            <div class="row">
+              <div class="card">
+                <div class="card-body">
+                  <div class="row">
+                    <!-- Contenedor Izquierdo: Lista de Archivos -->
+                    <div class="col-md-6" style="margin-top: 20px;">
+                      <h5>Files</h5>
+                      <ul class="list-group">
+                        {% for file in article.files.all %}
+                        <li class="list-group-item d-flex align-items-center">
+                          <i class="bi bi-file-{% if file.file.name|lower|slice:'-3:' == 'pdf' %}pdf{% elif file.file.name|lower|slice:'-4:' == 'docx' or file.file.name|lower|slice:'-3:' == 'doc' %}word{% elif file.file.name|lower|slice:'-3:' == 'zip' %}zip{% else %}text{% endif %} me-2"></i>
+                          <a href="#" class="file-link" 
+                             data-file-url="{% url 'serve_file' file.id %}"
+                             data-file-type="{{ file.file.name|lower|slice:'-3:' }}">
+                            {{ file.file.name }}
+                          </a>
+                        </li>
+                        {% endfor %}
+                      </ul>
+                      <div>
+                        <div id="preview-container" class="mb-3" style="margin-top: 20px;">
+                            <h5>File Preview</h5>
+                            <iframe id="preview-iframe" src="" style="width: 100%; height: 1400px; border: 1px solid #ccc;" hidden></iframe>
+                            <p id="no-preview" class="text-muted">Select a file to preview it here.</p>
+                          </div>
+                      </div>
+                    </div>
+      
+                    <!-- Contenedor Derecho: Vista Previa -->
+                    <div class="col-md-6" style="margin-top: 20px;">
+                        <h5>Assessment Rubric</h5> 
+                        <form method="post">
+                            {% csrf_token %}
+                            {% for field in form %}
+                                <div class="form-group" style="margin-top: 20px;">
+                                    <label for="{{ field.id_for_label }}">{{forloop.counter }}. {{ field.label }}</label> <br>
+                                    {% if field.help_text %}
+                                        <small class="form-text text-muted">{{ field.help_text }}</small><br>
+                                    {% endif %}
+                                    <!-- Add form-control class directly to the field widget -->
+                                    {{ field }}
+                                    
+                                    {% for error in field.errors %}
+                                        <div class="alert alert-danger mt-2">{{ error }}</div>
+                                    {% endfor %}
+                                </div>
+                            {% endfor %}
+                            
+                            {% if not is_completed %}
+                            <button type="submit" name="submit" class="btn btn-primary">Submit</button>
+                            <button type="submit" name="draft" class="btn btn-secondary">Save Draft</button>
+                            {%endif%}
+                        </form>
+                        
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+      
+      <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const fileLinks = document.querySelectorAll('.file-link');
+            const previewIframe = document.getElementById('preview-iframe');
+            const noPreviewMessage = document.getElementById('no-preview');
+            const previewContainer = document.getElementById('preview-container');
+        
+            function clearPreviews() {
+                // Limpiar vistas previas anteriores
+                if (previewContainer) {
+                    previewContainer.querySelectorAll('*:not(#preview-iframe):not(#no-preview)').forEach(el => el.remove());
+                }
+                previewIframe.src = '';
+                previewIframe.hidden = true;
+                noPreviewMessage.hidden = false;
+            }
+        
+            fileLinks.forEach(link => {
+                link.addEventListener('click', function (event) {
+                    event.preventDefault();
+                    const fileUrl = this.dataset.fileUrl;
+                    const fileType = this.dataset.fileType.toLowerCase();
+                    const fileName = this.textContent.trim().toLowerCase();
+        
+                    clearPreviews();
+        
+                    // Determinar el tipo de archivo
+                    const isDoc = fileName.endsWith('.doc') || fileName.endsWith('.docx');
+                    const isPdf = fileName.endsWith('.pdf');
+                    const isImage = /\.(jpg|jpeg|png|gif)$/i.test(fileName);
+                    const isZip = fileName.endsWith('.zip');
+        
+                    // Manejar diferentes tipos de archivo
+                    if (isPdf) {
+                        previewIframe.src = fileUrl;
+                        previewIframe.hidden = false;
+                        noPreviewMessage.hidden = true;
+                    } 
+                    else if (isImage) {
+                        const imgElement = document.createElement('img');
+                        imgElement.src = fileUrl;
+                        imgElement.style.maxWidth = '100%';
+                        imgElement.style.height = 'auto';
+                        imgElement.style.border = '1px solid #ccc';
+                        if (previewContainer) {
+                            previewContainer.insertBefore(imgElement, previewIframe);
+                        } else {
+                            previewIframe.parentNode.insertBefore(imgElement, previewIframe);
+                        }
+                        noPreviewMessage.hidden = true;
+                    } 
+                    else if (isDoc) {
+                        // Usar Microsoft Office Online Viewer para documentos Word
+                        const fullUrl = window.location.origin + fileUrl;
+                        const officeViewerUrl = `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(fullUrl)}`;
+                        previewIframe.src = officeViewerUrl;
+                        previewIframe.hidden = false;
+                        noPreviewMessage.hidden = true;
+        
+                        // Fallback a Google Docs Viewer si el Microsoft Viewer falla
+                        previewIframe.onerror = function() {
+                            const googleDocsUrl = `https://docs.google.com/viewer?url=${encodeURIComponent(fullUrl)}&embedded=true`;
+                            previewIframe.src = googleDocsUrl;
+                        };
+                    } 
+                    else if (isZip) {
+                        window.location.href = fileUrl;
+                        noPreviewMessage.textContent = "ZIP files are downloaded automatically";
+                        noPreviewMessage.hidden = false;
+                    } 
+                    else {
+                        if (confirm('This file type may not be previewable. Do you want to download it?')) {
+                            window.location.href = fileUrl;
+                        }
+                        noPreviewMessage.textContent = "No preview available for this file type";
+                        noPreviewMessage.hidden = false;
+                    }
+                });
+            });
+        });
+        </script>
+    
+  </main><!-- End #main -->
+  
+  
+
+  <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
+
+  <!-- Vendor JS Files -->
+  <!-- Vendor JS Files -->
+  <script src="{% static 'assets/vendor/apexcharts/apexcharts.min.js' %}"></script>
+  <script src="{% static 'assets/vendor/bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+  <script src="{% static 'assets/vendor/chart.js/chart.umd.js' %}"></script>
+  <script src="{% static 'assets/vendor/echarts/echarts.min.js' %}"></script>
+  <script src="{% static 'assets/vendor/quill/quill.js' %}"></script>
+  <script src="{% static 'assets/vendor/simple-datatables/simple-datatables.js' %}"></script>
+  <script src="{% static 'assets/vendor/tinymce/tinymce.min.js' %}"></script>
+  <script src="{% static 'assets/vendor/php-email-form/validate.js' %}"></script>
+
+  <!-- Template Main JS File -->
+  <script src="{% static 'assets/js/main.js' %}"></script>
+  
+
+</body>
+{%endblock%}
+</html>

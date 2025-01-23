@@ -159,11 +159,32 @@
         </li>
         {% if is_author %}
         <li class="nav-item">Author Menu</li>
-        <a class="nav-link {% if request.resolver_match.url_name != 'makeSubmission' %}collapsed{% endif %}" href="{% url 'makeSubmission' %}">
-            <i class="bi bi-journal-text"></i>
-            <span>Submit an Article</span>
-          </a>
-        </li>
+        <a class="nav-link {% if request.resolver_match.url_name != 'makeSubmission' %}collapsed{% endif %}" 
+   href="javascript:void(0);" 
+   id="submitArticleLink">
+    <i class="bi bi-journal-text"></i>
+    <span>Submit an Article</span>
+</a>
+
+<script>
+    // Suponiendo que `submissionEnabled` se pasa desde el backend como una variable JavaScript
+    const submissionEnabled = {{ submissionEnabled|yesno:"true,false" }};
+
+    document.getElementById('submitArticleLink').addEventListener('click', function () {
+        if (submissionEnabled) {
+            // Redirige a la página de envío
+            window.location.href = "{% url 'makeSubmission' %}";
+        } else {
+            // Muestra el mensaje de SweetAlert
+            Swal.fire({
+                icon: 'info',
+                title: 'Submissions Closed',
+                text: 'We are not accepting submissions at this time.',
+                confirmButtonText: 'OK'
+            });
+        }
+    });
+</script>
         <li class="nav-item"></li>
         <a class="nav-link {% if request.resolver_match.url_name != 'seeMySubmissions' and request.resolver_match.url_name != 'editSubmission' %} collapsed {% endif %} " href="{% url 'seeMySubmissions' %}">
             <i class="bi bi-calendar-check"></i>
@@ -174,7 +195,7 @@
         {% endif %}
         {% if is_reviewer %}
         <li class="nav-item">Reviewer Menu</li>
-        <a class="nav-link collapsed" href="{{request.scheme}}://{{ request.get_host }}/admin">
+        <a class="nav-link {% if not request.resolver_match.url_name == 'seeAssignedReviews' and request.resolver_match.url_name != 'assess' %}collapsed{% endif %}" href="{% url 'seeAssignedReviews' %}">
         <i class="bi bi-terminal"></i>
             <span>See Assigned Reviews</span>
           </a>
