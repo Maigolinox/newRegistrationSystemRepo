@@ -75,7 +75,7 @@
                           <a href="#" class="file-link" 
                              data-file-url="{% url 'serve_file' file.id %}"
                              data-file-type="{{ file.file.name|lower|slice:'-3:' }}">
-                            {{ file.file.name }}
+                            Version {{file.version_number}}: {{ file.file.name }}
                           </a>
                         </li>
                         {% endfor %}

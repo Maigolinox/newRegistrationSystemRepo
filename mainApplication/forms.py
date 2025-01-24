@@ -1,5 +1,5 @@
 from django import forms
-from .models import UserProfile, PaymentProof, Place, Event,CongressDate,Review
+from .models import News, UserProfile, PaymentProof, Place, Event,CongressDate,Review
 from django_countries.fields import CountryField
 from django_countries.widgets import CountrySelectWidget
 
@@ -306,3 +306,15 @@ class ReviewForm(forms.ModelForm):
             'email_form': 'Check this box if you want to receive a copy of this review via email.',
         }
 
+
+
+class NewsForm(forms.ModelForm):
+    class Meta:
+        model = News
+        fields = ['date', 'title', 'type', 'url']
+        widgets = {
+            'date': forms.DateInput(attrs={'type': 'date'}),
+            'type': forms.Select(),
+            'title': forms.TextInput(attrs={'class': 'form-control'}),
+            'url': forms.URLInput(attrs={'class': 'form-control'}),
+        }

@@ -14,6 +14,8 @@ from django.core.validators import MinValueValidator, MaxValueValidator
 
 from django.db.models import Avg
 
+from django.core.files.storage import FileSystemStorage
+
 
 class CustomUser(AbstractUser):
     isReviewer = models.BooleanField(default=False)
@@ -173,11 +175,13 @@ class Submission(models.Model):
     ]
 
     DECISION_STATUSES = [
+        ('pending', 'Pending'),
         ('rejected', 'Rejected'),
         ('minor_changes', 'Accepted with Minor Changes'),
         ('major_changes', 'Accepted with Major Changes'),
         ('accepted', 'Accepted'),
     ]
+    
 
     submission_id = models.CharField(max_length=6, unique=True, default=generate_random_submission_id)
 
@@ -199,14 +203,16 @@ class Submission(models.Model):
     is_withdrawn=models.BooleanField(default=False)
     assigned_reviewers=models.BooleanField(default=False)
     under_review = models.BooleanField(default=False)  # Status for being under review
-    decision_issued = models.BooleanField(default=False)  # Status for final decision issued
-    
+    decision_issued = models.CharField(max_length=20,choices=DECISION_STATUSES,default='pending')  # Status for final decision issued
+
     final_decision = models.CharField(
         max_length=20,
         choices=DECISION_STATUSES,
         blank=True,
         null=True
-    )  # Campo para guardar la decisión final
+    )  
+
+    review_round = models.PositiveIntegerField(default=1)  # Round of review
 
 
     def __str__(self):
@@ -336,10 +342,6 @@ class Submission(models.Model):
         else:
             return "Borderline"
         
-    
-    
-    
-    
 
 class Author(models.Model):
     """
@@ -375,6 +377,7 @@ class SubmissionFile(models.Model):
     submission = models.ForeignKey(Submission, on_delete=models.CASCADE, related_name='files')
     file = models.FileField(upload_to='submissions/%Y/%m/%d/')
     # description = models.TextField(blank=True, null=True)
+    version_number = models.PositiveIntegerField(default=1)  # Nueva columna para controlar versiones
     uploaded_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
@@ -454,6 +457,7 @@ class Review(models.Model):
     
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    revision_round_number = models.PositiveIntegerField(default=1)  # Round of review
 
     def calculate_score(self):
         score = 5  # Start with the maximum score
@@ -527,6 +531,41 @@ class Review(models.Model):
     def __str__(self):
         return f"Review for {self.submission.title} by {self.reviewer.username} (Score: {self.calculate_score()})"
     
+
+
+class OverwriteStorage(FileSystemStorage):
+    def get_available_name(self, name, max_length=None):
+        # Si el archivo existe, lo elimina antes de guardar el nuevo
+        self.delete(name)
+        return name
+
 class systemSettings(models.Model):
     allowSubmissions = models.BooleanField(default=False)
     allowScientificComitteeDiplomas = models.BooleanField(default=False)
+    signature_name = models.CharField(max_length=255, blank=True, null=True)
+    logoImageDecisionLetter = models.ImageField(
+        upload_to='images/', 
+        null=True, 
+        blank=True, 
+        storage=OverwriteStorage()
+    )
+    signatureImageDecisionLetter = models.ImageField(
+        upload_to='images/', 
+        null=True, 
+        blank=True, 
+        storage=OverwriteStorage()
+    )
+    availabilityDateScientificComitteeDiplomas = models.DateField(null=True, blank=True)
+    scientificCommiteeDiplomasTemplate = models.FileField(upload_to='diplomasTemplates/',null=True,blank=True)  # Directory where the file will be uploaded
+
+
+
+class News(models.Model):
+    date=models.DateField()
+    title=models.CharField(max_length=255)
+    type=models.CharField(max_length=50,
+        choices=[('info', 'Info'), ('success', 'Success'), ('danger', 'Danger')],
+        default='info')
+    url = models.URLField(blank=True, null=True)
+    def __str__(self):
+        return f"{self.fecha} - {self.titulo}"

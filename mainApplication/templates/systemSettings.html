@@ -68,16 +68,63 @@
                     <h1 class="bold-extra extra-bold-roboto" style="margin-top: 20px;">System Settings</h1>
                     <p class="roboto">Set the configuration of the system</p>
                 </div>
-                <form method="post">
-                    {% csrf_token %}
-                    <label for="allowSubmissions">Allow to create new Submissions:</label>
-                    <input type="checkbox" id="allowSubmissions" name="allowSubmissions" {% if settings.allowSubmissions %}checked{% endif %}>
-                    
-                    <label for="allowScientificComitteeDiplomas">Allow to the Scientific Committee to download the diplomas:</label>
-                    <input type="checkbox" id="allowScientificComitteeDiplomas" name="allowScientificComitteeDiplomas" {% if settings.allowScientificComitteeDiplomas %}checked{% endif %}>
-                    
-                    <button type="submit">Save Settings</button>
-                </form>
+                <form method="post" enctype="multipart/form-data">
+                  {% csrf_token %}
+                  
+                  <div class="form-check">
+                      <input type="checkbox" class="form-check-input" id="allowSubmissions" 
+                             name="allowSubmissions" {% if settings.allowSubmissions %}checked{% endif %}>
+                      <label class="form-check-label" for="allowSubmissions">Allow Submissions</label>
+                  </div>
+                  
+                  <div class="form-check">
+                      <input type="checkbox" class="form-check-input" id="allowScientificComitteeDiplomas" 
+                             name="allowScientificComitteeDiplomas" {% if settings.allowScientificComitteeDiplomas %}checked{% endif %}>
+                      <label class="form-check-label" for="allowScientificComitteeDiplomas">Allow Scientific Committee Diplomas</label>
+                  </div>
+                  
+                  <div class="form-group">
+                      <label for="signature_name">Signature Name</label>
+                      <input type="text" class="form-control" id="signature_name" 
+                             name="signature_name" value="{{ settings.signature_name|default_if_none:'' }}">
+                  </div>
+                  
+                  <div class="form-group">
+                      <label for="availabilityDateScientificComitteeDiplomas">Availability Date for Scientific Committee Diplomas</label>
+                      <input type="date" class="form-control" id="availabilityDateScientificComitteeDiplomas" 
+                             name="availabilityDateScientificComitteeDiplomas" 
+                             value="{{ settings.availabilityDateScientificComitteeDiplomas|date:'Y-m-d'|default_if_none:'' }}">
+                  </div>
+                  
+                  <div class="form-group">
+                      <label for="logoImageDecisionLetter">Logo Image for Decision Letter</label>
+                      <input type="file" class="form-control-file" id="logoImageDecisionLetter" 
+                             name="logoImageDecisionLetter">
+                      {% if settings.logoImageDecisionLetter %}
+                          <small>Current image: {{ settings.logoImageDecisionLetter.name }}</small>
+                      {% endif %}
+                  </div>
+                  
+                  <div class="form-group">
+                      <label for="signatureImageDecisionLetter">Signature Image for Decision Letter</label>
+                      <input type="file" class="form-control-file" id="signatureImageDecisionLetter" 
+                             name="signatureImageDecisionLetter">
+                      {% if settings.signatureImageDecisionLetter %}
+                          <small>Current image: {{ settings.signatureImageDecisionLetter.name }}</small>
+                      {% endif %}
+                  </div>
+                  
+                  <div class="form-group">
+                      <label for="scientificCommiteeDiplomasTemplate">Scientific Committee Diplomas Template</label>
+                      <input type="file" class="form-control-file" id="scientificCommiteeDiplomasTemplate" 
+                             name="scientificCommiteeDiplomasTemplate">
+                      {% if settings.scientificCommiteeDiplomasTemplate %}
+                          <small>Current template: {{ settings.scientificCommiteeDiplomasTemplate.name }}</small>
+                      {% endif %}
+                  </div>
+                  
+                  <button type="submit" class="btn btn-primary">Save Settings</button>
+              </form>
                 
                 
                 

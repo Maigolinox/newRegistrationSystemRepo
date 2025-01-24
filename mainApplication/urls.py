@@ -57,6 +57,8 @@ urlpatterns = [
     path('serve-file/<int:file_id>/', views.serve_file, name='serve_file'),#serve files
     path('systemSettings/', views.systemSettingsView, name='systemSettings'),#serve files
     path('generate_decision/<int:submission_id>/', views.generate_decision_letter, name='generate_decision'),
+    path('scientific-committee-diploma/', views.generateScientificCommitteeDiplomas, name='scientific_committee_diploma'),
+    path('manageNews/', views.newsManageView, name='newsManage'),
     
 ]
 urlpatterns += staticfiles_urlpatterns() 

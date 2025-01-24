@@ -1,5 +1,5 @@
 import base64
-from datetime import timedelta, datetime
+from datetime import date, timedelta, datetime
 import os
 from django.conf import settings
 from django.db import IntegrityError
@@ -7,8 +7,8 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib.admin.views.decorators import staff_member_required
 import qrcode
-from .forms import UserProfileForm,PaymentProofForm,EventForm, PlaceForm,CongressDateForm,TopicAreaForm,SubmissionForm,SubmissionFileForm,AuthorForm,ReviewForm
-from .models import UserProfile,PaymentProof,Place,CongressDate,Event,Registration,adminPermissions,TopicArea,Submission,reviewersCodes,Review, systemSettings
+from .forms import NewsForm, UserProfileForm,PaymentProofForm,EventForm, PlaceForm,CongressDateForm,TopicAreaForm,SubmissionForm,SubmissionFileForm,AuthorForm,ReviewForm
+from .models import UserProfile,PaymentProof,Place,CongressDate,Event,Registration,adminPermissions,TopicArea,Submission,reviewersCodes,Review, systemSettings,News
 from django.db.models import Exists, OuterRef
 from django.views.decorators.http import require_POST
 from django.http import JsonResponse,FileResponse,HttpResponse
@@ -21,7 +21,7 @@ from allauth.socialaccount.models import SocialAccount
 from django.contrib.auth.models import User
 from .models import CustomUser,SubmissionFile
 from wsgiref.util import FileWrapper
-
+import json
 
 import pycountry
 from io import BytesIO
@@ -32,7 +32,8 @@ from django.core.exceptions import ValidationError
 from django.core.validators import validate_email
 
 # PARA DIPLOMAS
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image as Im
+from PIL import ImageDraw, ImageFont
 from reportlab.lib.pagesizes import landscape, A4
 from reportlab.lib.units import inch
 from reportlab.lib.styles import getSampleStyleSheet
@@ -75,6 +76,11 @@ import hashlib
 ##FUNCION PARA MANDAR LAS RESPUESTAS
 from django.template.loader import render_to_string
 from django.utils.html import strip_tags
+
+
+#para pdf
+from reportlab.platypus import PageBreak
+
 
 def send_email(receiver_email, subject, body, pdf_path=None):
     sender = "conferencecimps@cimat.mx"
@@ -204,14 +210,33 @@ def get_user_context_data(request):
 
 @superuser_required
 def systemSettingsView(request):
-    # Obtiene o crea el registro de configuraciones del sistema
     settings, created = systemSettings.objects.get_or_create(id=1)
 
     if request.method == 'POST':
-        # Puedes manejar la actualización de los settings aquí
+        # Boolean fields
         settings.allowSubmissions = request.POST.get('allowSubmissions', False) == 'on'
         settings.allowScientificComitteeDiplomas = request.POST.get('allowScientificComitteeDiplomas', False) == 'on'
+        
+        # Text field
+        settings.signature_name = request.POST.get('signature_name', '').strip() or None
+        
+        # Date field
+        availability_date = request.POST.get('availabilityDateScientificComitteeDiplomas')
+        settings.availabilityDateScientificComitteeDiplomas = availability_date if availability_date else None
+        
+        # Image and File fields
+        if 'logoImageDecisionLetter' in request.FILES:
+            settings.logoImageDecisionLetter = request.FILES['logoImageDecisionLetter']
+        
+        if 'signatureImageDecisionLetter' in request.FILES:
+            settings.signatureImageDecisionLetter = request.FILES['signatureImageDecisionLetter']
+        
+        if 'scientificCommiteeDiplomasTemplate' in request.FILES:
+            settings.scientificCommiteeDiplomasTemplate = request.FILES['scientificCommiteeDiplomasTemplate']
+        
         settings.save()
+        messages.success(request, "System settings updated successfully.")
+        return redirect('dashboard')
 
     return render(request, 'systemSettings.html', {'settings': settings})
 
@@ -250,6 +275,7 @@ def fetch_image(location):
 def dashboard(request):
     userID = request.user.id
     allowRegistration=False
+    news=News.objects.all().order_by('-date')
 
     base_url = f"{request.scheme}://{request.get_host()}/"
     # Generate QR codes for each registration
@@ -308,8 +334,10 @@ def dashboard(request):
                 submission.step4_status = "pending"
 
             # Step 5: Check if decision issued
-            if submission.step4_status == "completed":
-                submission.step5_status = "completed" if submission.decision_issued() else "uncompleted"
+            if submission.final_decision:
+                submission.step3_status == "completed"
+                submission.step4_status = "completed"
+                submission.step5_status = "completed" 
             else:
                 submission.step5_status = "pending"
     except:
@@ -326,6 +354,7 @@ def dashboard(request):
         'images': images,
         'permissionValues':permissionValues,
         'submissions':submissions,
+        'news':news,
     }
     return render(request,'dashboard.html',context)
 
@@ -943,7 +972,31 @@ def registerStaff(request):
 def seeMyDiplomas(request):
     is_staff_user = request.user.is_staff
     is_staff_superuser = request.user.is_superuser
+    
+    #TO CHECK REVISIONS FALSE AS DEFAULT FOR ALL
+    is_reviewer = request.user.isReviewer
+    all_reviews_completed = False
+
+    if is_reviewer:
+        # Obtener los envíos asignados al usuario
+        assigned_submissions = Submission.objects.filter(reviewers=request.user)
+
+        # Contar las revisiones completadas y las totales
+        total_reviews = assigned_submissions.count()
+        completed_reviews = Review.objects.filter(
+            submission__in=assigned_submissions,
+            reviewer=request.user,
+            review_completed=True
+        ).count()
+
+        
+
+        # Verificar si todas las revisiones están completadas
+        all_reviews_completed = total_reviews > 0 and completed_reviews >= total_reviews
+        print(all_reviews_completed)
+
     registrations = Registration.objects.filter(user=request.user.id).select_related('event')
+    system_settings = systemSettings.objects.first()
 
     # Diccionario para consolidar eventos por título
     consolidated_events = defaultdict(lambda: {
@@ -983,6 +1036,8 @@ def seeMyDiplomas(request):
         'is_staff_user': is_staff_user,
         'is_staff_superuser': is_staff_superuser,
         'registrations': consolidated_list,
+        'system_settings': system_settings,
+        'all_reviews_completed': all_reviews_completed,
     }
     return render(request, 'seeMyDiplomas.html', context)
 
@@ -1022,7 +1077,7 @@ def generateMyDiplomas(request,event_id):
 
     def create_diploma(template_path, name, output_image_path):
         # Abrir la plantilla de imagen
-        image = Image.open(template_path)
+        image = Im.open(template_path)
         if image.mode == 'RGBA':
             image = image.convert('RGB')
         draw = ImageDraw.Draw(image)
@@ -1368,6 +1423,7 @@ def editSubmission(request, submissionID):
     # Cambiamos extra=0 a extra=1 para permitir un nuevo formulario en blanco
     AuthorFormSet = formset_factory(AuthorForm, extra=0, can_delete=True)
     submission = get_object_or_404(Submission, submission_id=submissionID, user=request.user)
+    version_files=submission.review_round
     
     if request.user.id is not submission.user_id:
         return redirect('seeMySubmissions')
@@ -1403,7 +1459,7 @@ def editSubmission(request, submissionID):
             # Handle files
             if request.FILES.getlist('files'):
                 for file in request.FILES.getlist('files'):
-                    SubmissionFile.objects.create(submission=submission, file=file)
+                    SubmissionFile.objects.create(submission=submission, file=file,version_number=version_files)
 
             messages.success(request, 'Submission updated successfully.')
             return HttpResponseRedirect(request.path)
@@ -1493,7 +1549,7 @@ def inviteReviewers(request):
     if request.method == 'POST':
         # Extract data from the form
         subject = request.POST.get('subject')
-        body_template = request.POST.get('message') + " <br> Please click here: <a href='{url}'>Become a Reviewer</a> <br> If this email is not a Gmail account, is mandatory to create one to access the platform. Then to become a reviewer in your profile section add the following code: {hashedEmail}."
+        body_template = request.POST.get('message') + "<ol> <li> <a href='https://register.cimps.org'>Login into the system by using a Google Account (mandatory).</a></li><li>Please click here: <a href='{url}'>Become a Reviewer</a></li> <li>In case of issues with the link to become a reviewer, go to Profile Information section and add the following code: {hashedEmail} at the end where Reviewer code is required.</li></ol>  <br> If this email is not a Gmail account, is mandatory to create one to access the platform."
         bcc = request.POST.get('bcc')  # Comma-separated email addresses
         base_url = f"{request.scheme}://{request.get_host()}/becomeReviewer"
 
@@ -1720,17 +1776,19 @@ def listSubmissions(request):
 @login_required(login_url='google_login')
 def seeAssignedReviews(request):
     user=request.user
-    assigned_reviews = Submission.objects.filter(reviewers=user).select_related('user').prefetch_related('authors')
+    
     assigned_reviews = Submission.objects.filter(
         reviewers=request.user
     ).prefetch_related(
         'review_set'
     ).annotate(
+        # Check if there's a review for the current review round
         user_review_completed=Exists(
             Review.objects.filter(
                 submission=OuterRef('pk'),
                 reviewer=request.user,
-                review_completed=True
+                review_completed=True,
+                revision_round_number=OuterRef('review_round')
             )
         )
     )
@@ -1752,20 +1810,26 @@ def assess(request, submission_id):
         # return redirect('dashboard')
     
     # Try to get existing review
+    # print(submission.review_round)
     try:
-        existing_review = Review.objects.get(submission=submission, reviewer=request.user)
+        existing_review = Review.objects.get(submission=submission, reviewer=request.user, revision_round_number=submission.review_round)
         is_completed = existing_review.review_completed
+        # print("se encontro")
     except Review.DoesNotExist:
         existing_review = None
         is_completed = False
+        # print("no se encontro")
     
     if request.method == 'POST' and not is_completed:
         form = ReviewForm(request.POST, instance=existing_review)
+        
         
         if form.is_valid():
             review = form.save(commit=False)
             review.submission = submission
             review.reviewer = request.user
+
+            review.revision_round_number = submission.review_round
             
             # Check which button was pressed
             if 'submit' in request.POST:
@@ -1775,6 +1839,7 @@ def assess(request, submission_id):
                 review.review_completed = False
                 messages.success(request, "Review saved as draft.")
 
+            review.save()
             if request.POST.get('email_form'):
                 
                 try:
@@ -1800,6 +1865,7 @@ def assess(request, submission_id):
             messages.error(request, "Please correct the errors below.")
     else:
         form = ReviewForm(instance=existing_review) if existing_review else ReviewForm()
+
 
     context = {
         'article': submission,
@@ -1835,12 +1901,26 @@ def serve_file(request, file_id):
     
     return response
 
-import json
 
 def generate_decision_letter(request, submission_id):
     submission = Submission.objects.get(submission_id=submission_id)
     authors = submission.authors.all()  # Obtener todos los autores relacionados con esta submission
     recipient_emails = [author.email for author in authors]
+
+    system_settings = systemSettings.objects.first()
+
+    # Determine logo path
+    if system_settings and system_settings.logoImageDecisionLetter:
+        logo_image_path = system_settings.logoImageDecisionLetter.path
+    else:
+        # Fallback to default logo
+        logo_image_path = os.path.join(settings.BASE_DIR, 'mainApplication/static/images/logo.png')
+
+    if system_settings and system_settings.signatureImageDecisionLetter:
+        signature_image_path = system_settings.signatureImageDecisionLetter.path
+    else:
+        # Fallback to default logo
+        signature_image_path = os.path.join(settings.BASE_DIR, 'mainApplication/static/images/sign.png')
 
     # Generar PDF en un buffer
     buffer = BytesIO()
@@ -1852,71 +1932,147 @@ def generate_decision_letter(request, submission_id):
     justified_style = ParagraphStyle(
         'Justified', 
         parent=styles['Normal'], 
-        alignment=1,  # Alineación justificada
+        alignment=4,  # Alineación justificada
         fontSize=12  # Tamaño de la fuente
     )
 
     # Agregar logo centrado
-    logo_image_path = os.path.join(settings.BASE_DIR, 'mainApplication/static/images/logo.png')
-    logo_image = Image(logo_image_path, width=150, height=75)
+    # logo_image_path = os.path.join(settings.BASE_DIR, 'mainApplication/static/images/logo.png')
+    logo_image = Image(logo_image_path, width=145, height=86)
     logo_image.hAlign = 'CENTER'  # Alinear el logo al centro
     story.append(logo_image)
+    story.append(Spacer(1, 12))  # 12 es el tamaño del espacio en puntos (puedes ajustarlo)
+
 
     # Agregar título centrado
     title_paragraph = Paragraph("Decision Letter", styles['Title'])
     title_paragraph.hAlign = 'CENTER'  # Alinear el título al centro
     story.append(title_paragraph)
+    story.append(Spacer(1, 12))  # 12 es el tamaño del espacio en puntos (puedes ajustarlo)
+
 
     # Agregar datos del artículo
     current_date = datetime.now().strftime('%Y-%m-%d')
     story.append(Paragraph(f"Title: {submission.title}", styles['Normal']))
     story.append(Paragraph(f"Date: {current_date}", styles['Normal']))
+    story.append(Paragraph(f"Submission ID: {submission.submission_id}", styles['Normal']))
+
+    story.append(Spacer(1, 12))  # 12 es el tamaño del espacio en puntos (puedes ajustarlo)
 
     # Decisión tomada
     decision_text = ""
+
+    try:
+        data = json.loads(request.body)  # Parseamos el JSON enviado desde el frontend
+        decision = data.get('decision')  # Extraemos el valor de la decisión
+    except json.JSONDecodeError:
+        decision=""
     
-    # data = json.loads(request.body)
     # decision = data.get('decision')
 
-    decision="accepted"
-    
+
     if decision == 'accepted':
+        submission.final_decision = 'accepted'
         decision_text = (
-            "We are pleased to inform you that your submission has been accepted for publication. "
-            "Congratulations on your achievement!<br/><br/>"
-            "Should you have any questions or require further clarification, please do not hesitate to reach out.<br/><br/>"
-        )
+        "We are pleased to inform you that your submission has been <strong>accepted</strong> for publication. "
+        "This decision reflects the high quality of your work, and we congratulate you on your achievement. "
+        "Your contribution will be an important addition to the body of knowledge in this field, "
+        "and we are excited to have it featured in our upcoming publication.\n\n"
+        "In the coming days, you will receive further instructions regarding the next steps for publication. "
+        "Please ensure that all required documents and forms are submitted promptly to avoid any delays. "
+        "We look forward to collaborating with you throughout this process.\n\n"
+        "Should you have any questions or require further clarification, please do not hesitate to reach out. "
+        "We are happy to assist you and ensure everything proceeds smoothly.\n\n"
+    )
     elif decision == 'rejected':
+        submission.final_decision = 'rejected'
+
         decision_text = (
-            "We regret to inform you that your submission has been rejected after review. "
-            "Thank you for your effort, and we encourage you to submit future work.<br/><br/>"
-            "Should you have any questions or require further clarification, please do not hesitate to reach out.<br/><br/>"
+            "\n\n We regret to inform you that your submission has been <strong>rejected</strong> after careful review. "
+            "While we appreciate the effort and thought that went into your work, it was determined that the submission "
+            "does not meet the specific criteria or standards required for publication at this time. "
+            "We encourage you to continue pursuing research in this area and hope to see future submissions from you.\n\n"
+            "We understand that this news may be disappointing, and we want to assure you that your submission was thoroughly considered. "
+            "We highly value your participation and hope you will consider submitting to us again in the future. "
+            "Constructive feedback from the reviewers will be provided to guide you in improving your work.\n\n"
+            "Should you have any questions or require further clarification, please do not hesitate to reach out. "
+            "We are here to support you and offer any guidance necessary as you move forward.\n\n"
         )
     elif decision == 'minor_changes':
+        submission.sent_for_review=False
+        submission.decision_issued=decision
+        submission.review_round += 1
+        
         decision_text = (
-            "Your submission has been accepted with minor changes. "
-            "Please review the feedback provided by the reviewers and make the necessary adjustments before resubmission.<br/><br/>"
-            "Should you have any questions or require further clarification, please do not hesitate to reach out.<br/><br/>"
+            "\n\nYour submission has been <strong>accepted with minor changes.</strong> "
+            "This means that your work is largely in line with our publication standards, but there are a few areas that need to be revised. "
+            "The reviewers have provided feedback outlining the specific changes required, and we kindly ask that you address these before resubmitting.\n\n"
+            "The revisions are expected to improve the clarity and overall impact of your work. Once you have made the necessary adjustments, "
+            "please submit the revised version for final approval. We are confident that these changes will enhance the quality of your submission.\n\n"
+            "Should you have any questions or require further clarification, please do not hesitate to reach out. "
+            "We are available to assist you throughout the revision process and look forward to receiving your updated submission.\n\n"
         )
     elif decision == 'major_changes':
+        submission.sent_for_review=False
+        submission.decision_issued=decision
+        submission.review_round += 1
+
         decision_text = (
-            "Your submission has been accepted with major changes. "
-            "Please review the feedback provided by the reviewers and make the necessary adjustments before resubmission.<br/><br/>"
-            "Should you have any questions or require further clarification, please do not hesitate to reach out.<br/><br/>"
+            "\n\nYour submission has been <strong>accepted with major changes.</strong> "
+            "This means that while your work shows significant potential, substantial revisions are required to meet the necessary standards for publication. "
+            "The reviewers have provided detailed feedback on the areas that need to be improved, and we recommend you carefully review their comments and suggestions. "
+            "These revisions may involve restructuring portions of your work or adding new content to enhance the overall quality and clarity.\n\n"
+            "Once you have completed the necessary revisions, please resubmit your work for another round of review. "
+            "We appreciate your efforts in addressing the feedback and are optimistic that the changes will significantly strengthen your submission.\n\n"
+            "Should you have any questions or require further clarification, please do not hesitate to reach out. "
+            "Our team is here to assist you with any concerns or difficulties you may encounter during the revision process.\n\n"
         )
+
+    
+
+    submission.save()  # Guardar la decisión en la base de datos
 
     # Añadir el texto de decisión utilizando Paragraph
     decision_paragraph = Paragraph(decision_text, justified_style)
     story.append(decision_paragraph)
 
+    story.append(Spacer(1, 12))  # 12 es el tamaño del espacio en puntos (puedes ajustarlo)
+
     # Agregar firma
-    signature_image_path = os.path.join(settings.BASE_DIR, 'mainApplication/static/images/sign.png')
-    signature_image = Image(signature_image_path, width=150, height=50)
+    # signature_image_path = os.path.join(settings.BASE_DIR, 'mainApplication/static/images/sign.png')
+    print(signature_image_path)
+    signature_image = Image(signature_image_path, width=75, height=70)
+    signature_image.hAlign = 'LEFT'
     story.append(signature_image)
-    story.append(Paragraph("Ph. Dr. Jezreel Mejía Miranda", styles['Normal']))
-    story.append(Paragraph("Conference Chair", styles['Normal']))
+    
+    systemSettingsVar = systemSettings.objects.first()
+    name = Paragraph(systemSettingsVar.signature_name or "Ph. Dr. Jezreel Mejía Miranda", styles['Heading2'])
+    name.hAlign = 'CENTER'  # Alinear el nombre al centro
+    titleh = Paragraph("Conference Chair", styles['Heading2'])
+    titleh.hAlign = 'CENTER'  # Alinear el título al centro
+    
+    story.append(name)
+    story.append(titleh)
 
     # Construir el PDF
+    #doc.build(story)
+
+
+    story.append(PageBreak())  # Esto agrega una nueva página al documento
+
+
+    reviews = Review.objects.filter(submission=submission)
+    
+    for review in reviews:
+        # Agregar comentario del autor
+        author_comment = review.author_comments.strip()
+        if author_comment:
+            story.append(Paragraph(f"<strong>Reviewer Comments:</strong> \n{author_comment}", justified_style))
+            story.append(Spacer(1, 12))  # Espacio entre los comentarios
+
+        
+
+    # Construir el PDF con los comentarios de los revisores
     doc.build(story)
 
     # Obtener el contenido del PDF
@@ -1925,8 +2081,8 @@ def generate_decision_letter(request, submission_id):
     buffer.close()
 
     # Enviar correos
-    subject = "Decision Letter"
-    body = f"Dear Author,\n\nPlease find attached the decision letter regarding your submission '{submission.title}'."
+    subject = f"Decision Letter on your Submission ID'{submission.submission_id}'"
+    body = f"Dear Author(s),\n\n I hope this email finds you well. We are pleased to inform you that the Scientific Review Committee has completed the evaluation of your submission {submission.submission_id}, titled '{submission.title}.\n Please find attached the decision letter, which contains the detailed outcome of the review process. We kindly ask you to carefully read the letter for further information and instructions regarding the next steps.\nShould you have any questions or require additional clarification, please do not hesitate to contact us.\n Thank you for your valuable contribution to our academic community.\n  If the evaluation results are neither \"accepted\" nor \"rejected,\" your submission will be reverted to allow you to re-upload the required documents. In such cases, please provide the following: \n\n\n\n 1. A response letter addressing the reviewers' comments.\n 2. A revised version of the paper with changes clearly highlighted based on the reviewers' feedback.\n 3. The final version of the paper with no highlights or underlining, ready for publication. \n \n \n Best regards,  Conference Chair."
     plain_message = body  # Mensaje plano
 
     email = EmailMessage(
@@ -1940,3 +2096,193 @@ def generate_decision_letter(request, submission_id):
     email.send()
 
     return HttpResponse("Decision letter sent successfully.")
+
+
+
+@login_required(login_url='google_login')
+def generateScientificCommitteeDiplomas(request):
+    # Get system settings
+
+    def create_diploma(template_path, name, output_image_path):
+        # Abrir la plantilla de imagen
+        image = Im.open(template_path)
+        if image.mode == 'RGBA':
+            image = image.convert('RGB')
+        draw = ImageDraw.Draw(image)
+
+        font_url = "https://github.com/Outfitio/Outfit-Fonts/raw/refs/heads/main/fonts/ttf/Outfit-Regular.ttf"
+        # Configurar la fuente
+        try:
+            response = requests.get(font_url)
+            font = ImageFont.truetype(BytesIO(response.content), 180)
+            
+        except:
+            # print("No se pudo cargar la fuente")
+            font = ImageFont.load_default()
+            text_bbox = draw.textbbox((0, 0), name, font=font)
+            default_text_width = text_bbox[2] - text_bbox[0]
+            default_text_height = text_bbox[3] - text_bbox[1]
+        
+
+        # Obtener tamaño del texto usando la fuente
+        text_bbox = draw.textbbox((0, 0), name, font=font)
+        text_width = text_bbox[2] - text_bbox[0]
+        text_height = text_bbox[3] - text_bbox[1]
+        width, height = image.size
+        
+
+        # Posicionar el texto en el centro de la imagen
+        x = (width - text_width) / 2
+        y = (height - text_height) / 2  # Centrar el texto verticalmente también
+        if font == ImageFont.load_default():
+            # If we're using the default font, we need to scale the image up before drawing
+            # and then scale it back down to get a larger text
+            large_image = image.resize((int(width * scale_factor), int(height * scale_factor)), Image.LANCZOS)
+            large_draw = ImageDraw.Draw(large_image)
+            large_x = (large_image.width - text_width * scale_factor) / 2
+            large_y = (large_image.height - text_height * scale_factor) / 2
+            large_draw.text((large_x, large_y), name, font=font, fill="black")
+            image = large_image.resize((width, height), Image.LANCZOS)
+        else:
+            draw.text((x, y), name, font=font, fill="black")
+
+        # Añadir el nombre al diploma
+        # draw.text((x, y), name, font=font, fill="black")
+
+        # Guardar la imagen con el nombre del diploma
+        image.save(output_image_path,'JPEG')
+        
+    def create_protected_pdf(image_path, pdf_path, owner_password):
+        # Crear un PDF a partir de la imagen
+        c = canvas.Canvas(pdf_path, pagesize=landscape(A4))
+        c.drawImage(image_path, 0, 0, width=landscape(A4)[0], height=landscape(A4)[1])
+        c.save()
+        
+        # Proteger el PDF con contraseña
+        reader = PdfReader(pdf_path)
+        writer = PdfWriter()
+        
+        for page in reader.pages:
+            writer.add_page(page)
+        
+        # Permitir abrir el archivo sin contraseña, pero protegerlo contra edición
+        writer.encrypt(user_pwd="", owner_pwd=owner_password, use_128bit=True)
+        
+        with open(pdf_path, "wb") as f:
+            writer.write(f)
+
+    def send_email(receiver_email, subject, body, pdf_path):
+        sender = "conferencecimps@cimat.mx"
+        password = "HIPOCRATES@2022"
+
+        message = MIMEMultipart()
+        message["From"] = sender
+        message["To"] = receiver_email
+        message["Subject"] = subject
+
+        message.attach(MIMEText(body, "html"))
+
+        with open(pdf_path, "rb") as f:
+            attach = MIMEApplication(f.read(),_subtype="pdf")
+            attach.add_header('Content-Disposition','attachment',filename=os.path.basename(pdf_path))
+            message.attach(attach)
+
+        with smtplib.SMTP_SSL('smtp.gmail.com', 465) as server:
+            server.login(sender, password)
+            server.send_message(message)
+
+
+    system_settings = systemSettings.objects.first()
+    
+    # Check if scientific committee diplomas are allowed
+    if not system_settings.allowScientificComitteeDiplomas:
+        messages.error(request, "Scientific Committee Diplomas are currently not available.")
+        return redirect('seeMyDiplomas')
+    
+    # Check availability date
+    if system_settings.availabilityDateScientificComitteeDiplomas:
+        if date.today() < system_settings.availabilityDateScientificComitteeDiplomas:
+            messages.error(request, "Scientific Committee Diplomas are not yet available.")
+            return redirect('seeMyDiplomas')
+    
+    # Get user profile
+    try:
+        user_profile = UserProfile.objects.get(user=request.user)
+    except UserProfile.DoesNotExist:
+        messages.error(request, "User profile not found.")
+        return redirect('seeMyDiplomas')
+    
+    # Check if full name exists
+    name = user_profile.FullName
+    if not name or name.strip() == "":
+        messages.error(request, "Full name is required to generate diploma.")
+        return redirect('seeMyDiplomas')
+    
+    # Get email
+    try:
+        email = SocialAccount.objects.get(user=request.user).extra_data.get('email')
+    except SocialAccount.DoesNotExist:
+        messages.error(request, "Email not found.")
+        return redirect('seeMyDiplomas')
+    
+    # Prepare diploma generation
+    output_folder = "./static/scientific_committee_diplomas"
+    os.makedirs(output_folder, exist_ok=True)
+    
+    # Use the template from system settings
+    template_path = system_settings.scientificCommiteeDiplomasTemplate.path
+    
+    # Paths for generated files
+    image_path = os.path.join(output_folder, f"{name}_diploma.jpg")
+    pdf_path = os.path.join(output_folder, f"{name}_diploma.pdf")
+    
+    # Subject and body for email
+    subject = "Scientific Committee Diploma - Thank You"
+    body = """
+    ================= THANK YOU <br>
+    Attached to this email you will find your Scientific Committee Diploma <br>
+    =================<br><br>
+    Warm regards<br>
+    """
+    
+    # Generate diploma (similar to your previous implementation)
+    create_diploma(template_path, name, image_path)
+    
+    # Create protected PDF
+    owner_password = "Cimps2025.ScientificCommittee#@!"
+    create_protected_pdf(image_path, pdf_path, owner_password)
+    
+    # Send email
+    send_email(email, subject, body, pdf_path)
+    
+    # Optional: You might want to track diploma generation
+    # Add a field to UserProfile or create a new model to track this if needed
+    
+    messages.success(request, "Your Scientific Committee Diploma has been sent to your email!")
+    return redirect('seeMyDiplomas')
+
+
+def newsManageView(request):
+    # For GET requests, display the news items and the form
+    news = News.objects.all().order_by('-date')  # Fetch all news items ordered by date
+    form = NewsForm()  # Instantiate an empty form for adding news
+    if request.method == 'POST':
+        if 'add_news' in request.POST:
+            # Handle adding a new news item
+            form = NewsForm(request.POST)
+            if form.is_valid():
+                form.save()  # Save the news item to the database
+                return redirect('newsManage')
+        elif 'delete_news' in request.POST:
+            # Handle deleting a news item
+            news_id = request.POST.get('news_id')  # Get the ID of the news to delete
+            news = get_object_or_404(News, id=news_id)
+            news.delete()
+            return redirect('newsManage')
+    context = {
+        'news': news,
+        'form': form,
+    }
+    return render(request, 'newsManage.html', context)
+
+    

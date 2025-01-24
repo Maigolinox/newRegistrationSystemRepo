@@ -80,16 +80,17 @@
                               <th>Reviews</th>
                               <th>Recommendation</th>
                               <th>Actions</th>
+                              <th>Final Decision</th>
                           </tr>
                       </thead>
                       <tbody>
                           {% for data in submission_data %}
-                          <tr class="{% if data.submission.is_withdrawn %} bg-secondary{% endif%}">
-                              <td class="{% if data.submission.is_withdrawn %} bg-secondary{% endif%}">{{ data.submission.submission_id }}</td>
-                              <td  class="{% if data.submission.is_withdrawn %} bg-secondary{% endif%}">{{ data.submission.title }}</td>
-                              <td  class="{% if data.submission.is_withdrawn %} bg-secondary{% endif%}">{{ data.submission.abstract }}</td>
-                              <td  class="{% if data.submission.is_withdrawn %} bg-secondary{% endif%}">{{ data.status }}</td>
-                              <td  class="{% if data.submission.is_withdrawn %} bg-secondary{% endif%}">
+                          <tr class="{% if data.submission.is_withdrawn %} bg-secondary {%elif data.submission.final_decision == 'accepted' %} bg-success {% elif data.submission.final_decision == 'rejected' %} bg-danger {% endif%}"">
+                              <td class="{% if data.submission.is_withdrawn %} bg-secondary {%elif data.submission.final_decision == 'accepted' %} bg-success {% elif data.submission.final_decision == 'rejected' %} bg-danger {% endif%}"">{{ data.submission.submission_id }}</td>
+                              <td  class="{% if data.submission.is_withdrawn %} bg-secondary {%elif data.submission.final_decision == 'accepted' %} bg-success {% elif data.submission.final_decision == 'rejected' %} bg-danger {% endif%}"">{{ data.submission.title }}</td>
+                              <td  class="{% if data.submission.is_withdrawn %} bg-secondary {%elif data.submission.final_decision == 'accepted' %} bg-success {% elif data.submission.final_decision == 'rejected' %} bg-danger {% endif%}"">{{ data.submission.abstract }}</td>
+                              <td  class="{% if data.submission.is_withdrawn %} bg-secondary {%elif data.submission.final_decision == 'accepted' %} bg-success {% elif data.submission.final_decision == 'rejected' %} bg-danger {% endif%}">{{ data.status }}</td>
+                              <td  class="{% if data.submission.is_withdrawn %} bg-secondary {%elif data.submission.final_decision == 'accepted' %} bg-success {% elif data.submission.final_decision == 'rejected' %} bg-danger {% endif%}"">
                                   <div class="progress">
                                       <div class="progress-bar" role="progressbar" 
                                            style="width: {{ data.completion_percentage }}%"
@@ -99,15 +100,15 @@
                                       </div>
                                   </div>
                               </td>
-                              <td  class="{% if data.submission.is_withdrawn %} bg-secondary{% endif%}">
+                              <td  class="{% if data.submission.is_withdrawn %} bg-secondary {%elif data.submission.final_decision == 'accepted' %} bg-success {% elif data.submission.final_decision == 'rejected' %} bg-danger {% endif%}">
                                   {% if data.average_score %}
                                       <span class="badge bg-primary">{{ data.average_score }}/10</span>
                                   {% else %}
                                       <span class="badge bg-secondary">Pending</span>
                                   {% endif %}
                               </td>
-                              <td  class="{% if data.submission.is_withdrawn %} bg-secondary{% endif%}">{{ data.completed_reviews }}/{{ data.total_reviews }}</td>
-                              <td  class="{% if data.submission.is_withdrawn %} bg-secondary{% endif%}">
+                              <td  class="{% if data.submission.is_withdrawn %} bg-secondary {%elif data.submission.final_decision == 'accepted' %} bg-success {% elif data.submission.final_decision == 'rejected' %} bg-danger {% endif%}">{{ data.completed_reviews }}/{{ data.total_reviews }}</td>
+                              <td  class="{% if data.submission.is_withdrawn %} bg-secondary {%elif data.submission.final_decision == 'accepted' %} bg-success {% elif data.submission.final_decision == 'rejected' %} bg-danger {% endif%}">
                                   {% if data.final_recommendation %}
                                       <span class="badge 
                                           {% if data.final_recommendation == 'Strong Accept' %}bg-success
@@ -137,6 +138,8 @@
                                 Withdrawn Submission
                                 {% endif%}
                               </td>
+                              <td  class="{% if data.submission.is_withdrawn %} bg-secondary {%elif data.submission.final_decision == 'accepted' %} bg-success {% elif data.submission.final_decision == 'rejected' %} bg-danger {% endif%}"">{{ data.submission.final_decision }}</td>
+
                           </tr>
 
                           <div class="modal fade" id="decisionModal{{ data.submission.submission_id }}" tabindex="-1" aria-labelledby="decisionModalLabel{{ data.submission.submission_id }}" aria-hidden="true">
@@ -155,7 +158,7 @@
                                         <option value="rejected">Rejected</option>
                                         <option value="minor_changes">Accepted with Minor Changes</option>
                                         <option value="major_changes">Accepted with Major Changes</option>
-                                        <option value="accepted_">Accepted</option>
+                                        <option value="accepted">Accepted</option>
                                       </select>
                                     </div>
                                   </form>
@@ -173,51 +176,69 @@
                 </div>
                 <script>
                   function generateDecision(submissionId) {
-                    const selectElement = document.getElementById(`decisionSelect${submissionId}`);
-                    const selectedDecision = selectElement.value;
-                      const url = `/generate_decision/${submissionId}/`; // Asegúrate de que esta URL coincida con tu configuración en urls.py
-              
-                      // Realiza la solicitud usando Fetch API
-                      fetch(url, {
-                          method: 'GET', // Cambia a 'POST' si necesitas usar otro método HTTP
-                          headers: {
-                              'Content-Type': 'application/json',
-                              'X-CSRFToken': getCookie('csrftoken'), // Asegura que el CSRF token esté incluido si es necesario
-                          }
-                          
-                      })
-                      .then(response => {
-                          if (response.ok) {
-                              return response.text();
-                          } else {
-                              throw new Error('Error al generar la decisión');
-                          }
-                      })
-                      .then(data => {
-                          alert("The decision letter has been sent successfully!");
-                      })
-                      .catch(error => {
-                          console.error('Error:', error);
-                          alert("There was an error generating the decision letter.");
-                      });
-                  }
-              
-                  // Función para obtener el CSRF token de las cookies (si usas protección CSRF en Django)
-                  function getCookie(name) {
-                      let cookieValue = null;
-                      if (document.cookie && document.cookie !== '') {
-                          const cookies = document.cookie.split(';');
-                          for (let i = 0; i < cookies.length; i++) {
-                              const cookie = cookies[i].trim();
-                              // Comprueba si esta cookie comienza con el nombre deseado
-                              if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                                  cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                                  break;
-                              }
-                          }
-                      }
-                      return cookieValue;
-                  }
+    const selectElement = document.getElementById(`decisionSelect${submissionId}`);
+    const selectedDecision = selectElement.value;
+    const url = `/generate_decision/${submissionId}/`;
+
+    // Mostrar loader con Swal
+    Swal.fire({
+        title: 'Please wait',
+        text: 'Generating decision letter...',
+        allowOutsideClick: false,
+        didOpen: () => {
+            Swal.showLoading(); // Muestra el loader
+        },
+    });
+
+    // Realiza la solicitud usando Fetch API
+    fetch(url, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken'),
+        },
+        body: JSON.stringify({ decision: selectedDecision })
+    })
+    .then(response => {
+        if (response.ok) {
+            return response.text();
+        } else {
+            throw new Error('Error generating the decision letter');
+        }
+    })
+    .then(data => {
+        // Cierra el loader y muestra éxito
+        Swal.fire({
+            icon: 'success',
+            title: 'Success',
+            text: 'The decision letter has been sent successfully!',
+        });
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'There was an error generating the decision letter.',
+        });
+    });
+}
+//CSFR Token
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
               </script>
               
                 

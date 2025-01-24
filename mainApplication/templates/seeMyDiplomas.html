@@ -103,23 +103,23 @@
   <table class="table">
     <thead>
       <tr>
-        <th scope="col">Event Name</th>
-        <th scope="col">Date</th>
-        <th scope="col">Start Time</th>
-        <th scope="col">End Time</th>
-        <th scope="col">Diploma</th>
+        <th scope="col-4">Event Name</th>
+        <th scope="col-2">Date</th>
+        <th scope="col-1">Start Time</th>
+        <th scope="col-1">End Time</th>
+        <th scope="col-4">Diploma</th>
       </tr>
     </thead>
     <tbody>
       <!-- Loop through the consolidated events -->
       {% for event in registrations %}
       <tr>
-        <td>{{ event.title }}</td>
-        <td>{{ event.date }}</td>
-        <td>{{ event.start_time }}</td>
-        <td>{{ event.end_time }}</td>
-        <td>
-          <a href="{% url 'sentDiploma' event.registration.event.id %}" class="btn btn-primary">
+        <td scope="col-4">{{ event.title }}</td>
+        <td scope="col-2">{{ event.date }}</td>
+        <td scope="col-1">{{ event.start_time }}</td>
+        <td scope="col-1">{{ event.end_time }}</td>
+        <td scope="col-4">
+          <a href="{% url 'hereURL' event.registration.event.id %}" class="btn btn-primary">
             <i class="bi bi-envelope"></i> Send it to my email
           </a>
         </td>
@@ -127,7 +127,40 @@
       {% endfor %}
     </tbody>
   </table>
-{% else %}
+  {% elif is_reviewer %}
+  <table class="table">
+    <thead>
+      <tr>
+        <th scope="col-4">Scientific Committee</th>
+        <th scope="col-2">Date</th>
+        <th scope="col-1">Start Time</th>
+        <th scope="col-1">End Time</th>
+        <th scope="col-4">Diploma</th>
+      </tr>
+    </thead>
+    <tbody>
+  <tr>
+    <td>Scientific Committee</td>
+    <td>-</td>
+    <td>-</td>
+    <td>-</td>
+    <td scope="col-4">
+      
+      {% if user.userprofile.FullName and system_settings.allowScientificComitteeDiplomas and system_settings.scientificCommiteeDiplomasTemplate and all_reviews_completed  %}
+          <a href="{% url 'scientific_committee_diploma' %}" class="btn btn-primary">
+              <i class="bi bi-envelope"></i> Send it to my email
+          </a>
+      {% else %}
+          <button class="btn btn-secondary" disabled>
+              <i class="bi bi-envelope"></i> Diploma Not Available
+          </button>
+      {% endif %}
+  </td>
+  </tr>
+  </tbody> 
+  </table>
+  {% else %}
+
   <p>Your assistance has not been registered yet for any event.</p>
 {% endif %}
                 </div>

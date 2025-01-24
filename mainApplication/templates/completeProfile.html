@@ -95,7 +95,7 @@
                 <form method="post" name="codeForm" style="margin-top: 20px;">
                     {% csrf_token %}
                     <div class="form-group">
-                        <label for="code">Enter your reviewer code:</label>
+                        <label for="code">Enter your reviewer code (Optional, just in case that you've received the invitation to become a reviewer, if not, leave blank):</label>
                         <input type="text" name="code" id="code" class="form-control" placeholder="Enter your reviewer code" required>
                     </div>
                     <button type="submit" name="code_form" class="btn btn-secondary" style="margin-top: 20px;">Submit Code</button>

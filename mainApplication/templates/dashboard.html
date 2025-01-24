@@ -63,7 +63,7 @@
           <div class="row">
             <div class="card">
               <div class="card-body">
-                <h5 class="card-title">Our gallery</h5>
+                <h5 class="card-title">Our gallery {% if is_staff_superuser %} <a href="{% url 'upload_banner' %}" class="btn btn-info">Edit Gallery</a>{%endif%}</h5>
                 <div id="carouselExampleIndicators" class="carousel slide carousel-container" data-bs-ride="carousel">
                   <!-- Indicadores del carrusel -->
                   <div class="carousel-indicators">
@@ -110,47 +110,33 @@
           <!-- Recent Activity -->
            
           
-
+          {% if news %}
           <div class="card">
-            
-
             <div class="card-body">
-              <h5 class="card-title">News <span></span></h5>
+              <h5 class="card-title">News <span>{% if is_staff_superuser %} <a href="{% url 'newsManage' %}" class="btn btn-info">Manage news</a>{%endif%}</span></h5>
 
               <div class="activity">
-
+                {% for new in news %}
                 <div class="activity-item d-flex">
-                  <div class="activite-label">October 04, 2024</div>
-                  <i class='bi bi-circle-fill activity-badge text-info align-self-start'></i>
+                  <div class="activite-label">{{ new.date }}</div>
+                  <i class="bi bi-circle-fill activity-badge text-{{ new.type }} align-self-start"></i>
                   <div class="activity-content">
-                    Update profile section<a href="{% url 'complete_profile' %}" class="fw-bold text-dark"> with your full name</a>.
-                    <p class="text-danger">The name you write will be the one under which your certificates will be issued.</p>
+                    {% if new.url %}
+                    <a href="{{ aviso.enlace_url }}" class="fw-bold text-dark" style="text-decoration: none;">
+                      {{ new.title }}
+                    </a>
+                    {% else %}
+                    {{ new.title }}
+                    {% endif %}
                   </div>
-                </div><!-- End activity item-->
-                <div class="activity-item d-flex">
-                  <div class="activite-label">September 06, 2024</div>
-                  <i class='bi bi-circle-fill activity-badge text-success align-self-start'></i>
-                  <div class="activity-content">
-                    Camera<a href="#" class="fw-bold text-dark" style="text-decoration: none;"> ready</a>.
-                  </div>
-                </div><!-- End activity item-->
-
-                <div class="activity-item d-flex">
-                  <div class="activite-label">September 13, 2024</div>
-                  <i class='bi bi-circle-fill activity-badge text-danger align-self-start'></i>
-                  <div class="activity-content">
-                    Payment registration.
-                  </div>
-                </div>
-
-
+                </div><!-- End activity item -->
+                {% endfor %}
               </div>
-
             </div>
-            
-          </div><!-- End Recent Activity -->
-          <!-- Sales Card -->
-           
+          </div>
+          {%elif not news and is_staff_superuser %}
+          {% if is_staff_superuser %} <a href="{% url 'newsManage' %}" class="btn btn-info">Manage news</a>{%endif%}
+          {%endif%}
           {% if permissionValues.0.kitBienvenida %}
     {% if permissionValues.0.kitBienvenidaAll %}
         <div class="card info-card sales-card">
@@ -180,6 +166,11 @@
             </div>
         </div>
     {% endif %}
+        </div><!-- End Recent Activity -->
+
+            
+          <!-- Sales Card -->
+           
 {% endif %}
            
 

@@ -478,12 +478,13 @@ label {
                         <div class="container-check">
                             {% if existing_files %}
                             <div class="existing-files">
-                              <h3>Existing Files:</h3>
+                              <h3>Existing Files: </h3>
+                              <h6>Current opportunity: {{submission.review_round}}</h6>
                               <div class="existing-files-container">
                                 {% for file in existing_files %}
                                 <div class="file-preview position-relative" data-file-id="{{ file.id }}">
                                   <!-- Botón de eliminar -->
-                                   {% if not submission.sent_for_review %}
+                                   {% if not submission.sent_for_review and submission.review_round == file.version_number%}
                                    <button type="button" class="delete-file-btn btn btn-danger btn-sm position-absolute"style="top: 0; right: 0;"onclick="deleteExistingFile('{{ file.id }}')">&times;</button>
                                     {% endif %}
                                    {% with file_extension=file.file.name|lower %}
@@ -500,7 +501,7 @@ label {
                                     <i class="bi bi-file-earmark text-secondary" style="font-size: 50px;"></i>
                                     {% endif %}
                                     {% endwith %}
-                                    <span class="file-name d-block mt-2">{{ file.file.name }}</span></a>
+                                    <span class="file-name d-block mt-2">V{{file.version_number }}. {{ file.file.name }}</span></a>
                                   </div>
         {% endfor %}
     </div>
