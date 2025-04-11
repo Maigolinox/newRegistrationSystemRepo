@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import UserProfile,PaymentProof,Place,CongressDate,Event,Registration,CustomUser,adminPermissions
+from .models import UserProfile,PaymentProof,Place,CongressDate,Event,Registration,CustomUser,adminPermissions,Author,Submission,SubmissionFile
 
 # Register your models here.
 
@@ -9,6 +9,9 @@ admin.site.register(Place)
 admin.site.register(CongressDate)
 admin.site.register(CustomUser)
 admin.site.register(adminPermissions)
+admin.site.register(Author)
+admin.site.register(Submission)
+admin.site.register(SubmissionFile)
 
 class EventAdmin(admin.ModelAdmin):
     # List all fields in the admin panel for each event
@@ -24,9 +27,9 @@ class EventAdmin(admin.ModelAdmin):
         'affiliation', 
         'moderator', 
         'banner', 
-        'links', 
-        'requisites', 
-        'allEvent', 
+        'links',
+        'requisites',
+        'allEvent',
         'fileDiplomas'
     )
     # Add a search bar for specific fields

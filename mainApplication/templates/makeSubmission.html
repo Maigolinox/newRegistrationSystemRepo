@@ -375,6 +375,10 @@ label {
                         <p><span></span></p>
                         <div id="author-formset">
                             {{ author_formset.management_form }}
+                            <div id="empty-form-template" style="display: none;">
+                              {{ author_formset.empty_form.as_p|safe }}
+                          </div>
+                          
                             {% for form in author_formset %}
                             <div class="formset-author position-relative">
                                 <h4 class="author-number">Author {{ forloop.counter }}</h4>
@@ -575,64 +579,61 @@ label {
                 
                 <script>
                   document.getElementById('add-author').addEventListener('click', function () {
-                    const formsetContainer = document.querySelector('form');
+                    // const formsetContainer = document.querySelector('form');
+                    const formsetContainer = document.querySelector('#author-formset');
                     const totalForms = document.getElementById('id_authors-TOTAL_FORMS');
                     const currentCount = parseInt(totalForms.value);
                 
                     // Clone the first author form as a template
-                    const newForm = document.querySelectorAll('.formset-author')[0].cloneNode(true);
-                
-                    // Update the formset index for all input, select, and textarea fields
-                    newForm.querySelectorAll('input, select, textarea').forEach((field) => {
-                      const name = field.name.replace(`-${currentCount - 1}-`, `-${currentCount}-`);
-                      const id = field.id.replace(`-${currentCount - 1}-`, `-${currentCount}-`);
-                      field.name = name;
-                      field.id = id;
-                      field.value = ''; // Clear the value for the new field
-                    });
-                
-                    // Update the author number for the new form
-                    const authorNumberElement = newForm.querySelector('.author-number');
-                    if (authorNumberElement) {
-                      authorNumberElement.textContent = `Author ${currentCount + 1}`;
-                    }
-                
-                    // Add delete button for the new form
-                    if (!newForm.querySelector('.position-absolute')) {
-                      const deleteButton = document.createElement('div');
-                      deleteButton.className = 'position-absolute';
-                      deleteButton.style = 'top: 10px; right: 10px;';
-                      deleteButton.innerHTML = `
-                        <i class="bi bi-trash text-danger" style="cursor: pointer; font-size: 20px;" 
-                           onclick="removeAuthorForm(this)"></i>
-                      `;
-                      newForm.appendChild(deleteButton);
-                    }
-                
-                    // Append the new form to the container
-                    formsetContainer.insertBefore(newForm, this);
-                
-                    // Increment the total forms count
+                    // const newForm = document.querySelectorAll('.formset-author')[0].cloneNode(true);
+                    const templateHtml = document.querySelector('#empty-form-template').innerHTML;
+                    const newFormHtml = templateHtml.replace(/__prefix__/g, currentCount);
+                    // Crear un nuevo contenedor para el formulario
+                    const wrapper = document.createElement('div');
+                    wrapper.classList.add('formset-author', 'position-relative');
+                    wrapper.innerHTML = newFormHtml;
+
+                    // Agregar número de autor
+                    const authorNumberElement = document.createElement('h4');
+                    authorNumberElement.classList.add('author-number');
+                    authorNumberElement.textContent = `Author ${currentCount + 1}`;
+                    wrapper.insertBefore(authorNumberElement, wrapper.firstChild);
+
+                    // Agregar botón de eliminar
+                    const deleteButton = document.createElement('div');
+                    deleteButton.className = 'position-absolute';
+                    deleteButton.style = 'top: 10px; right: 10px;';
+                    deleteButton.innerHTML = `
+                      <i class="bi bi-trash text-danger" style="cursor: pointer; font-size: 20px;" 
+                        onclick="removeAuthorForm(this)"></i>
+                    `;
+                    wrapper.appendChild(deleteButton);
+
+                    // Agregar el nuevo formulario al contenedor
+                    formsetContainer.appendChild(wrapper);
+
+                    // Actualizar el total de formularios
                     totalForms.value = currentCount + 1;
-                
-                    // Actualizar todos los números de autor
+
+                    // Actualizar números de autor
                     updateAuthorNumbers();
                   });
-                
+
                   // Función para eliminar un formulario de autor
                   function removeAuthorForm(button) {
-                    const authorForm = button.closest('.formset-author'); // Encuentra el contenedor del autor
-                    authorForm.remove(); // Elimina el formulario del DOM
-                
+                    const authorForm = button.closest('.formset-author');
+                    authorForm.remove();
+
                     // Actualiza el número total de formularios
                     const totalForms = document.getElementById('id_authors-TOTAL_FORMS');
-                    totalForms.value = parseInt(totalForms.value) - 1;
-                
-                    // Recalcular los números de autor después de la eliminación
+                    totalForms.value = document.querySelectorAll('.formset-author').length;
+
+                    // Recalcular los índices y los nombres/id de los campos
+                    reindexAuthorForms();
                     updateAuthorNumbers();
                   }
-                
-                  // Función para actualizar todos los números de autor
+
+                  // Función para actualizar los números de autor visibles
                   function updateAuthorNumbers() {
                     document.querySelectorAll('.formset-author').forEach((authorForm, index) => {
                       const authorNumberElement = authorForm.querySelector('.author-number');
@@ -641,6 +642,84 @@ label {
                       }
                     });
                   }
+
+                  // Reindexar nombres e IDs después de borrar
+                  function reindexAuthorForms() {
+                    const forms = document.querySelectorAll('.formset-author');
+                    forms.forEach((form, index) => {
+                      form.querySelectorAll('input, select, textarea, label').forEach((el) => {
+                        if (el.name) {
+                          el.name = el.name.replace(/authors-\d+-/, `authors-${index}-`);
+                        }
+                        if (el.id) {
+                          el.id = el.id.replace(/id_authors-\d+-/, `id_authors-${index}-`);
+                        }
+                        if (el.htmlFor) {
+                          el.htmlFor = el.htmlFor.replace(/id_authors-\d+-/, `id_authors-${index}-`);
+                        }
+                      });
+                    });
+                  }
+                
+                  //   // Update the formset index for all input, select, and textarea fields
+                  //   newForm.querySelectorAll('input, select, textarea').forEach((field) => {
+                  //     const name = field.name.replace(`-${currentCount - 1}-`, `-${currentCount}-`);
+                  //     const id = field.id.replace(`-${currentCount - 1}-`, `-${currentCount}-`);
+                  //     field.name = name;
+                  //     field.id = id;
+                  //     field.value = ''; // Clear the value for the new field
+                  //   });
+                
+                  //   // Update the author number for the new form
+                  //   const authorNumberElement = newForm.querySelector('.author-number');
+                  //   if (authorNumberElement) {
+                  //     authorNumberElement.textContent = `Author ${currentCount + 1}`;
+                  //   }
+                
+                  //   // Add delete button for the new form
+                  //   if (!newForm.querySelector('.position-absolute')) {
+                  //     const deleteButton = document.createElement('div');
+                  //     deleteButton.className = 'position-absolute';
+                  //     deleteButton.style = 'top: 10px; right: 10px;';
+                  //     deleteButton.innerHTML = `
+                  //       <i class="bi bi-trash text-danger" style="cursor: pointer; font-size: 20px;" 
+                  //          onclick="removeAuthorForm(this)"></i>
+                  //     `;
+                  //     newForm.appendChild(deleteButton);
+                  //   }
+                
+                  //   // Append the new form to the container
+                  //   formsetContainer.insertBefore(newForm, this);
+                
+                  //   // Increment the total forms count
+                  //   totalForms.value = currentCount + 1;
+                
+                  //   // Actualizar todos los números de autor
+                  //   updateAuthorNumbers();
+                  // });
+                
+                  // // Función para eliminar un formulario de autor
+                  // function removeAuthorForm(button) {
+                  //   const authorForm = button.closest('.formset-author'); // Encuentra el contenedor del autor
+                  //   authorForm.remove(); // Elimina el formulario del DOM
+                
+                  //   // Actualiza el número total de formularios
+                  //   const totalForms = document.getElementById('id_authors-TOTAL_FORMS');
+                  //   totalForms.value = parseInt(totalForms.value) - 1;
+                
+                  //   // Recalcular los números de autor después de la eliminación
+                  //   updateAuthorNumbers();
+                  // }
+                
+                  // // Función para actualizar todos los números de autor
+                  // function updateAuthorNumbers() {
+                  //   document.querySelectorAll('.formset-author').forEach((authorForm, index) => {
+                  //     const authorNumberElement = authorForm.querySelector('.author-number');
+                  //     if (authorNumberElement) {
+                  //       authorNumberElement.textContent = `Author ${index + 1}`;
+                  //     }
+                  //   });
+                  // }
                 </script>
                 
                 

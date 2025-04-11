@@ -1225,7 +1225,7 @@ def upload_banner(request):
 
 @login_required(login_url='google_login')
 @superuser_required
-def delete_file(request, filename):
+def delete_file_Banner(request, filename):
     # Construir la ruta completa del archivo
     banners_path = os.path.join(settings.BASE_DIR, 'mainApplication', 'static', 'images', 'banners')
     file_path = os.path.join(banners_path, filename)
@@ -1322,7 +1322,8 @@ def submitArticle(request,submission_id=None):
                 SubmissionFile.objects.create(submission=submission, file=file)
 
             if is_submit:
-                subject = 'Your Article Submission'
+                subject= f"Your Article Submission {submission.title} with ID {submission.submission_id} ({submission.review_round}) has been submitted for review"
+
                 # Gather submission details
                 title = submission.title
                 article_type = submission.publication_type  # Assuming you have this field
@@ -1333,7 +1334,7 @@ def submitArticle(request,submission_id=None):
 
                 # Format the email body
                 body = f"""
-                <p>Your article titled <strong>{title}</strong> has been submitted for review.</p>
+                <p>Your article titled <strong>{title}</strong> with ID <strong>{submission.submission_id}</strong> has been submitted for review.</p>
                 <p>Below you'll find the information:</p>
                 <ul>
                     <li><strong>Title:</strong> {title}</li>
@@ -1368,6 +1369,7 @@ def submitArticle(request,submission_id=None):
                 <p>Below you'll find the information:</p>
                 <ul>
                     <li><strong>Title:</strong> {title}</li>
+                    <li><strong>ID:</strong> {submission.id}</li>
                     <li><strong>Type:</strong> {article_type}</li>
                     <li><strong>Topic Areas:</strong> {topic_areas}</li>
                     <li><strong>Keywords:</strong> {keywords}</li>
@@ -1462,6 +1464,61 @@ def editSubmission(request, submissionID):
                     SubmissionFile.objects.create(submission=submission, file=file,version_number=version_files)
 
             messages.success(request, 'Submission updated successfully.')
+            if is_submit:
+                subject= f"Your Article Submission {submission.title} with ID {submission.id} ({version_files}) has been sended"
+                title = submission.title
+                article_type = submission.publication_type
+                topic_areas = ', '.join([str(area) for area in submission.topic_areas.all()])
+                keywords = submission.keywords
+                abstract = submission.abstract
+                comments = submission.comments
+                submission_id = submission.submission_id
+                authors = submission.authors.all()
+                body = f"""
+                <p>Your article titled <strong>{title}</strong> has been submitted for review.</p>
+                <p>Below you'll find the updated information:</p>
+                <ul>
+                <li><strong>Submission ID:</strong> {submission_id}</li>
+                <li><strong>Title:</strong> {title}</li>
+                <li><strong>Type:</strong> {article_type}</li>
+                <li><strong>Topic Areas:</strong> {topic_areas}</li>
+                <li><strong>Keywords:</strong> {keywords}</li>
+                <li><strong>Abstract:</strong> {abstract}</li>
+                <li><strong>Comments:</strong> {comments}</li>
+                </ul>
+                <p><strong>Authors:</strong></p>
+                <ul>
+                """
+                for author in authors:
+                    body += f"<li>{author.honorific} {author.first_name} {author.last_name} - {author.email}</li>"
+                body += "</ul>"
+
+                # Send to all authors
+                for author in authors:
+                    send_email(author.email, subject, body)
+
+                # Email to internal staff
+                subject = 'Notification of Updated Article Submission'
+                body = f"""
+                <p>An article titled <strong>{title}</strong> has been re-submitted for review.</p>
+                <p>Updated submission details:</p>
+                <ul>
+                    <li><strong>Submission ID:</strong> {submission_id}</li>
+                    <li><strong>Title:</strong> {title}</li>
+                    <li><strong>Type:</strong> {article_type}</li>
+                    <li><strong>Topic Areas:</strong> {topic_areas}</li>
+                    <li><strong>Keywords:</strong> {keywords}</li>
+                    <li><strong>Abstract:</strong> {abstract}</li>
+                    <li><strong>Comments:</strong> {comments}</li>
+                </ul>
+                <p><strong>Authors:</strong></p>
+                <ul>
+                """
+                for author in authors:
+                    body += f"<li>{author.honorific} {author.first_name} {author.last_name} - {author.email}</li>"
+                body += "</ul>"
+
+                send_email('jmejia@cimat.mx', subject, body)
             return HttpResponseRedirect(request.path)
         
 
